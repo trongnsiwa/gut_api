@@ -12,13 +12,14 @@ import com.ecommerce.gut.entity.User;
 import com.ecommerce.gut.payload.request.LoginRequest;
 import com.ecommerce.gut.payload.request.SignUpRequest;
 import com.ecommerce.gut.payload.response.JwtResponse;
-import com.ecommerce.gut.payload.response.MessageResponse;
 import com.ecommerce.gut.repository.RoleRepository;
 import com.ecommerce.gut.repository.UserRepository;
 import com.ecommerce.gut.security.jwt.JwtUtils;
 import com.ecommerce.gut.security.service.UserDetailsImpl;
 import com.ecommerce.gut.service.AuthService;
+import com.ecommerce.gut.util.CustomResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,7 +32,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-  private static final String ROLE_NOT_FOUND_MSG = "Error: Role is not found.";
+  private static final String ROLE_NOT_FOUND_MSG = "Role is not found.";
 
   @Autowired
   AuthenticationManager authenticationManager;
@@ -44,6 +45,9 @@ public class AuthServiceImpl implements AuthService {
 
   @Autowired
   PasswordEncoder encoder;
+
+  @Autowired
+  CustomResponseEntity customResponseEntity;
 
   @Autowired
   JwtUtils jwtUtils;
@@ -75,9 +79,7 @@ public class AuthServiceImpl implements AuthService {
 
     boolean existedEmail = userRepository.existsByEmail(signUpRequest.getEmail());
     if (existedEmail) {
-      messages.put("error", "Email is already taken.");
-      return ResponseEntity.badRequest()
-          .body(new MessageResponse(messages));
+      return customResponseEntity.generateResponseEntity(messages, HttpStatus.CONFLICT, false, "error", "Email is already taken.");
     }
 
     User user = new User();
@@ -114,9 +116,7 @@ public class AuthServiceImpl implements AuthService {
     user.setRoles(roles);
     userRepository.save(user);
 
-    messages.clear();
-    messages.put("success", "User registered successfully!");
-    return ResponseEntity.ok().body(new MessageResponse(messages));
+    return customResponseEntity.generateResponseEntity(messages, HttpStatus.CREATED, true, "success", "User registered successfully!");
   }
   
 }
