@@ -1,10 +1,10 @@
 package com.ecommerce.gut.service.impl;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
+import com.ecommerce.gut.exception.ItemNotFoundException;
 import com.ecommerce.gut.repository.CategoryGroupRepository;
 import com.ecommerce.gut.repository.CategoryRepository;
 import com.ecommerce.gut.service.CategoryService;
@@ -34,131 +34,168 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   public CategoryGroup getCategoryGroupById(Long groupId) {
 
-    return categoryGroupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Category group is not found."));
+    return categoryGroupRepository.findById(groupId).orElseThrow(() -> new ItemNotFoundException("Category group"));
 
   }
 
   @Override
   public ResponseEntity<?> addCategoryGroup(CategoryGroup categoryGroup) {
 
-    Map<String, String> messages = new HashMap<>();
-
     boolean existed = categoryGroupRepository.existsById(categoryGroup.getId());
     if (existed) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.CONFLICT, false, "error", "Group ID is already taken.");
+      return customResponseEntity.generateMessageResponseEntity("Group Id is already taken.", HttpStatus.CONFLICT);
     }
 
     boolean isUniqueName = categoryGroupRepository.existsByName(categoryGroup.getName());
     if (isUniqueName) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.CONFLICT, true, "error", String.format("Group name %s is already existed.", categoryGroup.getName()));
+      return customResponseEntity.generateMessageResponseEntity(String.format("Group name %s is already existed.", categoryGroup.getName()), HttpStatus.CONFLICT);
     }
 
     categoryGroupRepository.save(categoryGroup);
 
-    return customResponseEntity.generateResponseEntity(messages, HttpStatus.CREATED, true, "success", String.format("Add new category group %s successfully!", categoryGroup.getName()));
+    return customResponseEntity.generateMessageResponseEntity(String.format("Add new category group %s successfully!", categoryGroup.getName()), HttpStatus.CREATED);
 
   }
 
   @Override
-  public ResponseEntity<?> addCategory(Category category, Long groupId) {
-
-    Map<String, String> messages = new HashMap<>();
+  public ResponseEntity<?> addCategoryToGroup(Category category, Optional<Long> groupId) {
 
     boolean existed = categoryRepository.existsById(category.getId());
     if (existed) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.CONFLICT, false, "error", "Category ID is already taken.");
+      return customResponseEntity.generateMessageResponseEntity("Category Id is already taken.",
+          HttpStatus.CONFLICT);
+    }
+
+    if (!groupId.isPresent()) {
+      return customResponseEntity.generateMessageResponseEntity("Please provide group Id.",
+          HttpStatus.BAD_REQUEST);
+    }
+
+    Optional<CategoryGroup> group = categoryGroupRepository.findById(groupId.get());
+    if (!group.isPresent()) {
+      return customResponseEntity.generateMessageResponseEntity(String.format("Category group %d is not found.", groupId.get()),
+          HttpStatus.NOT_FOUND);
     }
 
     boolean isUniqueName = categoryRepository.existsByName(category.getName());
     if (isUniqueName) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.CONFLICT, true, "error", String.format("Category name %s is already existed.", category.getName()));
+      return customResponseEntity.generateMessageResponseEntity(
+          String.format("Category name %s is already existed.", category.getName()),
+          HttpStatus.CONFLICT);
     }
 
-    boolean existedGroupId = categoryGroupRepository.existsById(groupId);
-    if (!existedGroupId) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.NOT_FOUND, true, "error", "This category group is not found.");
-    }
-
+    CategoryGroup categoryGroup = group.get();
+    category.setCategoryGroup(categoryGroup);
     categoryRepository.save(category);
 
-    return customResponseEntity.generateResponseEntity(messages, HttpStatus.CREATED, true, "success", String.format("Add new category %s successfully!", category.getName()));
+    return customResponseEntity.generateMessageResponseEntity(
+        String.format("Add new category %s successfully!", category.getName()), HttpStatus.CREATED);
   }
 
   @Override
-  public ResponseEntity<?> updateCategoryGroup(CategoryGroup categoryGroup, Long id) {
-
-    Map<String, String> messages = new HashMap<>();
+  public ResponseEntity<?> updateCategoryGroup(CategoryGroup categoryGroup, Optional<Long> id) {
     
-    boolean existedGroupId = categoryGroupRepository.existsById(id);
-    if (!existedGroupId) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.NOT_FOUND, true, "error", "This category group is not found.");
+    if (!id.isPresent()) {
+      return customResponseEntity.generateMessageResponseEntity("Please provide group Id.", HttpStatus.BAD_REQUEST);
     }
 
-    categoryGroupRepository.save(categoryGroup);
+    Optional<CategoryGroup> oldCategoryGroup = categoryGroupRepository.findById(id.get());
+    if (!oldCategoryGroup.isPresent()) {
+      return customResponseEntity.generateMessageResponseEntity(String.format("Category group %d is not found.", id.get()), HttpStatus.NOT_FOUND);
+    }
 
-    return customResponseEntity.generateResponseEntity(messages, HttpStatus.OK, true, "success", String.format("Update category group %s successfully!", categoryGroup.getName()));
+    boolean isUniqueName = categoryGroupRepository.existsByName(categoryGroup.getName());
+    if (isUniqueName) {
+      return customResponseEntity.generateMessageResponseEntity(String.format("Group name %s is already existed.", categoryGroup.getName()), HttpStatus.CONFLICT);
+    }
+
+    CategoryGroup newCategory = oldCategoryGroup.get();
+    newCategory.setName(categoryGroup.getName());
+    
+    categoryGroupRepository.save(newCategory);
+
+    return customResponseEntity.generateMessageResponseEntity( String.format("Update category group %d successfully!", id.get()), HttpStatus.OK);
     
   }
 
   @Override
-  public ResponseEntity<?> updateCategory(Category category, Long groupId, Long id) {
+  public ResponseEntity<?> updateCategory(Category category, Optional<Long> id, Optional<Long> groupId) {
     
-    Map<String, String> messages = new HashMap<>();
-    
-    boolean existed = categoryRepository.existsById(id);
-    if (!existed) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.NOT_FOUND, true, "error", "This category is not found.");
+    if (!id.isPresent()) {
+      return customResponseEntity.generateMessageResponseEntity("Please provide category Id.", HttpStatus.BAD_REQUEST);
+    }
+
+    Optional<Category> oldCategory = categoryRepository.findById(id.get());
+    if (!oldCategory.isPresent()) {
+      return customResponseEntity.generateMessageResponseEntity(String.format("Category %d is not found.", id.get()), HttpStatus.NOT_FOUND);
+    }
+
+    if (!groupId.isPresent()) {
+      return customResponseEntity.generateMessageResponseEntity("Please provide group Id.", HttpStatus.BAD_REQUEST);
+    }
+
+    boolean existedGroupId = categoryGroupRepository.existsById(groupId.get());
+    if (!existedGroupId) {
+      return customResponseEntity.generateMessageResponseEntity(String.format("Category group %d is not found.", groupId.get()), HttpStatus.NOT_FOUND);
+    }
+
+    Long categoryGroupId = categoryRepository.getGroupIdbyId(id.get());
+
+    if (!categoryGroupId.equals(groupId.get())) {
+      return customResponseEntity.generateMessageResponseEntity(String.format("Category %d is not in group %d", id.get(), groupId.get()), HttpStatus.CONFLICT);
     }
 
     boolean isUniqueName = categoryRepository.existsByName(category.getName());
     if (isUniqueName) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.CONFLICT, true, "error", String.format("Category name %s is already existed.", category.getName()));
+      return customResponseEntity.generateMessageResponseEntity(String.format("Category name %s is already existed.", category.getName()), HttpStatus.CONFLICT);
     }
 
-    boolean existedGroupId = categoryGroupRepository.existsById(groupId);
-    if (!existedGroupId) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.NOT_FOUND, true, "error", "This category group is not found.");
-    }
+    Category newCategory = oldCategory.get();
+    newCategory.setName(category.getName());
 
-    categoryRepository.save(category);
+    categoryRepository.save(newCategory);
 
-    return customResponseEntity.generateResponseEntity(messages, HttpStatus.OK, true, "success", String.format("Update category %s successfully!", category.getName()));
+    return customResponseEntity.generateMessageResponseEntity(String.format("Update category %d successfully!", id.get()), HttpStatus.OK);
 
   }
 
   @Override
-  public ResponseEntity<?> deleteCategory(Long id) {
+  public ResponseEntity<?> deleteCategory(Optional<Long> id) {
     
-    Map<String, String> messages = new HashMap<>();
-    
-    boolean existed = categoryRepository.existsById(id);
+    if (!id.isPresent()) {
+      return customResponseEntity.generateMessageResponseEntity("Please provide category Id.", HttpStatus.BAD_REQUEST);
+    }
+
+    boolean existed = categoryRepository.existsById(id.get());
     if (!existed) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.NOT_FOUND, true, "error", "This category is not found.");
+      return customResponseEntity.generateMessageResponseEntity(String.format("Category %d is not found.", id.get()), HttpStatus.NOT_FOUND);
     }
 
-    categoryRepository.deleteById(id);
+    categoryRepository.deleteById(id.get());
 
-    return customResponseEntity.generateResponseEntity(messages, HttpStatus.OK, true, "success", String.format("Delete category %s successfully.", id));
+    return customResponseEntity.generateMessageResponseEntity(String.format("Delete category %d successfully.", id.get()), HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<?> deleteCategoryGroup(Long id) {
+  public ResponseEntity<?> deleteCategoryGroup(Optional<Long> id) {
+
+    if (!id.isPresent()) {
+      return customResponseEntity.generateMessageResponseEntity("Please provide group Id.", HttpStatus.BAD_REQUEST);
+    }
     
-    Map<String, String> messages = new HashMap<>();
-    
-    boolean existedGroupId = categoryGroupRepository.existsById(id);
+    boolean existedGroupId = categoryGroupRepository.existsById(id.get());
     if (!existedGroupId) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.NOT_FOUND, true, "error", "This category group is not found.");
+      return customResponseEntity.generateMessageResponseEntity(String.format("Category group %d is not found.", id.get()), HttpStatus.NOT_FOUND);
     }
 
-    boolean stillHaveCategory = categoryRepository.existsByGroupId(id);
+    boolean stillHaveCategory = categoryRepository.existsByGroupId(id.get());
     if (stillHaveCategory) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.CONFLICT, true, "error", "There are some categories still in the group.");
+      return customResponseEntity.generateMessageResponseEntity("There are some categories still in the group.", HttpStatus.CONFLICT);
     }
 
-    categoryGroupRepository.deleteById(id);
+    categoryGroupRepository.deleteById(id.get());
 
-    return customResponseEntity.generateResponseEntity(messages, HttpStatus.OK, true, "success", String.format("Delete category group %s successfully.", id));
+    return customResponseEntity.generateMessageResponseEntity(String.format("Delete category group %d successfully.", id.get()), HttpStatus.OK);
 
   }
   

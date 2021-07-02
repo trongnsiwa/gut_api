@@ -1,19 +1,19 @@
 package com.ecommerce.gut.entity;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Objects;
-import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotBlank;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(
@@ -35,12 +35,17 @@ public class CategoryGroup {
   @Column(name = "group_name", length = 50)
   private String name;
 
-  @JsonIgnore
-  @OneToMany
-  @JoinColumn(name = "group_id")
-  private Set<Category> categories = new HashSet<>();
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "categoryGroup")
+  @JsonManagedReference
+  private Collection<Category> categories = new ArrayList<>();
 
   public CategoryGroup() {
+  }
+
+  public CategoryGroup(Long id, String name, Collection<Category> categories) {
+    this.id = id;
+    this.name = name;
+    this.categories = categories;
   }
 
   public Long getId() {
@@ -59,11 +64,11 @@ public class CategoryGroup {
     this.name = name;
   }
 
-  public Set<Category> getCategories() {
+  public Collection<Category> getCategories() {
     return this.categories;
   }
 
-  public void setCategories(Set<Category> categories) {
+  public void setCategories(Collection<Category> categories) {
     this.categories = categories;
   }
 

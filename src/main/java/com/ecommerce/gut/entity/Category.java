@@ -3,16 +3,16 @@ package com.ecommerce.gut.entity;
 import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(
@@ -33,15 +33,18 @@ public class Category {
   @Column(name = "category_name", length = 50)
   private String name;
 
-  @Transient
-  @NotNull(message = "Category must be belong to one group.")
-  private Long groupId;
-
-  @ManyToOne
-  @JoinColumn(name = "group_id", insertable = false, updatable = false)
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "group_id")
+  @JsonBackReference
   private CategoryGroup categoryGroup;
 
   public Category() {
+  }
+
+  public Category(Long id, String name, CategoryGroup categoryGroup) {
+    this.id = id;
+    this.name = name;
+    this.categoryGroup = categoryGroup;
   }
 
   public Long getId() {
@@ -60,14 +63,6 @@ public class Category {
     this.name = name;
   }
 
-  public Long getGroupId() {
-    return this.groupId;
-  }
-
-  public void setGroupId(Long groupId) {
-    this.groupId = groupId;
-  }
-
   public CategoryGroup getCategoryGroup() {
     return this.categoryGroup;
   }
@@ -84,13 +79,12 @@ public class Category {
             return false;
         }
         Category category = (Category) o;
-        return Objects.equals(id, category.id) && Objects.equals(name, category.name) && Objects.equals(groupId, category.groupId) && Objects.equals(categoryGroup, category.categoryGroup);
+        return Objects.equals(id, category.id) && Objects.equals(name, category.name) && Objects.equals(categoryGroup, category.categoryGroup);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, groupId, categoryGroup);
+    return Objects.hash(id, name, categoryGroup);
   }
-
 
 }

@@ -9,10 +9,19 @@ import org.springframework.stereotype.Repository;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
   
   @Query(
-    value = "SELECT EXISTS(SELECT 1 FROM product_categories pc WHERE pc.groupId = ?1)"
+    value = "SELECT EXISTS(SELECT 1 FROM product_categories pc WHERE pc.group_id = ?1)",
+    nativeQuery = true
   )
   boolean existsByGroupId(Long groupId);
 
   boolean existsByName(String name);
+
+  @Query(
+    value = "SELECT pc.group_id " +
+            "FROM product_categories pc " +
+            "WHERE pc.category_id = ?1",
+    nativeQuery = true
+  )
+  Long getGroupIdbyId(Long id);
 
 }

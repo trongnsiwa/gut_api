@@ -1,6 +1,7 @@
 package com.ecommerce.gut.service;
 
 import java.util.List;
+import java.util.Optional;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
 import org.springframework.http.ResponseEntity;
@@ -13,14 +14,14 @@ public interface CategoryService {
 
   ResponseEntity<?> addCategoryGroup(CategoryGroup categoryGroup);
 
-  ResponseEntity<?> addCategory(Category category, Long groupId);
+  ResponseEntity<?> addCategoryToGroup(Category category, Optional<Long> groupId);
 
-  ResponseEntity<?> updateCategoryGroup(CategoryGroup categoryGroup, Long id);
+  ResponseEntity<?> updateCategoryGroup(CategoryGroup categoryGroup, Optional<Long> id);
 
-  ResponseEntity<?> updateCategory(Category category, Long groupdId, Long id);
+  ResponseEntity<?> updateCategory(Category category, Optional<Long> id, Optional<Long> groupId);
 
-  ResponseEntity<?> deleteCategory(Long id);
+  ResponseEntity<?> deleteCategory(Optional<Long> id);
 
-  ResponseEntity<?> deleteCategoryGroup(Long id);
+  ResponseEntity<?> deleteCategoryGroup(Optional<Long> id);
 
 }

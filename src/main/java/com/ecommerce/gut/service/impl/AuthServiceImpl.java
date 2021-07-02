@@ -1,9 +1,7 @@
 package com.ecommerce.gut.service.impl;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import com.ecommerce.gut.entity.ERole;
@@ -75,11 +73,9 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public ResponseEntity<?> registerUser(SignUpRequest signUpRequest) {
 
-    Map<String, String> messages = new HashMap<>();
-
     boolean existedEmail = userRepository.existsByEmail(signUpRequest.getEmail());
     if (existedEmail) {
-      return customResponseEntity.generateResponseEntity(messages, HttpStatus.CONFLICT, false, "error", "Email is already taken.");
+      return customResponseEntity.generateMessageResponseEntity("Email is already taken.", HttpStatus.CONFLICT);
     }
 
     User user = new User();
@@ -116,7 +112,7 @@ public class AuthServiceImpl implements AuthService {
     user.setRoles(roles);
     userRepository.save(user);
 
-    return customResponseEntity.generateResponseEntity(messages, HttpStatus.CREATED, true, "success", "User registered successfully!");
+    return customResponseEntity.generateMessageResponseEntity("User registered successfully!", HttpStatus.CREATED);
   }
   
 }

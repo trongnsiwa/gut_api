@@ -1,21 +1,22 @@
 package com.ecommerce.gut.payload.response;
 
-import java.util.Map;
-
 public class MessageResponse {
   
-  private Map<String, String> messages;
+  private String message;
 
-  public MessageResponse(Map<String, String> messages) {
-    this.messages = messages;
+  public MessageResponse() {
   }
 
-  public Map<String,String> getMessages() {
-    return this.messages;
+  public MessageResponse(String message) {
+    this.message = message;
   }
 
-  public void setMessages(Map<String,String> messages) {
-    this.messages = messages;
+  public String getMessage() {
+    return this.message;
   }
-  
+
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
 }

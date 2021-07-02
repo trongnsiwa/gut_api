@@ -2,8 +2,8 @@ package com.ecommerce.gut.exception;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import com.ecommerce.gut.payload.response.MessageResponse;
+import com.ecommerce.gut.payload.response.MessagesResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +25,16 @@ public class GlobalExceptionHandler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
+  @ExceptionHandler({
+    MethodArgumentNotValidException.class,
+    ItemNotFoundException.class
+  })
   @Nullable
-  public final ResponseEntity<MessageResponse> handleException(Exception ex, WebRequest request) {
+  public final ResponseEntity<?> handleException(Exception ex, WebRequest request) {
 
     HttpHeaders headers = new HttpHeaders();
 
-    LOGGER.error("Handling " + ex.getClass().getSimpleName() + "  due to " + ex.getMessage());
+    LOGGER.error("Handling " + ex.getClass().getSimpleName() + " due to " + ex.getMessage());
 
     if (ex instanceof MethodArgumentNotValidException) {
 
@@ -40,6 +43,13 @@ public class GlobalExceptionHandler {
       MethodArgumentNotValidException manve = (MethodArgumentNotValidException) ex;
 
       return handleMethodArgumentNotValidException(manve, headers, status, request);
+    } else if (ex instanceof ItemNotFoundException) {
+
+      HttpStatus status = HttpStatus.NOT_FOUND;
+
+      ItemNotFoundException cinfe = (ItemNotFoundException) ex;
+
+      return handleCustomItemNotFoundException(cinfe, headers, status);
     }
 
     if (LOGGER.isWarnEnabled()) {
@@ -50,7 +60,7 @@ public class GlobalExceptionHandler {
     return handleExceptionInternal(ex, null, headers, status, request);
   }
 
-  protected ResponseEntity<MessageResponse> handleMethodArgumentNotValidException(
+  protected ResponseEntity<MessagesResponse> handleMethodArgumentNotValidException(
       MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status,
       WebRequest request) {
 
@@ -69,11 +79,17 @@ public class GlobalExceptionHandler {
       }
     });
 
-    return handleExceptionInternal(ex, new MessageResponse(errors), headers, status, request);
+    return handleExceptionInternal(ex, new MessagesResponse(errors), headers, status, request);
   }
 
-  protected ResponseEntity<MessageResponse> handleExceptionInternal(Exception ex,
-  MessageResponse body, HttpHeaders headers, HttpStatus status, WebRequest request) {
+  protected ResponseEntity<MessageResponse> handleCustomItemNotFoundException(
+    ItemNotFoundException ex, HttpHeaders headers, HttpStatus status) {
+
+    return new ResponseEntity<>(new MessageResponse(ex.getMessage()), headers, status);
+  }
+
+  protected ResponseEntity<MessagesResponse> handleExceptionInternal(Exception ex,
+  MessagesResponse body, HttpHeaders headers, HttpStatus status, WebRequest request) {
 
     if (HttpStatus.INTERNAL_SERVER_ERROR.equals(status)) {
       request.setAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, ex, RequestAttributes.SCOPE_REQUEST);
