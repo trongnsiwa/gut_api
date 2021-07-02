@@ -7,62 +7,29 @@ import com.ecommerce.gut.payload.response.MessagesResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.util.WebUtils;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-  @ExceptionHandler({
-    MethodArgumentNotValidException.class,
-    ItemNotFoundException.class
-  })
-  @Nullable
-  public final ResponseEntity<?> handleException(Exception ex, WebRequest request) {
-
-    HttpHeaders headers = new HttpHeaders();
-
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<MessagesResponse> handleMethodArgumentNotValidException(
+      MethodArgumentNotValidException ex,
+      WebRequest request) {
     LOGGER.error("Handling " + ex.getClass().getSimpleName() + " due to " + ex.getMessage());
 
-    if (ex instanceof MethodArgumentNotValidException) {
-
-      HttpStatus status = HttpStatus.BAD_REQUEST;
-
-      MethodArgumentNotValidException manve = (MethodArgumentNotValidException) ex;
-
-      return handleMethodArgumentNotValidException(manve, headers, status, request);
-    } else if (ex instanceof ItemNotFoundException) {
-
-      HttpStatus status = HttpStatus.NOT_FOUND;
-
-      ItemNotFoundException cinfe = (ItemNotFoundException) ex;
-
-      return handleCustomItemNotFoundException(cinfe, headers, status);
-    }
-
-    if (LOGGER.isWarnEnabled()) {
-      LOGGER.warn("Unknown exception type: " + ex.getClass().getName());
-    }
-
-    HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-    return handleExceptionInternal(ex, null, headers, status, request);
-  }
-
-  protected ResponseEntity<MessagesResponse> handleMethodArgumentNotValidException(
-      MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status,
-      WebRequest request) {
+    HttpHeaders headers = new HttpHeaders();
 
     Map<String, String> errors = new HashMap<>();
     ex.getBindingResult().getAllErrors().forEach(error -> {
@@ -79,23 +46,23 @@ public class GlobalExceptionHandler {
       }
     });
 
-    return handleExceptionInternal(ex, new MessagesResponse(errors), headers, status, request);
+    return new ResponseEntity<>(new MessagesResponse(errors), headers, HttpStatus.BAD_REQUEST);
   }
 
-  protected ResponseEntity<MessageResponse> handleCustomItemNotFoundException(
-    ItemNotFoundException ex, HttpHeaders headers, HttpStatus status) {
+  @ExceptionHandler(ItemNotFoundException.class)
+  public ResponseEntity<MessageResponse> handleCustomItemNotFoundException(
+      ItemNotFoundException ex) {
 
-    return new ResponseEntity<>(new MessageResponse(ex.getMessage()), headers, status);
+    HttpHeaders headers = new HttpHeaders();
+
+    return new ResponseEntity<>(new MessageResponse(ex.getMessage()), headers,
+        HttpStatus.NOT_FOUND);
   }
 
-  protected ResponseEntity<MessagesResponse> handleExceptionInternal(Exception ex,
-  MessagesResponse body, HttpHeaders headers, HttpStatus status, WebRequest request) {
-
-    if (HttpStatus.INTERNAL_SERVER_ERROR.equals(status)) {
-      request.setAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, ex, RequestAttributes.SCOPE_REQUEST);
+  @ExceptionHandler(ConversionFailedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleConnversion(RuntimeException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
-
-    return new ResponseEntity<>(body, headers, status);
-  }
 
 }

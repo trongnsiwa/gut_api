@@ -1,6 +1,6 @@
 package com.ecommerce.gut.service.impl;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
@@ -27,7 +27,7 @@ public class CategoryServiceImpl implements CategoryService {
   CustomResponseEntity customResponseEntity;
 
   @Override
-  public List<CategoryGroup> getAllCategoryGroups() {
+  public Collection<CategoryGroup> getAllCategoryGroups() {
     return categoryGroupRepository.findAll();
   }
 
@@ -53,7 +53,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     categoryGroupRepository.save(categoryGroup);
 
-    return customResponseEntity.generateMessageResponseEntity(String.format("Add new category group %s successfully!", categoryGroup.getName()), HttpStatus.CREATED);
+    return customResponseEntity.generateMessageResponseEntity(String.format("Add new category group %s successful!", categoryGroup.getName()), HttpStatus.CREATED);
 
   }
 
@@ -89,7 +89,7 @@ public class CategoryServiceImpl implements CategoryService {
     categoryRepository.save(category);
 
     return customResponseEntity.generateMessageResponseEntity(
-        String.format("Add new category %s successfully!", category.getName()), HttpStatus.CREATED);
+        String.format("Add new category %s successful!", category.getName()), HttpStatus.CREATED);
   }
 
   @Override
@@ -114,7 +114,7 @@ public class CategoryServiceImpl implements CategoryService {
     
     categoryGroupRepository.save(newCategory);
 
-    return customResponseEntity.generateMessageResponseEntity( String.format("Update category group %d successfully!", id.get()), HttpStatus.OK);
+    return customResponseEntity.generateMessageResponseEntity( String.format("Update category group %d successful!", id.get()), HttpStatus.OK);
     
   }
 
@@ -155,7 +155,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     categoryRepository.save(newCategory);
 
-    return customResponseEntity.generateMessageResponseEntity(String.format("Update category %d successfully!", id.get()), HttpStatus.OK);
+    return customResponseEntity.generateMessageResponseEntity(String.format("Update category %d successful!", id.get()), HttpStatus.OK);
 
   }
 
@@ -173,7 +173,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     categoryRepository.deleteById(id.get());
 
-    return customResponseEntity.generateMessageResponseEntity(String.format("Delete category %d successfully.", id.get()), HttpStatus.OK);
+    return customResponseEntity.generateMessageResponseEntity(String.format("Delete category %d successful.", id.get()), HttpStatus.OK);
   }
 
   @Override
@@ -195,7 +195,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     categoryGroupRepository.deleteById(id.get());
 
-    return customResponseEntity.generateMessageResponseEntity(String.format("Delete category group %d successfully.", id.get()), HttpStatus.OK);
+    return customResponseEntity.generateMessageResponseEntity(String.format("Delete category group %d successful.", id.get()), HttpStatus.OK);
 
   }
   

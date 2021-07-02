@@ -13,6 +13,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Entity
 @Table(
@@ -36,6 +37,7 @@ public class Category {
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "group_id")
   @JsonBackReference
+  @Schema(hidden = true)
   private CategoryGroup categoryGroup;
 
   public Category() {

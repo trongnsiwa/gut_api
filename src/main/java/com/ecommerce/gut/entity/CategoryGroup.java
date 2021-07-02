@@ -14,6 +14,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.AccessMode;
 
 @Entity
 @Table(
@@ -37,6 +39,7 @@ public class CategoryGroup {
 
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "categoryGroup")
   @JsonManagedReference
+  @Schema(accessMode = AccessMode.READ_ONLY)
   private Collection<Category> categories = new ArrayList<>();
 
   public CategoryGroup() {

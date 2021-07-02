@@ -1,6 +1,6 @@
 package com.ecommerce.gut.service;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface CategoryService {
   
-  List<CategoryGroup> getAllCategoryGroups();
+  Collection<CategoryGroup> getAllCategoryGroups();
 
   CategoryGroup getCategoryGroupById(Long groupId);
 
