@@ -33,7 +33,7 @@ public class ProductImage {
     allocationSize = 1
   )
   @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_image_id_generator")
-  @Column(name = "product_images_id")
+  @Column(name = "image_id")
   private Long id;
 
   @ManyToOne(fetch = FetchType.EAGER)
