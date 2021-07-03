@@ -8,6 +8,7 @@ import com.ecommerce.gut.entity.CategoryGroup;
 import com.ecommerce.gut.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,6 +70,7 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "Group Id or name is already taken", content = @Content),
   })
   @PostMapping("/group/add")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> addCategoryGroup(@Valid @RequestBody CategoryGroup categoryGroup) {
     return categoryService.addCategoryGroup(categoryGroup);
   }
@@ -96,6 +98,7 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "Group name is already taken", content = @Content),
   })
   @PutMapping("/group/update/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> updateCategoryGroup(@Valid @RequestBody CategoryGroup categoryGroup,
       @PathVariable("id") Optional<Long> id) {
     return categoryService.updateCategoryGroup(categoryGroup, id);
@@ -110,6 +113,7 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "Category name is already taken", content = @Content),
   })
   @PutMapping("/group/{groupId}/update/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> updateCategory(@Valid @RequestBody Category category,
       @PathVariable("id") Optional<Long> id, Optional<Long> groupId) {
     return categoryService.updateCategory(category, id, groupId);
@@ -122,6 +126,7 @@ public class CategoryController {
       @ApiResponse(responseCode = "404", description = "Category is not found", content = @Content),
   })
   @DeleteMapping("/delete/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> deleteCategory(@PathVariable("id") Optional<Long> id) {
     return categoryService.deleteCategory(id);
   }
@@ -135,6 +140,7 @@ public class CategoryController {
           description = "There are some categories still in the group", content = @Content),
   })
   @DeleteMapping("/group/delete/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> deleteCategoryGroup(@PathVariable("id") Optional<Long> id) {
     return categoryService.deleteCategoryGroup(id);
   }

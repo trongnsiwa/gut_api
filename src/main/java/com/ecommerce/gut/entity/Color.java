@@ -6,6 +6,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -18,7 +21,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode
 @Entity
-@Table(name = "colors")
+@Table(name = "colors",
+    uniqueConstraints = @UniqueConstraint(
+        name = "colors_un",
+        columnNames = "color_name"))
 public class Color {
   
   @Id
@@ -26,6 +32,8 @@ public class Color {
   @Column(name = "color_id")
   private Integer id;
 
+  @NotBlank(message = "Color name must not be blank.")
+  @Size(max = 50, message = "Color name must be lower than 50 characters.")
   @Column(name = "color_name", length = 50)
   private String name;
 

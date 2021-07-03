@@ -17,7 +17,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.hibernate.annotations.CreationTimestamp;
@@ -87,7 +86,6 @@ public class Product {
 
   @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "category_id", insertable = false, updatable = false)
-  @JsonBackReference
   private Category category;
 
   @OneToMany(fetch = FetchType.EAGER)

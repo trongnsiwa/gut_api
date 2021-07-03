@@ -15,7 +15,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Entity
@@ -44,7 +44,7 @@ public class Category {
   private CategoryGroup categoryGroup;
 
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "category")
-  @JsonManagedReference
+  @JsonIgnore
   @Schema(hidden = true)
   private Collection<Product> products;
 
