@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.ecommerce.gut.entity.ERole;
 import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
+import com.ecommerce.gut.exception.CustomNotFoundException;
 import com.ecommerce.gut.payload.request.LoginRequest;
 import com.ecommerce.gut.payload.request.SignUpRequest;
 import com.ecommerce.gut.payload.response.JwtResponse;
@@ -90,19 +91,19 @@ public class AuthServiceImpl implements AuthService {
 
     if (strRoles == null) {
       Role userRole =
-          roleRepository.findByName(ERole.ROLE_USER).orElseThrow(() -> new RuntimeException(
+          roleRepository.findByName(ERole.ROLE_USER).orElseThrow(() -> new CustomNotFoundException(
               ROLE_NOT_FOUND_MSG));
       roles.add(userRole);
     } else {
       strRoles.forEach(role -> {
         if ("admin".equals(role)) {
           Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-              .orElseThrow(() -> new RuntimeException(ROLE_NOT_FOUND_MSG));
+              .orElseThrow(() -> new CustomNotFoundException(ROLE_NOT_FOUND_MSG));
           roles.add(adminRole);
 
         } else {
           Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-              .orElseThrow(() -> new RuntimeException(ROLE_NOT_FOUND_MSG));
+              .orElseThrow(() -> new CustomNotFoundException(ROLE_NOT_FOUND_MSG));
           roles.add(userRole);
         }
 

@@ -49,9 +49,9 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(new MessagesResponse(errors), headers, HttpStatus.BAD_REQUEST);
   }
 
-  @ExceptionHandler(ItemNotFoundException.class)
+  @ExceptionHandler(CustomNotFoundException.class)
   public ResponseEntity<MessageResponse> handleCustomItemNotFoundException(
-      ItemNotFoundException ex) {
+      CustomNotFoundException ex) {
 
     HttpHeaders headers = new HttpHeaders();
 

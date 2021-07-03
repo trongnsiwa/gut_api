@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Optional;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
-import com.ecommerce.gut.exception.ItemNotFoundException;
+import com.ecommerce.gut.exception.CustomNotFoundException;
 import com.ecommerce.gut.repository.CategoryGroupRepository;
 import com.ecommerce.gut.repository.CategoryRepository;
 import com.ecommerce.gut.service.CategoryService;
@@ -34,7 +34,7 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   public CategoryGroup getCategoryGroupById(Long groupId) {
 
-    return categoryGroupRepository.findById(groupId).orElseThrow(() -> new ItemNotFoundException("Category group"));
+    return categoryGroupRepository.findById(groupId).orElseThrow(() -> new CustomNotFoundException("Category group"));
 
   }
 

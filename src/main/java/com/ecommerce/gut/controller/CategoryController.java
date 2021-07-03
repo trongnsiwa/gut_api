@@ -122,7 +122,7 @@ public class CategoryController {
       @ApiResponse(responseCode = "404", description = "Category is not found", content = @Content),
   })
   @DeleteMapping("/delete/{id}")
-  public ResponseEntity<?> deleteCategory(Optional<Long> id) {
+  public ResponseEntity<?> deleteCategory(@PathVariable("id") Optional<Long> id) {
     return categoryService.deleteCategory(id);
   }
 

@@ -11,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -56,7 +57,6 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
         .authorizeRequests()
             .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
-            .antMatchers("/api-docs", "/api-docs.yaml", "/swagger-ui.html", "/swagger-ui/**").permitAll()
             .antMatchers("/api/auth/**").permitAll()
             .antMatchers("/api/test/**").permitAll()
             .antMatchers("/api/category/**").permitAll()
@@ -80,4 +80,9 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     authenticationManagerBuilder.userDetailsService(userDetailsService)
         .passwordEncoder(passwordEncoder());
   }
+
+  @Override
+	public void configure(WebSecurity web) throws Exception {
+		web.ignoring().antMatchers("/swagger-ui/**", "/v3/api-docs/**");
+	}
 }
