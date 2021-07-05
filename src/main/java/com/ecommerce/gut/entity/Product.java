@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -15,30 +16,25 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.AccessMode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "products")
 public class Product {
   
   @Id
-  @SequenceGenerator(
-    name = "product_id_generator",
-    sequenceName = "products_product_id_seq",
-    allocationSize = 1
-  )
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_id_generator")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "product_id")
   private Long id;
 
@@ -46,22 +42,13 @@ public class Product {
   private String name;
 
   @Column(name = "price", nullable = false)
-  private float price;
-  
-  @Column(name = "quantity", nullable = false)
-  private int quantity;
-
-  @Column(name = "cart_desc", length = 250)
-  private String cartDesc;
+  private double price;
 
   @Column(name = "short_desc", length = 1000)
   private String shortDesc;
 
   @Column(name = "long_desc", columnDefinition = "TEXT")
   private String longDesc;
-
-  @Column(name = "category_id", nullable = false)
-  private Long categoryId;
 
   @Column(name = "material", length = 255)
   private String material;
@@ -70,30 +57,44 @@ public class Product {
   private String handling;
 
   @CreationTimestamp
-  @Column(name = "created_date")
+  @Column(name = "created_date", nullable = false)
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private Date createdDate;
   
   @UpdateTimestamp
-  @Column(name = "updated_date")
+  @Column(name = "updated_date", nullable = false)
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private Date updatedDate;
 
-  private boolean limited;
-
-  @Column(name = "brand_new")
+  @Column(name = "brand_new", nullable = false)
   private boolean brandNew;
 
+  @Column(name = "sale", nullable = false)
+  private boolean sale;
+
+  @Column(name = "price_sale")
+  private Double priceSale;
+
+  @Column(name = "sale_from_date")
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  private Date saleFromDate;
+
+  @Column(name = "sale_to_date")
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  private Date saleToDate;
+
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "category_id", insertable = false, updatable = false)
+  @JoinColumn(name = "category_id", nullable = true)
+  @JsonIgnore
+  @Schema(hidden = true)
   private Category category;
 
-  @OneToMany(fetch = FetchType.EAGER)
-  @JoinColumn(name = "product_id")
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "product", cascade = { CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH, CascadeType.REMOVE}, orphanRemoval = true)
   @JsonManagedReference
+  @Schema(accessMode = AccessMode.READ_ONLY)
   private Collection<ProductImage> productImages;
 
-  @ManyToMany(fetch = FetchType.LAZY)
+  @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
   @JoinTable(
       name = "product_colors",
       joinColumns = @JoinColumn(
@@ -102,74 +103,234 @@ public class Product {
           name = "color_id"))
   private Set<Color> colors = new HashSet<>();
 
-  public Product(String name, float price, int quantity, String cartDesc, String shortDesc, String longDesc, String material, String handling) {
+  public Product(Long id, String name, double price, String shortDesc, String longDesc,
+      String material, String handling, boolean brandNew, boolean sale, Double priceSale,
+      Date saleFromDate, Date saleToDate, Category category,
+      Collection<ProductImage> productImages, Set<Color> colors) {
+    this.id = id;
     this.name = name;
     this.price = price;
-    this.quantity = quantity;
-    this.cartDesc = cartDesc;
     this.shortDesc = shortDesc;
     this.longDesc = longDesc;
     this.material = material;
     this.handling = handling;
+    this.brandNew = brandNew;
+    this.sale = sale;
+    this.priceSale = priceSale;
+    this.saleFromDate = saleFromDate;
+    this.saleToDate = saleToDate;
+    this.category = category;
+    this.productImages = productImages;
+    this.colors = colors;
   }
 
-  public static class ProductBuilder {
+  public Long getId() {
+    return this.id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public String getName() {
+    return this.name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public double getPrice() {
+    return this.price;
+  }
+
+  public void setPrice(double price) {
+    this.price = price;
+  }
+
+  public String getShortDesc() {
+    return this.shortDesc;
+  }
+
+  public void setShortDesc(String shortDesc) {
+    this.shortDesc = shortDesc;
+  }
+
+  public String getLongDesc() {
+    return this.longDesc;
+  }
+
+  public void setLongDesc(String longDesc) {
+    this.longDesc = longDesc;
+  }
+
+  public String getMaterial() {
+    return this.material;
+  }
+
+  public void setMaterial(String material) {
+    this.material = material;
+  }
+
+  public String getHandling() {
+    return this.handling;
+  }
+
+  public void setHandling(String handling) {
+    this.handling = handling;
+  }
+
+  public Date getCreatedDate() {
+    return this.createdDate;
+  }
+
+  public void setCreatedDate(Date createdDate) {
+    this.createdDate = createdDate;
+  }
+
+  public Date getUpdatedDate() {
+    return this.updatedDate;
+  }
+
+  public void setUpdatedDate(Date updatedDate) {
+    this.updatedDate = updatedDate;
+  }
+
+  public boolean isBrandNew() {
+    return this.brandNew;
+  }
+
+  public boolean getBrandNew() {
+    return this.brandNew;
+  }
+
+  public void setBrandNew(boolean brandNew) {
+    this.brandNew = brandNew;
+  }
+
+  public boolean isSale() {
+    return this.sale;
+  }
+
+  public boolean getSale() {
+    return this.sale;
+  }
+
+  public void setSale(boolean sale) {
+    this.sale = sale;
+  }
+
+  public Double getPriceSale() {
+    return this.priceSale;
+  }
+
+  public void setPriceSale(Double priceSale) {
+    this.priceSale = priceSale;
+  }
+
+  public Date getSaleFromDate() {
+    return this.saleFromDate;
+  }
+
+  public void setSaleFromDate(Date saleFromDate) {
+    this.saleFromDate = saleFromDate;
+  }
+
+  public Date getSaleToDate() {
+    return this.saleToDate;
+  }
+
+  public void setSaleToDate(Date saleToDate) {
+    this.saleToDate = saleToDate;
+  }
+
+  public Category getCategory() {
+    return this.category;
+  }
+
+  public void setCategory(Category category) {
+    this.category = category;
+  }
+
+  public Collection<ProductImage> getProductImages() {
+    return this.productImages;
+  }
+
+  public Set<Color> getColors() {
+    return this.colors;
+  }
+
+  public void setColors(Set<Color> colors) {
+    this.colors = colors;
+  }
+
+  public static class Builder {
+    private Long id;
     private String name;
-    private float price;
-    private int quantity;
-    private String cartDesc;
+    private double price;
     private String shortDesc;
     private String longDesc;
     private String material;
     private String handling;
+    private boolean brandNew;
+    private boolean sale;
+    private double priceSale;
+    private Date saleFromDate;
+    private Date saleToDate;
+    private Category category;
+    private Collection<ProductImage> images;
+    private Set<Color> colors;
 
-    public ProductBuilder withName(String name) {
+    public Builder(Long id, String name) {
+      this.id = id;
       this.name = name;
-      return this;
     }
 
-    public ProductBuilder withPrice(float price) {
+    public Builder withPrice(double price) {
       this.price = price;
       return this;
     }
 
-    public ProductBuilder withQuantity(int quantity) {
-      this.quantity = quantity;
-      return this;
-    }
-
-    public ProductBuilder withCartDesc(String cartDesc) {
-      this.cartDesc = cartDesc;
-      return this;
-    }
-
-    public ProductBuilder withShortDesc(String shortDesc) {
+    public Builder withDescription(String shortDesc, String longDesc, String material, String handling) {
       this.shortDesc = shortDesc;
-      return this;
-    }
-
-    public ProductBuilder withLongDesc(String longDesc) {
       this.longDesc = longDesc;
-      return this;
-    }
-
-    public ProductBuilder withMaterial(String material) {
       this.material = material;
-      return this;
-    }
-
-    public ProductBuilder withHandling(String handling) {
       this.handling = handling;
       return this;
     }
 
-    public Product build() {
-      return new Product(
-        this.name, this.price, this.quantity,
-        this.cartDesc, this.shortDesc, this.longDesc,
-        this.material, this.handling
-      );
+    public Builder withNew(boolean brandNew) {
+      this.brandNew = brandNew;
+      return this;
     }
+
+    public Builder withSale(boolean sale, double priceSale, Date saleFromDate, Date saleToDate) {
+      this.sale = sale;
+      this.priceSale = priceSale;
+      this.saleFromDate = saleFromDate;
+      this.saleToDate = saleToDate;
+      return this;
+    }
+
+    public Builder withCategory(Category category) {
+      this.category = category;
+      return this;
+    }
+
+    public Builder withImages(Collection<ProductImage> images) {
+      this.images = images;
+      return this;
+    }
+
+    public Builder withColors(Set<Color> colors) {
+      this.colors = colors;
+      return this;
+    }
+
+    public Product build() {
+      return new Product(this.id, this.name, this.price, this.shortDesc, this.longDesc, this.material, this.handling, this.brandNew, this.sale, this.priceSale, this.saleFromDate, this.saleToDate, this.category, this.images, this.colors);
+    }
+
   }
 
 }

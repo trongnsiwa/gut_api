@@ -45,14 +45,10 @@ public class ColorServiceImpl implements ColorService {
   }
 
   @Override
-  public ResponseEntity<?> updateColor(Color color, Optional<Integer> id) {
-    if (!id.isPresent()) {
-      return customResponseEntity.generateMessageResponseEntity("Please provide color Id.", HttpStatus.BAD_REQUEST);
-    }
-
-    Optional<Color> oldColor = colorRepository.findById(id.get());
+  public ResponseEntity<?> updateColor(Color color, Integer id) {
+    Optional<Color> oldColor = colorRepository.findById(id);
     if (!oldColor.isPresent()) {
-      return customResponseEntity.generateMessageResponseEntity(String.format("Color %d is not found.", id.get()), HttpStatus.NOT_FOUND);
+      throw new CustomNotFoundException(String.format("Color %d", id));
     }
 
     boolean isUniqueName = colorRepository.existsByName(color.getName());
@@ -68,28 +64,24 @@ public class ColorServiceImpl implements ColorService {
     
     colorRepository.save(newCategory);
 
-    return customResponseEntity.generateMessageResponseEntity( String.format("Update color %d successful!", id.get()), HttpStatus.OK);
+    return customResponseEntity.generateMessageResponseEntity( String.format("Update color %d successful!", id), HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<?> deleteColor(Optional<Integer> id) {
-    if (!id.isPresent()) {
-      return customResponseEntity.generateMessageResponseEntity("Please provide color Id.", HttpStatus.BAD_REQUEST);
-    }
-    
-    boolean existedColorId = colorRepository.existsById(id.get());
+  public ResponseEntity<?> deleteColor(Integer id) {
+    boolean existedColorId = colorRepository.existsById(id);
     if (!existedColorId) {
-      return customResponseEntity.generateMessageResponseEntity(String.format("Category group %d is not found.", id.get()), HttpStatus.NOT_FOUND);
+      throw new CustomNotFoundException(String.format("Category group %d", id));
     }
 
-    boolean stillJoining = colorRepository.existsJoiningColor(id.get());
+    boolean stillJoining = colorRepository.existsJoiningColor(id);
     if (stillJoining) {
       return customResponseEntity.generateMessageResponseEntity("There are some products still have this color.", HttpStatus.CONFLICT);
     }
 
-    colorRepository.deleteById(id.get());
+    colorRepository.deleteById(id);
 
-    return customResponseEntity.generateMessageResponseEntity(String.format("Delete color %d successful.", id.get()), HttpStatus.OK);
+    return customResponseEntity.generateMessageResponseEntity(String.format("Delete color %d successful.", id), HttpStatus.OK);
   }
   
 }

@@ -1,12 +1,13 @@
 package com.ecommerce.gut.controller;
 
-import java.util.Optional;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.service.ColorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @RestController
 @RequestMapping("/api/color")
 @Tag(name = "color")
+@Validated
 public class ColorController {
   
   @Autowired
@@ -42,7 +44,7 @@ public class ColorController {
       @ApiResponse(responseCode = "404", description = "Not found color", content = @Content),
   })
   @GetMapping("/{id}")
-  public Color getColorById(@PathVariable(name = "id") Integer id) {
+  public Color getColorById(@PathVariable(name = "id") @Min(1) Integer id) {
     return colorService.getColorById(id);
   }
   
@@ -72,7 +74,7 @@ public class ColorController {
   })
   @PutMapping("/update/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> updateColor(@Valid @RequestBody Color color, @PathVariable(name = "id") Optional<Integer> id) {
+  public ResponseEntity<?> updateColor(@Valid @RequestBody Color color, @PathVariable(name = "id") @Min(1) Integer id) {
     return colorService.updateColor(color, id);
   }
 
@@ -88,7 +90,7 @@ public class ColorController {
   })
   @DeleteMapping("/delete/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> deleteColor(@PathVariable(name = "id") Optional<Integer> id) {
+  public ResponseEntity<?> deleteColor(@PathVariable(name = "id") @Min(1) Integer id) {
     return colorService.deleteColor(id);
   }
 

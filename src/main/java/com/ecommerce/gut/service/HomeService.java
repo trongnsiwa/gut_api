@@ -1,11 +1,12 @@
 package com.ecommerce.gut.service;
 
-import org.springframework.http.ResponseEntity;
+import java.util.Collection;
+import com.ecommerce.gut.entity.Product;
 
 public interface HomeService {
   
-  ResponseEntity<?> getNewProducts(int size);
+  Collection<Product> getNewProducts(int size);
 
-  ResponseEntity<?> getLimitedProducts(int size);
+  Collection<Product> getSaleProducts(int size);
 
 }

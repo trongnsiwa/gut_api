@@ -1,14 +1,15 @@
 package com.ecommerce.gut.controller;
 
 import java.util.Collection;
-import java.util.Optional;
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
 import com.ecommerce.gut.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/category")
 @Tag(name = "category")
+@Validated
 public class CategoryController {
 
   @Autowired
@@ -58,7 +60,7 @@ public class CategoryController {
       @ApiResponse(responseCode = "404", description = "Not found category group", content = @Content),
   })
   @GetMapping("/group/{id}")
-  public CategoryGroup getCategoryGroupById(@PathVariable("id") Long groupId) {
+  public CategoryGroup getCategoryGroupById(@PathVariable("id") @Min(1) Long groupId) {
     return categoryService.getCategoryGroupById(groupId);
   }
 
@@ -85,7 +87,7 @@ public class CategoryController {
   })
   @PostMapping("/group/{groupId}/add")
   public ResponseEntity<?> addCategoryToGroup(@Valid @RequestBody Category category,
-      @PathVariable("groupId") Optional<Long> groupId) {
+      @PathVariable("groupId") @Min(1) Long groupId) {
     return categoryService.addCategoryToGroup(category, groupId);
   }
 
@@ -100,7 +102,7 @@ public class CategoryController {
   @PutMapping("/group/update/{id}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> updateCategoryGroup(@Valid @RequestBody CategoryGroup categoryGroup,
-      @PathVariable("id") Optional<Long> id) {
+      @PathVariable("id") @Min(1) Long id) {
     return categoryService.updateCategoryGroup(categoryGroup, id);
   }
 
@@ -115,7 +117,7 @@ public class CategoryController {
   @PutMapping("/group/{groupId}/update/{id}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> updateCategory(@Valid @RequestBody Category category,
-      @PathVariable("id") Optional<Long> id, Optional<Long> groupId) {
+      @PathVariable("id") @Min(1) Long id, @Min(1) Long groupId) {
     return categoryService.updateCategory(category, id, groupId);
   }
 
@@ -127,7 +129,7 @@ public class CategoryController {
   })
   @DeleteMapping("/delete/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> deleteCategory(@PathVariable("id") Optional<Long> id) {
+  public ResponseEntity<?> deleteCategory(@PathVariable("id") @Min(1) Long id) {
     return categoryService.deleteCategory(id);
   }
 
@@ -141,7 +143,7 @@ public class CategoryController {
   })
   @DeleteMapping("/group/delete/{id}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> deleteCategoryGroup(@PathVariable("id") Optional<Long> id) {
+  public ResponseEntity<?> deleteCategoryGroup(@PathVariable("id") @Min(1) Long id) {
     return categoryService.deleteCategoryGroup(id);
   }
 

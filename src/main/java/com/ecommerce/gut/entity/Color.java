@@ -1,14 +1,18 @@
 package com.ecommerce.gut.entity;
 
+import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,10 +38,15 @@ public class Color {
 
   @NotBlank(message = "Color name must not be blank.")
   @Size(max = 50, message = "Color name must be lower than 50 characters.")
-  @Column(name = "color_name", length = 50)
+  @Column(name = "color_name", length = 50, nullable = false)
   private String name;
 
-  @Column(name = "source", columnDefinition = "TEXT")
+  @NotBlank(message = "Source must not be blank.")
+  @Column(name = "source", columnDefinition = "TEXT", nullable = false)
   private String source;
+
+  @ManyToMany(mappedBy = "colors", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+  @JsonIgnore
+  Set<Product> products;
 
 }

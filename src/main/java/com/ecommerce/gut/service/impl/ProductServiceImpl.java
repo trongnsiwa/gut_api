@@ -1,56 +1,267 @@
 package com.ecommerce.gut.service.impl;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import com.ecommerce.gut.dto.ProductImageDto;
+import com.ecommerce.gut.entity.Category;
+import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.entity.Product;
 import com.ecommerce.gut.entity.ProductImage;
+import com.ecommerce.gut.exception.CustomNotFoundException;
+import com.ecommerce.gut.payload.request.ImageListRequest;
+import com.ecommerce.gut.payload.request.ProductRequest;
+import com.ecommerce.gut.repository.CategoryRepository;
+import com.ecommerce.gut.repository.ColorRepository;
+import com.ecommerce.gut.repository.ProductImageRepository;
+import com.ecommerce.gut.repository.ProductRepository;
 import com.ecommerce.gut.service.ProductService;
+import com.ecommerce.gut.util.CustomResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-public class ProductServiceImpl implements ProductService  {
+@Service
+public class ProductServiceImpl implements ProductService {
+
+  @Autowired
+  ProductRepository productRepository;
+
+  @Autowired
+  ColorRepository colorRepository;
+
+  @Autowired
+  ProductImageRepository imageRepository;
+
+  @Autowired
+  CategoryRepository categoryRepository;
+
+  @Autowired
+  CustomResponseEntity customResponseEntity;
 
   @Override
   public ResponseEntity<?> getProductsByCategoryIdPerPage(Long categoryId, int pageNumber,
-      int pageSize) {
-    // TODO Auto-generated method stub
-    return null;
+      int pageSize, String sortBy) {
+    Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+    if (!existedCategory.isPresent()) {
+      throw new CustomNotFoundException(String.format("Category %d", categoryId));
+    }
+
+    Sort sort = null;
+    switch (sortBy) {
+      case "CHEAPEST":
+        sort = Sort.by("price").ascending()
+            .and(Sort.by("sale").descending())
+            .and(Sort
+                .by(new Sort.Order(Sort.Direction.ASC, "price_sale",
+                    Sort.NullHandling.NULLS_LAST))
+                .and(
+                    Sort.by(new Sort.Order(Sort.Direction.ASC, "sale_from_date",
+                        Sort.NullHandling.NULLS_LAST))
+                        .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "sale_to_date",
+                            Sort.NullHandling.NULLS_LAST)))))
+            .and(Sort.by("brand_new").descending())
+            .and(Sort.by("updated_date").descending());
+        break;
+      case "HIGHEST":
+        sort = Sort.by("price").descending()
+            .and(Sort.by("brand_new").descending())
+            .and(Sort.by("sale").descending()
+                .and(Sort
+                    .by(new Sort.Order(Sort.Direction.DESC, "price_sale",
+                        Sort.NullHandling.NULLS_LAST))
+                    .and(
+                        Sort.by(new Sort.Order(Sort.Direction.ASC, "sale_from_date",
+                            Sort.NullHandling.NULLS_LAST))
+                            .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "sale_to_date",
+                                Sort.NullHandling.NULLS_LAST))))))
+            .and(Sort.by("updated_date").descending());
+        break;
+      default:
+        sort = Sort.by("brand_new").descending()
+            .and(Sort.by("sale").descending())
+            .and(
+                Sort.by(new Sort.Order(Sort.Direction.ASC, "sale_from_date",
+                    Sort.NullHandling.NULLS_LAST))
+                    .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "sale_to_date",
+                        Sort.NullHandling.NULLS_LAST))))
+            .and(Sort.by("updated_date").descending());
+        break;
+    }
+
+    PageRequest request = PageRequest.of(pageNumber - 1, pageSize, sort);
+    return ResponseEntity
+        .ok(productRepository.getProductsByCategoryId(categoryId, request).getContent());
   }
 
   @Override
   public Product getProductDetail(Long id) {
-    // TODO Auto-generated method stub
-    return null;
+    return productRepository.findById(id)
+        .orElseThrow(() -> new CustomNotFoundException(String.format("Product %d", id)));
   }
 
   @Override
-  public ResponseEntity<?> addProductToCategory(Product product, Long categoryId) {
-    // TODO Auto-generated method stub
-    return null;
+  public ResponseEntity<?> addProductToCategory(ProductRequest productRequest, Long categoryId) {
+    Optional<Category> existedCategory =
+        categoryRepository.findById(categoryId);
+    if (!existedCategory.isPresent()) {
+      throw new CustomNotFoundException(
+          String.format("Category %d", categoryId));
+    }
+
+    if (productRequest.getId() > 0) {
+      boolean existedProduct = productRepository.existsById(productRequest.getId());
+      if (existedProduct) {
+        return customResponseEntity.generateMessageResponseEntity(
+            String.format("Product %d is already taken.", productRequest.getId()),
+            HttpStatus.CONFLICT);
+      }
+    }
+
+    Set<Color> colors = productRequest.getColors().stream().map(id -> colorRepository.findById(id)
+        .orElseThrow(() -> new CustomNotFoundException(String.format("Color %d", id))))
+        .collect(Collectors.toSet());
+
+    Product product = new Product.Builder(productRequest.getId(), productRequest.getName())
+        .withPrice(productRequest.getPrice())
+        .withDescription(productRequest.getShortDesc(), productRequest.getLongDesc(),
+            productRequest.getMaterial(), productRequest.getHandling())
+        .withNew(true)
+        .withSale(productRequest.isSale(), productRequest.getPriceSale(),
+            productRequest.getSaleFromDate(), productRequest.getSaleToDate())
+        .withCategory(existedCategory.get())
+        .withColors(colors)
+        .build();
+
+    productRepository.save(product);
+
+    return customResponseEntity
+        .generateMessageResponseEntity(String.format("Add product %s to category %s successful!",
+            product.getName(), existedCategory.get().getName()), HttpStatus.CREATED);
   }
 
   @Override
-  public ResponseEntity<?> updateProduct(Product product, Long id, Long categoryId) {
-    // TODO Auto-generated method stub
-    return null;
-  }
+  public ResponseEntity<?> updateProduct(ProductRequest productRequest, Long id, Long categoryId) {
+    Optional<Category> existedCategory =
+        categoryRepository.findById(categoryId);
+    if (!existedCategory.isPresent()) {
+      throw new CustomNotFoundException(
+          String.format("Category %d", categoryId));
+    }
 
-  @Override
-  public ResponseEntity<?> deleteProduct(Long id) {
-    // TODO Auto-generated method stub
-    return null;
-  }
+    Optional<Product> existedProduct = productRepository.findById(id);
+    if (!existedProduct.isPresent()) {
+      throw new CustomNotFoundException(String.format("Product %d", id));
+    }
 
-  @Override
-  public ResponseEntity<?> replaceImagesOfProduct(Collection<ProductImage> images, Long id,
-      Long productId) {
-    // TODO Auto-generated method stub
-    return null;
-  }
+    Set<Color> colors = productRequest.getColors().stream()
+        .map(colorId -> colorRepository.findById(colorId)
+            .orElseThrow(() -> new CustomNotFoundException(String.format("Color %d", colorId))))
+        .collect(Collectors.toSet());
+    
+    Product product = existedProduct.get();
+    product.setName(productRequest.getName());
+    product.setPrice(productRequest.getPrice());
+    product.setShortDesc(productRequest.getShortDesc());
+    product.setLongDesc(productRequest.getLongDesc());
+    product.setMaterial(productRequest.getMaterial());
+    product.setHandling(productRequest.getHandling());
+    product.setBrandNew(false);
+    product.setSale(productRequest.isSale());
+    product.setPriceSale(productRequest.getPriceSale());
+    product.setSaleFromDate(productRequest.getSaleFromDate());
+    product.setSaleToDate(productRequest.getSaleToDate());
+    product.setCategory(existedCategory.get());
+    product.setColors(colors);
 
-  @Override
-  public ResponseEntity<?> replaceColorsOfProduct(Long productId, Set<Integer> colors) {
-    // TODO Auto-generated method stub
-    return null;
+    productRepository.save(product);
+
+    return customResponseEntity.generateMessageResponseEntity(
+        String.format("Update product %d successful!", id), HttpStatus.OK);
   }
   
+  @Override
+  @Transactional
+  public ResponseEntity<?> deleteProduct(Long id) {
+    Optional<Product> existedProduct = productRepository.findById(id);
+    if (!existedProduct.isPresent()) {
+      throw new CustomNotFoundException(String.format("Product %d", id));
+    }
+
+    Product product = existedProduct.get();
+    product.getColors().removeAll(product.getColors());
+    product.getProductImages().clear();
+
+    Optional<Category> category = categoryRepository.findById(product.getCategory().getId());
+    if (category.isPresent()) {
+      category.get().getProducts().remove(product);
+    }
+
+    productRepository.delete(product);
+
+    return customResponseEntity.generateMessageResponseEntity(
+        String.format("Delete category %d successful.", id), HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<?> replaceImagesOfProduct(ImageListRequest imageListRequest, Long id) {
+    Optional<Product> existedProduct = productRepository.findById(id);
+    if (!existedProduct.isPresent()) {
+      throw new CustomNotFoundException(String.format("Product %d", id));
+    }
+
+    Collection<ProductImageDto> images = imageListRequest.getImages();
+
+    if (images.isEmpty()) {
+      imageRepository.deleteAllByProductId(id);
+
+      return customResponseEntity.generateMessageResponseEntity(
+          String.format("Delete all images of product %d successful.", id), HttpStatus.OK);
+    }
+
+    imageListRequest.getImages().stream().forEach(image -> {
+      Optional<Color> color = colorRepository.findById(image.getColorCode());
+
+      if (!color.isPresent()) {
+        throw new CustomNotFoundException(String.format("Color %d", image.getColorCode()));
+      }
+    });
+
+    List<ProductImage> existedImages = imageRepository.findAllImageIdsByProductId(id);
+
+    existedImages.stream().forEach(image -> {
+      boolean notReplaced =
+          imageListRequest.getImages().stream().noneMatch(img -> img.getId().equals(image.getId()));
+
+      if (notReplaced) {
+        imageRepository.deleteByIdAndProductId(Long.valueOf(String.valueOf(image.getId())), id);
+      }
+    });
+
+    imageListRequest.getImages().stream().forEach(image -> imageRepository.findById(image.getId())
+        .map(existedImage -> {
+          existedImage.setImageUrl(image.getImageUrl());
+          existedImage.setProduct(existedProduct.get());
+          existedImage.setColorCode(image.getColorCode());
+
+          return imageRepository.save(existedImage);
+        })
+        .orElseGet(() -> {
+          var productImage =
+              new ProductImage(image.getId(), existedProduct.get(), image.getImageUrl(),
+                  image.getTitle(), image.getColorCode());
+
+          return imageRepository.save(productImage);
+        }));
+
+    return customResponseEntity.generateMessageResponseEntity(
+        String.format("Update images of product %d successful.", id), HttpStatus.OK);
+  }
+
 }

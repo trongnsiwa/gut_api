@@ -2,6 +2,7 @@ package com.ecommerce.gut.entity;
 
 import java.util.Collection;
 import java.util.Objects;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -43,7 +44,7 @@ public class Category {
   @Schema(hidden = true)
   private CategoryGroup categoryGroup;
 
-  @OneToMany(fetch = FetchType.EAGER, mappedBy = "category")
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "category", orphanRemoval = true, cascade = { CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH, CascadeType.REMOVE})
   @JsonIgnore
   @Schema(hidden = true)
   private Collection<Product> products;

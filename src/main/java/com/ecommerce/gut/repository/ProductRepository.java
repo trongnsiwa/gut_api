@@ -37,9 +37,11 @@ public interface ProductRepository extends PagingAndSortingRepository<Product, L
     value = "SELECT product_id, product_name, price, quantity, "
           + "short_desc, updated_date " 
           + "FROM products "
-          + "WHERE category_id = ?1 "
-          + "ORDER BY updated_date DESC ",
-    countQuery = "SELECT count(*) FROM products",
+          + "WHERE category_id = ?{categoryId} "
+          + "ORDER BY ?{#pageable}",
+    countQuery = "SELECT count(*) "
+               + "FROM products "
+               + "WHERE category_id = ?{categoryId}",
     nativeQuery = true
   )
   Page<Product> getProductsByCategoryId(Long categoryId, Pageable pageable);

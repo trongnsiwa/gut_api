@@ -1,26 +1,21 @@
 package com.ecommerce.gut.service;
 
-import java.util.Collection;
-import java.util.Set;
-
 import com.ecommerce.gut.entity.Product;
-import com.ecommerce.gut.entity.ProductImage;
+import com.ecommerce.gut.payload.request.ImageListRequest;
+import com.ecommerce.gut.payload.request.ProductRequest;
 import org.springframework.http.ResponseEntity;
 
 public interface ProductService {
   
-  ResponseEntity<?> getProductsByCategoryIdPerPage(Long categoryId, int pageNumber, int pageSize);
+  ResponseEntity<?> getProductsByCategoryIdPerPage(Long categoryId, int pageNumber, int pageSize, String sortBy);
 
   Product getProductDetail(Long id);
 
-  ResponseEntity<?> addProductToCategory(Product product, Long categoryId);
+  ResponseEntity<?> addProductToCategory(ProductRequest productRequest, Long categoryId);
 
-  ResponseEntity<?> updateProduct(Product product, Long id, Long categoryId);
+  ResponseEntity<?> updateProduct(ProductRequest productRequest, Long id, Long categoryId);
 
   ResponseEntity<?> deleteProduct(Long id);
 
-  ResponseEntity<?> replaceImagesOfProduct(Collection<ProductImage> images, Long id, Long productId);
-
-  ResponseEntity<?> replaceColorsOfProduct(Long productId, Set<Integer> colors);
-
+  ResponseEntity<?> replaceImagesOfProduct(ImageListRequest imageListRequest, Long id);
 }
