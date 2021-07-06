@@ -7,8 +7,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
+import com.ecommerce.gut.dto.ColorSizeDto;
 
 public class ProductRequest {
   private Long id;
@@ -44,9 +44,9 @@ public class ProductRequest {
 
   private Date saleToDate;
   
-  @NotEmpty(message = "Please provide colors for this product.")
-  private Set<@NotNull @Positive @Min(1) Integer> colors = new HashSet<>();
-
+  @NotEmpty(message = "Please provide color ans its sizes for this product.")
+  private Set<ColorSizeDto> colorSizes = new HashSet<>();
+  
   public ProductRequest() {
   }
 
@@ -169,12 +169,13 @@ public class ProductRequest {
     this.saleToDate = saleToDate;
   }
 
-  public Set<Integer> getColors() {
-    return colors;
+  public Set<ColorSizeDto> getColorSizes() {
+    return this.colorSizes;
   }
 
-  public void setColors(Set<Integer> colors) {
-    this.colors = colors;
+  public void setColorSizes(Set<ColorSizeDto> colorSizes) {
+    this.colorSizes = colorSizes;
   }
-  
+
+
 }

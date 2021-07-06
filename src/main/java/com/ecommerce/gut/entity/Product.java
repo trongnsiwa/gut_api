@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -13,8 +14,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -25,15 +24,17 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.AccessMode;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@EqualsAndHashCode
 @Entity
 @Table(name = "products")
 public class Product {
-  
+
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   @Column(name = "product_id")
@@ -61,7 +62,7 @@ public class Product {
   @Column(name = "created_date", updatable = false)
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private Date createdDate;
-  
+
   @UpdateTimestamp
   @Column(name = "updated_date")
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -90,24 +91,19 @@ public class Product {
   @Schema(hidden = true)
   private Category category;
 
-  @OneToMany(fetch = FetchType.LAZY, mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "product", cascade = CascadeType.ALL,
+      orphanRemoval = true)
   @JsonManagedReference
   @Schema(accessMode = AccessMode.READ_ONLY)
   private Collection<ProductImage> productImages = new ArrayList<>();
 
-  @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST})
-  @JoinTable(
-      name = "product_colors",
-      joinColumns = @JoinColumn(
-          name = "product_id"),
-      inverseJoinColumns = @JoinColumn(
-          name = "color_id"))
-  private Set<Color> colors = new HashSet<>();
+  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<ProductColor> colors = new HashSet<>();
 
   public Product(String name, double price, String shortDesc, String longDesc,
       String material, String handling, boolean brandNew, boolean sale, Double priceSale,
       Date saleFromDate, Date saleToDate, Category category,
-      Collection<ProductImage> productImages, Set<Color> colors) {
+      Collection<ProductImage> productImages) {
     this.name = name;
     this.price = price;
     this.shortDesc = shortDesc;
@@ -121,7 +117,6 @@ public class Product {
     this.saleToDate = saleToDate;
     this.category = category;
     this.productImages = productImages;
-    this.colors = colors;
   }
 
   public Long getId() {
@@ -256,12 +251,34 @@ public class Product {
     return this.productImages;
   }
 
-  public Set<Color> getColors() {
+  public void setProductImages(Collection<ProductImage> productImages) {
+    this.productImages = productImages;
+  }
+
+  public Set<ProductColor> getColors() {
     return this.colors;
   }
 
-  public void setColors(Set<Color> colors) {
+  public void setColors(Set<ProductColor> colors) {
     this.colors = colors;
+  }
+
+  public void addColor(ProductColor productColor) {
+    colors.add(productColor);
+  }
+
+  public void removeColor(Color color) {
+    for (Iterator<ProductColor> iterator = colors.iterator(); iterator.hasNext();) {
+      ProductColor productColor = iterator.next();
+
+      if (productColor.getProduct().equals(this) &&
+          productColor.getColor().equals(color)) {
+        iterator.remove();
+        productColor.getColor().getProducts().remove(productColor);
+        productColor.setProduct(null);
+        productColor.setColor(null);
+      }
+    }
   }
 
   public static class Builder {
@@ -278,7 +295,6 @@ public class Product {
     private Date saleToDate;
     private Category category;
     private Collection<ProductImage> images;
-    private Set<Color> colors;
 
     public Builder(String name) {
       this.name = name;
@@ -289,7 +305,8 @@ public class Product {
       return this;
     }
 
-    public Builder withDescription(String shortDesc, String longDesc, String material, String handling) {
+    public Builder withDescription(String shortDesc, String longDesc, String material,
+        String handling) {
       this.shortDesc = shortDesc;
       this.longDesc = longDesc;
       this.material = material;
@@ -320,13 +337,10 @@ public class Product {
       return this;
     }
 
-    public Builder withColors(Set<Color> colors) {
-      this.colors = colors;
-      return this;
-    }
-
     public Product build() {
-      return new Product(this.name, this.price, this.shortDesc, this.longDesc, this.material, this.handling, this.brandNew, this.sale, this.priceSale, this.saleFromDate, this.saleToDate, this.category, this.images, this.colors);
+      return new Product(this.name, this.price, this.shortDesc, this.longDesc, this.material,
+          this.handling, this.brandNew, this.sale, this.priceSale, this.saleFromDate,
+          this.saleToDate, this.category, this.images);
     }
 
   }
