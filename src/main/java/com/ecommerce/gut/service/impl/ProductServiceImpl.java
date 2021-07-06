@@ -128,7 +128,7 @@ public class ProductServiceImpl implements ProductService {
         .orElseThrow(() -> new CustomNotFoundException(String.format("Color %d", id))))
         .collect(Collectors.toSet());
 
-    Product product = new Product.Builder(productRequest.getId(), productRequest.getName())
+    Product product = new Product.Builder(productRequest.getName())
         .withPrice(productRequest.getPrice())
         .withDescription(productRequest.getShortDesc(), productRequest.getLongDesc(),
             productRequest.getMaterial(), productRequest.getHandling())
@@ -195,15 +195,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     Product product = existedProduct.get();
-    product.getColors().removeAll(product.getColors());
+    product.getColors().clear();
     product.getProductImages().clear();
 
-    Optional<Category> category = categoryRepository.findById(product.getCategory().getId());
-    if (category.isPresent()) {
-      category.get().getProducts().remove(product);
+    Optional<Category> existedCategory = categoryRepository.findById(product.getCategory().getId());
+    if (!existedCategory.isPresent()) {
+      throw new CustomNotFoundException(String.format("Category %d", product.getCategory().getId()));
     }
 
-    productRepository.delete(product);
+    Category category = existedCategory.get();
+    category.getProducts().remove(product);
+    categoryRepository.save(category);
 
     return customResponseEntity.generateMessageResponseEntity(
         String.format("Delete category %d successful.", id), HttpStatus.OK);

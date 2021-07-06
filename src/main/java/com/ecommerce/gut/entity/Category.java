@@ -1,5 +1,6 @@
 package com.ecommerce.gut.entity;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 import javax.persistence.CascadeType;
@@ -44,10 +45,10 @@ public class Category {
   @Schema(hidden = true)
   private CategoryGroup categoryGroup;
 
-  @OneToMany(fetch = FetchType.LAZY, mappedBy = "category", orphanRemoval = true, cascade = { CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH, CascadeType.REMOVE})
+  @OneToMany(fetch = FetchType.LAZY,mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonIgnore
   @Schema(hidden = true)
-  private Collection<Product> products;
+  private Collection<Product> products = new ArrayList<>();
 
   public Category() {
   }
@@ -84,10 +85,6 @@ public class Category {
 
   public Collection<Product> getProducts() {
     return this.products;
-  }
-
-  public void setProducts(Collection<Product> products) {
-    this.products = products;
   }
 
   @Override

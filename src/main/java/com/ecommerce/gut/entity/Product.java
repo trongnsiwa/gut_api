@@ -1,5 +1,6 @@
 package com.ecommerce.gut.entity;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -34,7 +35,7 @@ import lombok.NoArgsConstructor;
 public class Product {
   
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.AUTO)
   @Column(name = "product_id")
   private Long id;
 
@@ -57,12 +58,12 @@ public class Product {
   private String handling;
 
   @CreationTimestamp
-  @Column(name = "created_date", nullable = false)
+  @Column(name = "created_date", updatable = false)
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private Date createdDate;
   
   @UpdateTimestamp
-  @Column(name = "updated_date", nullable = false)
+  @Column(name = "updated_date")
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private Date updatedDate;
 
@@ -83,18 +84,18 @@ public class Product {
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private Date saleToDate;
 
-  @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "category_id", nullable = true)
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "category_id")
   @JsonIgnore
   @Schema(hidden = true)
   private Category category;
 
-  @OneToMany(fetch = FetchType.LAZY, mappedBy = "product", cascade = { CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH, CascadeType.REMOVE}, orphanRemoval = true)
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonManagedReference
   @Schema(accessMode = AccessMode.READ_ONLY)
-  private Collection<ProductImage> productImages;
+  private Collection<ProductImage> productImages = new ArrayList<>();
 
-  @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+  @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST})
   @JoinTable(
       name = "product_colors",
       joinColumns = @JoinColumn(
@@ -103,11 +104,10 @@ public class Product {
           name = "color_id"))
   private Set<Color> colors = new HashSet<>();
 
-  public Product(Long id, String name, double price, String shortDesc, String longDesc,
+  public Product(String name, double price, String shortDesc, String longDesc,
       String material, String handling, boolean brandNew, boolean sale, Double priceSale,
       Date saleFromDate, Date saleToDate, Category category,
       Collection<ProductImage> productImages, Set<Color> colors) {
-    this.id = id;
     this.name = name;
     this.price = price;
     this.shortDesc = shortDesc;
@@ -265,7 +265,6 @@ public class Product {
   }
 
   public static class Builder {
-    private Long id;
     private String name;
     private double price;
     private String shortDesc;
@@ -281,8 +280,7 @@ public class Product {
     private Collection<ProductImage> images;
     private Set<Color> colors;
 
-    public Builder(Long id, String name) {
-      this.id = id;
+    public Builder(String name) {
       this.name = name;
     }
 
@@ -328,7 +326,7 @@ public class Product {
     }
 
     public Product build() {
-      return new Product(this.id, this.name, this.price, this.shortDesc, this.longDesc, this.material, this.handling, this.brandNew, this.sale, this.priceSale, this.saleFromDate, this.saleToDate, this.category, this.images, this.colors);
+      return new Product(this.name, this.price, this.shortDesc, this.longDesc, this.material, this.handling, this.brandNew, this.sale, this.priceSale, this.saleFromDate, this.saleToDate, this.category, this.images, this.colors);
     }
 
   }

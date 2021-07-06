@@ -1,5 +1,6 @@
 package com.ecommerce.gut.entity;
 
+import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -32,7 +33,7 @@ import lombok.Setter;
 public class Color {
   
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.AUTO)
   @Column(name = "color_id")
   private Integer id;
 
@@ -47,6 +48,6 @@ public class Color {
 
   @ManyToMany(mappedBy = "colors", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
   @JsonIgnore
-  Set<Product> products;
+  Set<Product> products = new HashSet<>();
 
 }
