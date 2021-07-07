@@ -11,6 +11,7 @@ import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -52,11 +53,23 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(CustomNotFoundException.class)
   public ResponseEntity<MessageResponse> handleCustomItemNotFoundException(
       CustomNotFoundException ex) {
+    LOGGER.error("Handling " + ex.getClass().getSimpleName() + " due to " + ex.getMessage());
 
     HttpHeaders headers = new HttpHeaders();
 
     return new ResponseEntity<>(new MessageResponse(ex.getMessage()), headers,
         HttpStatus.NOT_FOUND);
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<MessagesResponse> handleHttpMessageNotReadableException(
+      HttpMessageNotReadableException e)  {
+
+    Map<String, String> errorResponse = new HashMap<>();
+    errorResponse.put("message", e.getLocalizedMessage());
+    errorResponse.put("status", HttpStatus.BAD_REQUEST.toString());
+
+    return new ResponseEntity<>(new MessagesResponse(errorResponse), HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(ConversionFailedException.class)

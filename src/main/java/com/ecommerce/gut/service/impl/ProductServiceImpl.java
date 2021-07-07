@@ -2,18 +2,16 @@ package com.ecommerce.gut.service.impl;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import com.ecommerce.gut.dto.ProductImageDto;
+import com.ecommerce.gut.dto.ImageListDTO;
+import com.ecommerce.gut.dto.ProductDTO;
+import com.ecommerce.gut.dto.ProductImageDTO;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.entity.PSize;
 import com.ecommerce.gut.entity.Product;
-import com.ecommerce.gut.entity.ProductColor;
 import com.ecommerce.gut.entity.ProductImage;
 import com.ecommerce.gut.exception.CustomNotFoundException;
-import com.ecommerce.gut.payload.request.ImageListRequest;
-import com.ecommerce.gut.payload.request.ProductRequest;
 import com.ecommerce.gut.repository.CategoryRepository;
 import com.ecommerce.gut.repository.ColorRepository;
 import com.ecommerce.gut.repository.PSizeRepository;
@@ -112,7 +110,7 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public ResponseEntity<?> addProductToCategory(ProductRequest productRequest, Long categoryId) {
+  public ResponseEntity<?> addProductToCategory(ProductDTO productRequest, Long categoryId) {
     Optional<Category> existedCategory =
         categoryRepository.findById(categoryId);
     if (!existedCategory.isPresent()) {
@@ -139,28 +137,19 @@ public class ProductServiceImpl implements ProductService {
         .withCategory(existedCategory.get())
         .build();
 
-    productRequest.getColorSizes().stream().forEach(colorSize -> {
+    productRequest.getColors().stream().forEach(colorSize -> {
       Color color = colorRepository.findById(colorSize.getColorId())
           .orElseThrow(
               () -> new CustomNotFoundException(String.format("Color %d", colorSize.getColorId())));
 
-      ProductColor productColor = new ProductColor(product, color);
-
-      Map<Integer, Integer> sizes = colorSize.getSizes();
-
-      sizes.entrySet().stream()
+      colorSize.getSizes().entrySet().stream()
           .forEach(entry -> {
-            Optional<PSize> pSize = pSizeRepository.findById(entry.getKey());
-            if (!pSize.isPresent()) {
-              throw new CustomNotFoundException(String.format("Size %d", entry.getKey()));
-            }
+            PSize size = pSizeRepository.findById(entry.getKey())
+                .orElseThrow(
+                    () -> new CustomNotFoundException(String.format("Size %s", entry.getKey())));
 
-            productColor.addColorSize(pSize.get(), entry.getValue());
+            product.addColorSize(color, size, entry.getValue());
           });
-      
-      color.getProducts().add(productColor);
-      productColor.setColor(color);
-      product.addColor(productColor);
     });
 
     productRepository.save(product);
@@ -171,7 +160,7 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public ResponseEntity<?> updateProduct(ProductRequest productRequest, Long id, Long categoryId) {
+  public ResponseEntity<?> updateProduct(ProductDTO productRequest, Long id, Long categoryId) {
     Optional<Category> existedCategory =
         categoryRepository.findById(categoryId);
     if (!existedCategory.isPresent()) {
@@ -197,30 +186,21 @@ public class ProductServiceImpl implements ProductService {
     product.setSaleFromDate(productRequest.getSaleFromDate());
     product.setSaleToDate(productRequest.getSaleToDate());
     product.setCategory(existedCategory.get());
-    product.getColors().clear();
+    product.getColorSizes().clear();
 
-    productRequest.getColorSizes().stream().forEach(colorSize -> {
+    productRequest.getColors().stream().forEach(colorSize -> {
       Color color = colorRepository.findById(colorSize.getColorId())
           .orElseThrow(
               () -> new CustomNotFoundException(String.format("Color %d", colorSize.getColorId())));
 
-      ProductColor productColor = new ProductColor(product, color);
-
-      Map<Integer, Integer> sizes = colorSize.getSizes();
-
-      sizes.entrySet().stream()
+      colorSize.getSizes().entrySet().stream()
           .forEach(entry -> {
-            Optional<PSize> pSize = pSizeRepository.findById(entry.getKey());
-            if (!pSize.isPresent()) {
-              throw new CustomNotFoundException(String.format("Size %d", entry.getKey()));
-            }
+            PSize size = pSizeRepository.findById(entry.getKey())
+                .orElseThrow(
+                    () -> new CustomNotFoundException(String.format("Size %s", entry.getKey())));
 
-            productColor.addColorSize(pSize.get(), entry.getValue());
+            product.addColorSize(color, size, entry.getValue());
           });
-      
-      color.getProducts().add(productColor);
-      productColor.setColor(color);
-      product.addColor(productColor);
     });
 
     productRepository.save(product);
@@ -239,7 +219,7 @@ public class ProductServiceImpl implements ProductService {
 
     Product product = existedProduct.get();
     product.getProductImages().clear();
-    product.getColors().clear();
+    product.getColorSizes().clear();
 
     Optional<Category> existedCategory = categoryRepository.findById(product.getCategory().getId());
     if (!existedCategory.isPresent()) {
@@ -256,13 +236,13 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public ResponseEntity<?> replaceImagesOfProduct(ImageListRequest imageListRequest, Long id) {
+  public ResponseEntity<?> replaceImagesOfProduct(ImageListDTO imageListRequest, Long id) {
     Optional<Product> existedProduct = productRepository.findById(id);
     if (!existedProduct.isPresent()) {
       throw new CustomNotFoundException(String.format("Product %d", id));
     }
 
-    Collection<ProductImageDto> images = imageListRequest.getImages();
+    Collection<ProductImageDTO> images = imageListRequest.getImages();
 
     if (images.isEmpty()) {
       imageRepository.deleteAllByProductId(id);

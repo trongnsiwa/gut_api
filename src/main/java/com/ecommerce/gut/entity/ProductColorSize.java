@@ -6,6 +6,7 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 import javax.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,21 +19,29 @@ import lombok.Setter;
 public class ProductColorSize {
   
   @EmbeddedId
+  @JsonIgnore
   private ProductColorSizeId id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @MapsId("productColorId")
-  private ProductColor productColor;
+  @MapsId("productId")
+  @JsonIgnore
+  private Product product;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne
+  @MapsId("colorId")
+  private Color color;
+
+  @ManyToOne
   @MapsId("sizeId")
   private PSize size;
 
   private Integer quantity;
 
-  public ProductColorSize(ProductColor productColor, PSize size) {
-    this.productColor = productColor;
-    this.id = new ProductColorSizeId(productColor.getId(), size.getId());
+  public ProductColorSize(Product product, Color color, PSize size) {
+    this.product = product;
+    this.color = color;
+    this.size = size;
+    this.id = new ProductColorSizeId(product.getId(), color.getId(), size.getId());
   }
 
 }

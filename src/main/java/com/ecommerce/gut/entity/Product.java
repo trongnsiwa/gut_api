@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -98,7 +97,7 @@ public class Product {
   private Collection<ProductImage> productImages = new ArrayList<>();
 
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-  private Set<ProductColor> colors = new HashSet<>();
+  private Set<ProductColorSize> colorSizes = new HashSet<>();
 
   public Product(String name, double price, String shortDesc, String longDesc,
       String material, String handling, boolean brandNew, boolean sale, Double priceSale,
@@ -255,30 +254,18 @@ public class Product {
     this.productImages = productImages;
   }
 
-  public Set<ProductColor> getColors() {
-    return this.colors;
+  public Set<ProductColorSize> getColorSizes() {
+    return this.colorSizes;
   }
 
-  public void setColors(Set<ProductColor> colors) {
-    this.colors = colors;
+  public void setColorSizes(Set<ProductColorSize> colorSizes) {
+    this.colorSizes = colorSizes;
   }
 
-  public void addColor(ProductColor productColor) {
-    colors.add(productColor);
-  }
-
-  public void removeColor(Color color) {
-    for (Iterator<ProductColor> iterator = colors.iterator(); iterator.hasNext();) {
-      ProductColor productColor = iterator.next();
-
-      if (productColor.getProduct().equals(this) &&
-          productColor.getColor().equals(color)) {
-        iterator.remove();
-        productColor.getColor().getProducts().remove(productColor);
-        productColor.setProduct(null);
-        productColor.setColor(null);
-      }
-    }
+  public void addColorSize(Color color, PSize size, int quantity) {
+    ProductColorSize colorSize = new ProductColorSize(this, color, size);
+    colorSize.setQuantity(quantity);
+    colorSizes.add(colorSize);
   }
 
   public static class Builder {

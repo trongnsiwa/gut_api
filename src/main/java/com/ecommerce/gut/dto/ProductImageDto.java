@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class ProductImageDto {
+public class ProductImageDTO {
   private Long id;
 
   @NotBlank(message = "Image URL must not be blank.")

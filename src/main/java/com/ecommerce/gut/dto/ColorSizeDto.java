@@ -7,6 +7,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +16,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ColorSizeDto {
+@EqualsAndHashCode
+public class ColorSizeDTO {
 
   @Positive
   @Min(1)
@@ -23,6 +25,6 @@ public class ColorSizeDto {
   private Integer colorId;
 
   @NotEmpty(message = "Please give size Id and quantity of its size.")
-  private Map<Integer, Integer> sizes = new HashMap<>();
+  private Map<Integer,  Integer> sizes = new HashMap<>();
   
 }

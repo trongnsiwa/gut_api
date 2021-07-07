@@ -4,7 +4,6 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,12 +12,14 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
 @Embeddable
 public class ProductColorSizeId implements Serializable {
 
-  @Column(name = "product_color_id")
-  private Long productColorId;
+  @Column(name = "product_id")
+  private Long productId;
+
+  @Column(name = "color_id")
+  private Integer colorId;
 
   @Column(name = "size_id")
   private Integer sizeId;

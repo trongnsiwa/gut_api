@@ -1,8 +1,7 @@
-package com.ecommerce.gut.payload.request;
+package com.ecommerce.gut.dto;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import com.ecommerce.gut.dto.ProductImageDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,8 +11,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImageListRequest {
+public class ImageListDTO {
   
-  private Collection<ProductImageDto> images = new ArrayList<>();
+  private Collection<ProductImageDTO> images = new ArrayList<>();
 
 }

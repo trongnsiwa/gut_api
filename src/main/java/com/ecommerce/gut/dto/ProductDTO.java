@@ -1,4 +1,4 @@
-package com.ecommerce.gut.payload.request;
+package com.ecommerce.gut.dto;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -8,9 +8,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import com.ecommerce.gut.dto.ColorSizeDto;
 
-public class ProductRequest {
+public class ProductDTO {
   private Long id;
 
   @NotBlank(message = "Name must not be blank.")
@@ -44,13 +43,13 @@ public class ProductRequest {
 
   private Date saleToDate;
   
-  @NotEmpty(message = "Please provide color ans its sizes for this product.")
-  private Set<ColorSizeDto> colorSizes = new HashSet<>();
+  @NotEmpty(message = "Please provide color and its sizes for this product.")
+  private Set<ColorSizeDTO> colors = new HashSet<>();
   
-  public ProductRequest() {
+  public ProductDTO() {
   }
 
-  public ProductRequest(Long id, String name, Double price, String shortDesc, String longDesc, String material, String handling, boolean brandNew, boolean sale, Double priceSale, Date saleFromDate, Date saleToDate) {
+  public ProductDTO(Long id, String name, Double price, String shortDesc, String longDesc, String material, String handling, boolean brandNew, boolean sale, Double priceSale, Date saleFromDate, Date saleToDate) {
     this.id = id;
     this.name = name;
     this.price = price;
@@ -169,13 +168,12 @@ public class ProductRequest {
     this.saleToDate = saleToDate;
   }
 
-  public Set<ColorSizeDto> getColorSizes() {
-    return this.colorSizes;
+  public Set<ColorSizeDTO> getColors() {
+    return this.colors;
   }
 
-  public void setColorSizes(Set<ColorSizeDto> colorSizes) {
-    this.colorSizes = colorSizes;
+  public void setColors(Set<ColorSizeDTO> colors) {
+    this.colors = colors;
   }
-
 
 }

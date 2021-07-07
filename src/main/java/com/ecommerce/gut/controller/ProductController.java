@@ -2,9 +2,9 @@ package com.ecommerce.gut.controller;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import com.ecommerce.gut.dto.ImageListDTO;
+import com.ecommerce.gut.dto.ProductDTO;
 import com.ecommerce.gut.entity.Product;
-import com.ecommerce.gut.payload.request.ImageListRequest;
-import com.ecommerce.gut.payload.request.ProductRequest;
 import com.ecommerce.gut.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +57,7 @@ public class ProductController {
       @ApiResponse(responseCode = "409", description = "Product Id is already taken", content = @Content),
   })
   @PostMapping("/add/{categoryId}")
-  public ResponseEntity<?> addProductToCategory(@Valid @RequestBody ProductRequest productRequest, @PathVariable("categoryId") @Min(1) Long categoryId) {
+  public ResponseEntity<?> addProductToCategory(@Valid @RequestBody ProductDTO productRequest, @PathVariable("categoryId") @Min(1) Long categoryId) {
     return productService.addProductToCategory(productRequest, categoryId);
   }
 
@@ -69,7 +69,7 @@ public class ProductController {
       @ApiResponse(responseCode = "409", description = "Product Id is already taken", content = @Content),
   })
   @PutMapping("/update/{id}/{categoryId}")
-  public ResponseEntity<?> updateProduct(@Valid @RequestBody ProductRequest productRequest, @PathVariable("id") @Min(1) Long id, @PathVariable("categoryId") @Min(1) Long categoryId) {
+  public ResponseEntity<?> updateProduct(@Valid @RequestBody ProductDTO productRequest, @PathVariable("id") @Min(1) Long id, @PathVariable("categoryId") @Min(1) Long categoryId) {
     return productService.updateProduct(productRequest, id, categoryId);
   }
 
@@ -90,7 +90,7 @@ public class ProductController {
       @ApiResponse(responseCode = "404", description = "Product Id is not found", content = @Content),
   })
   @PutMapping("/update/{id}/images")
-  public ResponseEntity<?> replaceImagesOfProduct(@Valid @RequestBody ImageListRequest imageListRequest, @PathVariable("id") @Min(1) Long id) {
+  public ResponseEntity<?> replaceImagesOfProduct(@Valid @RequestBody ImageListDTO imageListRequest, @PathVariable("id") @Min(1) Long id) {
     return productService.replaceImagesOfProduct(imageListRequest, id);
   }
   
