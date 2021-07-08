@@ -1,6 +1,5 @@
-package com.ecommerce.gut.payload.response;
+package com.ecommerce.gut.dto;
 
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -12,8 +11,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class MessagesResponse {
+public class ProductColorSizeDTO {
   
-  private Map<String, String> messages;
-  
+  private ColorDTO color;
+  private SizeDTO size;
+
 }

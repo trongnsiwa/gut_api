@@ -19,9 +19,9 @@ public class ProductColorSizeId implements Serializable {
   private Long productId;
 
   @Column(name = "color_id")
-  private Integer colorId;
+  private Long colorId;
 
   @Column(name = "size_id")
-  private Integer sizeId;
+  private Long sizeId;
 
 }

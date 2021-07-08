@@ -1,6 +1,6 @@
-package com.ecommerce.gut.payload.response;
+package com.ecommerce.gut.dto;
 
-import java.util.Map;
+import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -12,8 +12,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class MessagesResponse {
+public class SizeDTO {
   
-  private Map<String, String> messages;
-  
+  private Long id;
+
+  @Size(max = 10, message = "Size name must be lower than 10.")
+  private String name;
+
 }

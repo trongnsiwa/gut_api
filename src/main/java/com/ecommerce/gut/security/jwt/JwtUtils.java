@@ -1,12 +1,18 @@
 package com.ecommerce.gut.security.jwt;
 
 import java.time.LocalDate;
+
 import java.util.Date;
+
 import javax.crypto.SecretKey;
+
 import com.ecommerce.gut.security.service.UserDetailsImpl;
+
 import com.google.common.net.HttpHeaders;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -92,6 +98,5 @@ public class JwtUtils {
   public int getTokenExpirationAfterDays() {
     return this.tokenExpirationAfterDays;
   }
-
 
 }

@@ -5,12 +5,12 @@ import org.springframework.http.ResponseEntity;
 
 public interface ColorService {
 
-  Color getColorById(Integer id);
+  Color getColorById(Long id);
   
   ResponseEntity<?> addColor(Color color);
 
-  ResponseEntity<?> updateColor(Color color, Integer id);
+  ResponseEntity<?> updateColor(Color color, Long id);
 
-  ResponseEntity<?> deleteColor(Integer id);
+  ResponseEntity<?> deleteColor(Long id);
 
 }

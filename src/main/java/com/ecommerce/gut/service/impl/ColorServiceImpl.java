@@ -1,11 +1,14 @@
 package com.ecommerce.gut.service.impl;
 
 import java.util.Optional;
+
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.exception.CustomNotFoundException;
 import com.ecommerce.gut.repository.ColorRepository;
+import com.ecommerce.gut.repository.ProductColorSizeRepository;
 import com.ecommerce.gut.service.ColorService;
 import com.ecommerce.gut.util.CustomResponseEntity;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +18,18 @@ import org.springframework.stereotype.Service;
 public class ColorServiceImpl implements ColorService {
 
   @Autowired
-  ColorRepository colorRepository;
+  private ColorRepository colorRepository;
 
   @Autowired
-  CustomResponseEntity customResponseEntity;
+  private CustomResponseEntity customResponseEntity;
+
+  @Autowired
+  private ProductColorSizeRepository productColorSizeRepository;
 
   @Override
-  public Color getColorById(Integer id) {
-    return colorRepository.findById(id).orElseThrow(() -> new CustomNotFoundException(String.format("Color %d", id)));
+  public Color getColorById(Long id) {
+    return colorRepository.findById(id)
+        .orElseThrow(() -> new CustomNotFoundException(String.format("Color %d", id)));
   }
 
   @Override
@@ -45,7 +52,7 @@ public class ColorServiceImpl implements ColorService {
   }
 
   @Override
-  public ResponseEntity<?> updateColor(Color color, Integer id) {
+  public ResponseEntity<?> updateColor(Color color, Long id) {
     Optional<Color> oldColor = colorRepository.findById(id);
     if (!oldColor.isPresent()) {
       throw new CustomNotFoundException(String.format("Color %d", id));
@@ -58,23 +65,23 @@ public class ColorServiceImpl implements ColorService {
           HttpStatus.CONFLICT);
     }
 
-    Color newCategory = oldColor.get();
+    var newCategory = oldColor.get();
     newCategory.setName(color.getName());
     newCategory.setSource(color.getSource());
     
     colorRepository.save(newCategory);
 
-    return customResponseEntity.generateMessageResponseEntity( String.format("Update color %d successful!", id), HttpStatus.OK);
+    return customResponseEntity.generateMessageResponseEntity(String.format("Update color %d successful!", id), HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<?> deleteColor(Integer id) {
+  public ResponseEntity<?> deleteColor(Long id) {
     boolean existedColorId = colorRepository.existsById(id);
     if (!existedColorId) {
       throw new CustomNotFoundException(String.format("Category group %d", id));
     }
 
-    boolean stillJoining = colorRepository.existsJoiningColor(id);
+    boolean stillJoining = productColorSizeRepository.existsJoiningColor(id);
     if (stillJoining) {
       return customResponseEntity.generateMessageResponseEntity("There are some products still have this color.", HttpStatus.CONFLICT);
     }

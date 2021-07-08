@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PSizeRepository extends JpaRepository<PSize, Integer> {
+public interface PSizeRepository extends JpaRepository<PSize, Long> {
 
 }

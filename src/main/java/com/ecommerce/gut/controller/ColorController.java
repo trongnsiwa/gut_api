@@ -2,11 +2,12 @@ package com.ecommerce.gut.controller;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import com.ecommerce.gut.dto.ColorDTO;
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.service.ColorService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.*;
@@ -31,8 +33,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class ColorController {
   
   @Autowired
-  ColorService colorService;
+  private ColorService colorService;
 
+  @Autowired
+  private ModelMapper modelMapper;
   
   @Operation(summary = "Get the color by its id")
   @ApiResponses(value = {
@@ -44,11 +48,13 @@ public class ColorController {
       @ApiResponse(responseCode = "404", description = "Not found color", content = @Content),
   })
   @GetMapping("/{id}")
-  public Color getColorById(@PathVariable(name = "id") @Min(1) Integer id) {
-    return colorService.getColorById(id);
+  public ColorDTO getColorById(@PathVariable(name = "id") @Min(1) Long id) {
+    return convertToDto(colorService.getColorById(id));
   }
   
-  @Operation(summary = "Add new color")
+  @Operation(summary = "Add new color",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Color object to be added"))
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "Create new color successful",
           content = @Content(
@@ -57,12 +63,15 @@ public class ColorController {
       @ApiResponse(responseCode = "409", description = "Color id or name is already taken", content = @Content),
   })
   @PostMapping("/add")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> addColor(@Valid @RequestBody Color color) {
+  // @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> addColor(@Valid @RequestBody ColorDTO colorDTO) {
+    Color color = convertToEntity(colorDTO);
     return colorService.addColor(color);
   }
 
-  @Operation(summary = "Update a color by its id")
+  @Operation(summary = "Update a color by its id",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Color object to be updated"))
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Update the color successful",
           content = @Content(
@@ -73,8 +82,9 @@ public class ColorController {
       @ApiResponse(responseCode = "409", description = "Color name is already taken", content = @Content),
   })
   @PutMapping("/update/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> updateColor(@Valid @RequestBody Color color, @PathVariable(name = "id") @Min(1) Integer id) {
+  // @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> updateColor(@Valid @RequestBody ColorDTO colorDTO, @PathVariable(name = "id") @Min(1) Long id) {
+    Color color = convertToEntity(colorDTO);
     return colorService.updateColor(color, id);
   }
 
@@ -89,9 +99,17 @@ public class ColorController {
       @ApiResponse(responseCode = "409", description = "There are some products still have this color", content = @Content),
   })
   @DeleteMapping("/delete/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> deleteColor(@PathVariable(name = "id") @Min(1) Integer id) {
+  // @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> deleteColor(@PathVariable(name = "id") @Min(1) Long id) {
     return colorService.deleteColor(id);
+  }
+  
+  private ColorDTO convertToDto(Color color) {
+    return modelMapper.map(color, ColorDTO.class);
+  }
+
+  private Color convertToEntity(ColorDTO colorDTO) {
+    return modelMapper.map(colorDTO, Color.class);
   }
 
 }

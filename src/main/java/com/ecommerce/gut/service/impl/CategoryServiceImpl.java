@@ -1,7 +1,8 @@
 package com.ecommerce.gut.service.impl;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
 import com.ecommerce.gut.exception.CustomNotFoundException;
@@ -9,6 +10,7 @@ import com.ecommerce.gut.repository.CategoryGroupRepository;
 import com.ecommerce.gut.repository.CategoryRepository;
 import com.ecommerce.gut.service.CategoryService;
 import com.ecommerce.gut.util.CustomResponseEntity;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,30 +20,36 @@ import org.springframework.stereotype.Service;
 public class CategoryServiceImpl implements CategoryService {
 
   @Autowired
-  CategoryGroupRepository categoryGroupRepository;
+  private CategoryGroupRepository categoryGroupRepository;
 
   @Autowired
-  CategoryRepository categoryRepository;
+  private CategoryRepository categoryRepository;
 
   @Autowired
-  CustomResponseEntity customResponseEntity;
+  private CustomResponseEntity customResponseEntity;
 
   @Override
-  public Collection<CategoryGroup> getAllCategoryGroups() {
+  public List<CategoryGroup> getAllCategoryGroups() {
     return categoryGroupRepository.findAll();
   }
 
   @Override
   public CategoryGroup getCategoryGroupById(Long groupId) {
-    return categoryGroupRepository.findById(groupId).orElseThrow(() -> new CustomNotFoundException("Category group"));
+    return categoryGroupRepository.findById(groupId)
+        .orElseThrow(() -> new CustomNotFoundException(String.format("Category group %d", groupId)));
+  }
+
+  @Override
+  public Category getCategoryById(Long id) {
+    return categoryRepository.findById(id)
+        .orElseThrow(() -> new CustomNotFoundException(String.format("Category %d", id)));
   }
 
   @Override
   public ResponseEntity<?> addCategoryGroup(CategoryGroup categoryGroup) {
-
     boolean existed = categoryGroupRepository.existsById(categoryGroup.getId());
     if (existed) {
-      return customResponseEntity.generateMessageResponseEntity("Group Id is already taken.", HttpStatus.CONFLICT);
+      return customResponseEntity.generateMessageResponseEntity(String.format("Group Id %d is already taken.", categoryGroup.getId()), HttpStatus.CONFLICT);
     }
 
     boolean isUniqueName = categoryGroupRepository.existsByName(categoryGroup.getName());
@@ -52,14 +60,13 @@ public class CategoryServiceImpl implements CategoryService {
     categoryGroupRepository.save(categoryGroup);
 
     return customResponseEntity.generateMessageResponseEntity(String.format("Add new category group %s successful!", categoryGroup.getName()), HttpStatus.CREATED);
-
   }
 
   @Override
   public ResponseEntity<?> addCategoryToGroup(Category category, Long groupId) {
     boolean existed = categoryRepository.existsById(category.getId());
     if (existed) {
-      return customResponseEntity.generateMessageResponseEntity("Category Id is already taken.",
+      return customResponseEntity.generateMessageResponseEntity(String.format("Category Id %d is already taken.", category.getId()),
           HttpStatus.CONFLICT);
     }
 
@@ -75,7 +82,7 @@ public class CategoryServiceImpl implements CategoryService {
           HttpStatus.CONFLICT);
     }
 
-    CategoryGroup categoryGroup = group.get();
+    var categoryGroup = group.get();
     category.setCategoryGroup(categoryGroup);
     categoryRepository.save(category);
 
@@ -95,12 +102,12 @@ public class CategoryServiceImpl implements CategoryService {
       return customResponseEntity.generateMessageResponseEntity(String.format("Group name %s is already existed.", categoryGroup.getName()), HttpStatus.CONFLICT);
     }
 
-    CategoryGroup newCategory = oldCategoryGroup.get();
+    var newCategory = oldCategoryGroup.get();
     newCategory.setName(categoryGroup.getName());
     
     categoryGroupRepository.save(newCategory);
 
-    return customResponseEntity.generateMessageResponseEntity( String.format("Update category group %d successful!", id), HttpStatus.OK);
+    return customResponseEntity.generateMessageResponseEntity(String.format("Update category group %d successful!", id), HttpStatus.OK);
   }
 
   @Override
@@ -126,13 +133,12 @@ public class CategoryServiceImpl implements CategoryService {
       return customResponseEntity.generateMessageResponseEntity(String.format("Category name %s is already existed.", category.getName()), HttpStatus.CONFLICT);
     }
 
-    Category newCategory = oldCategory.get();
+    var newCategory = oldCategory.get();
     newCategory.setName(category.getName());
 
     categoryRepository.save(newCategory);
 
     return customResponseEntity.generateMessageResponseEntity(String.format("Update category %d successful!", id), HttpStatus.OK);
-
   }
 
   @Override
@@ -162,7 +168,6 @@ public class CategoryServiceImpl implements CategoryService {
     categoryGroupRepository.deleteById(id);
 
     return customResponseEntity.generateMessageResponseEntity(String.format("Delete category group %d successful.", id), HttpStatus.OK);
-
   }
   
 }

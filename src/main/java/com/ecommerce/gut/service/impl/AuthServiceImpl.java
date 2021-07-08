@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import com.ecommerce.gut.entity.ERole;
 import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
@@ -17,6 +18,7 @@ import com.ecommerce.gut.security.jwt.JwtUtils;
 import com.ecommerce.gut.security.service.UserDetailsImpl;
 import com.ecommerce.gut.service.AuthService;
 import com.ecommerce.gut.util.CustomResponseEntity;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,28 +36,27 @@ public class AuthServiceImpl implements AuthService {
   private static final String ROLE_NOT_FOUND_MSG = "Role is not found.";
 
   @Autowired
-  AuthenticationManager authenticationManager;
+  private AuthenticationManager authenticationManager;
 
   @Autowired
-  UserRepository userRepository;
+  private UserRepository userRepository;
 
   @Autowired
-  RoleRepository roleRepository;
+  private RoleRepository roleRepository;
 
   @Autowired
-  PasswordEncoder encoder;
+  private PasswordEncoder encoder;
 
   @Autowired
-  CustomResponseEntity customResponseEntity;
+  private CustomResponseEntity customResponseEntity;
 
   @Autowired
-  JwtUtils jwtUtils;
+  private JwtUtils jwtUtils;
 
   @Override
   public ResponseEntity<?> authenticateUser(LoginRequest loginRequest) {
     Authentication authentication = authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),
-            loginRequest.getPassword()));
+        new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -67,8 +68,9 @@ public class AuthServiceImpl implements AuthService {
         .map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
 
-    return ResponseEntity.ok().header(jwtUtils.getAuthorizationHeader(), jwtUtils.getTokenPrefix() + jwt).body(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(),
-    userDetails.getFirstName(), userDetails.getLastName(), roles));
+    return ResponseEntity.ok()
+        .header(jwtUtils.getAuthorizationHeader(), jwtUtils.getTokenPrefix() + jwt)
+        .body(new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getFirstName(), userDetails.getLastName(), roles));
   }
 
   @Override

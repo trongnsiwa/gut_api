@@ -1,8 +1,8 @@
 package com.ecommerce.gut.entity;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.List;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,11 +15,23 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotBlank;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 @Entity
 @Table(
     name = "product_categories",
@@ -35,7 +47,6 @@ public class Category {
   @Column(name = "category_id")
   private Long id;
 
-  @NotBlank(message = "Name must not be blank.")
   @Column(name = "category_name", length = 50)
   private String name;
 
@@ -48,59 +59,6 @@ public class Category {
   @OneToMany(fetch = FetchType.LAZY,mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
   @JsonIgnore
   @Schema(hidden = true)
-  private Collection<Product> products = new ArrayList<>();
-
-  public Category() {
-  }
-
-  public Category(Long id, String name, CategoryGroup categoryGroup) {
-    this.id = id;
-    this.name = name;
-    this.categoryGroup = categoryGroup;
-  }
-
-  public Long getId() {
-    return this.id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public String getName() {
-    return this.name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public CategoryGroup getCategoryGroup() {
-    return this.categoryGroup;
-  }
-
-  public void setCategoryGroup(CategoryGroup categoryGroup) {
-    this.categoryGroup = categoryGroup;
-  }
-
-  public Collection<Product> getProducts() {
-    return this.products;
-  }
-
-  @Override
-    public boolean equals(Object o) {
-        if (o == this)
-            return true;
-        if (!(o instanceof Category)) {
-            return false;
-        }
-        Category category = (Category) o;
-        return Objects.equals(id, category.id) && Objects.equals(name, category.name) && Objects.equals(categoryGroup, category.categoryGroup);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(id, name, categoryGroup);
-  }
+  private List<Product> products = new ArrayList<>();
 
 }

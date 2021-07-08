@@ -5,6 +5,7 @@ import com.ecommerce.gut.security.jwt.JwtTokenVerifier;
 import com.ecommerce.gut.security.service.UserDetailsServiceImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,7 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
-  UserDetailsServiceImpl userDetailsService;
+  private UserDetailsServiceImpl userDetailsService;
 
   @Autowired
   private JwtAuthEntryPoint jwtAuthEntryPoint;
@@ -58,7 +59,6 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         .authorizeRequests()
             .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
             .antMatchers("/api/auth/**").permitAll()
-            .antMatchers("/api/test/**").permitAll()
             .antMatchers("/api/home/**").permitAll()
             .antMatchers("/api/category/**").permitAll()
             .antMatchers("/api/color/**").permitAll()

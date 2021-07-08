@@ -1,6 +1,7 @@
 package com.ecommerce.gut.controller;
 
 import javax.validation.Valid;
+
 import com.ecommerce.gut.payload.request.LoginRequest;
 import com.ecommerce.gut.payload.request.SignUpRequest;
 import com.ecommerce.gut.service.AuthService;
@@ -26,9 +27,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AuthController {
 
   @Autowired
-  AuthService authService;
+  private AuthService authService;
 
-  @Operation(summary = "Login and authenticate the username and password")
+  @Operation(summary = "Login and authenticate the username and password",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Login information of user to authenticate"))
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Login successful", content = @Content),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
@@ -40,10 +43,11 @@ public class AuthController {
   public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
     return authService.authenticateUser(loginRequest);
   }
-
-  @Operation(summary = "Create new user")
+  @Operation(summary = "Create new user", 
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Sign up information of user to be create new"))
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "201", description = "Signup successful"),
+      @ApiResponse(responseCode = "201", description = "Signup successful", content = @Content),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
       @ApiResponse(responseCode = "404", description = "Role is not found", content = @Content),
       @ApiResponse(responseCode = "409", description = "Email is already taken", content = @Content),

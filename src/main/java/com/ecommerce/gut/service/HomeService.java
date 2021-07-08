@@ -1,12 +1,13 @@
 package com.ecommerce.gut.service;
 
-import java.util.Collection;
-import com.ecommerce.gut.entity.Product;
+import java.util.List;
+import com.ecommerce.gut.dto.ProductDTO;
+import com.ecommerce.gut.dto.SaleProductDTO;
 
 public interface HomeService {
   
-  Collection<Product> getNewProducts(int size);
+  List<ProductDTO> getNewProducts(Integer size);
 
-  Collection<Product> getSaleProducts(int size);
+  List<SaleProductDTO> getSaleProducts(Integer size);
 
 }

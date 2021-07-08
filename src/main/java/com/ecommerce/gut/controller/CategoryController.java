@@ -1,14 +1,20 @@
 package com.ecommerce.gut.controller;
 
-import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+
+import com.ecommerce.gut.dto.CategoryDTO;
+import com.ecommerce.gut.dto.CategoryGroupDTO;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
 import com.ecommerce.gut.service.CategoryService;
+
+import org.modelmapper.ModelMapper;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +25,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,7 +42,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class CategoryController {
 
   @Autowired
-  CategoryService categoryService;
+  private CategoryService categoryService;
+
+  @Autowired
+  private ModelMapper modelMapper;
 
   @Operation(summary = "Get all category groups with their categories")
   @ApiResponses(value = {
@@ -46,8 +56,10 @@ public class CategoryController {
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
   @GetMapping("/all")
-  public Collection<CategoryGroup> getAllCategoryGroups() {
-    return categoryService.getAllCategoryGroups();
+  public List<CategoryGroupDTO> getAllCategoryGroups() {
+    return categoryService.getAllCategoryGroups().stream()
+        .map(this::convertCategoryGroupToDto)
+        .collect(Collectors.toList());
   }
 
   @Operation(summary = "Get a category group with its categories by its id")
@@ -60,11 +72,13 @@ public class CategoryController {
       @ApiResponse(responseCode = "404", description = "Not found category group", content = @Content),
   })
   @GetMapping("/group/{id}")
-  public CategoryGroup getCategoryGroupById(@PathVariable("id") @Min(1) Long groupId) {
-    return categoryService.getCategoryGroupById(groupId);
+  public CategoryGroupDTO getCategoryGroupById(@PathVariable("id") @Min(1) Long groupId) {
+    return convertCategoryGroupToDto(categoryService.getCategoryGroupById(groupId));
   }
 
-  @Operation(summary = "Add a category group")
+  @Operation(summary = "Add a category group",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Category group object to be added"))
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "Add new category group successful", content = @Content),
       @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
@@ -72,12 +86,15 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "Group Id or name is already taken", content = @Content),
   })
   @PostMapping("/group/add")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> addCategoryGroup(@Valid @RequestBody CategoryGroup categoryGroup) {
+  // @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> addCategoryGroup(@Valid @RequestBody CategoryGroupDTO categoryGroupDTO) {
+    CategoryGroup categoryGroup = convertCategoryGroupToEntity(categoryGroupDTO);
     return categoryService.addCategoryGroup(categoryGroup);
   }
 
-  @Operation(summary = "Add a category to a group")
+  @Operation(summary = "Add a category to a group",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Category object to be added"))
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "Add new category successful", content = @Content),
       @ApiResponse(responseCode = "400",
@@ -86,12 +103,16 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "Category Id or name is already taken", content = @Content),
   })
   @PostMapping("/group/{groupId}/add")
-  public ResponseEntity<?> addCategoryToGroup(@Valid @RequestBody Category category,
+  // @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> addCategoryToGroup(@Valid @RequestBody CategoryDTO categoryDTO,
       @PathVariable("groupId") @Min(1) Long groupId) {
+    Category category = convertCategoryToEntity(categoryDTO);
     return categoryService.addCategoryToGroup(category, groupId);
   }
 
-  @Operation(summary = "Update a category group by its Id")
+  @Operation(summary = "Update a category group by its Id",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Category group object to be updated"))
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Update category group successful", content = @Content),
       @ApiResponse(responseCode = "400",
@@ -100,13 +121,16 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "Group name is already taken", content = @Content),
   })
   @PutMapping("/group/update/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> updateCategoryGroup(@Valid @RequestBody CategoryGroup categoryGroup,
+  // @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> updateCategoryGroup(@Valid @RequestBody CategoryGroupDTO categoryGroupDTO,
       @PathVariable("id") @Min(1) Long id) {
+    CategoryGroup categoryGroup = convertCategoryGroupToEntity(categoryGroupDTO);
     return categoryService.updateCategoryGroup(categoryGroup, id);
   }
 
-  @Operation(summary = "Update a category by its Id and group Id")
+  @Operation(summary = "Update a category by its Id and group Id",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "Category object to be updated"))
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Update category successful", content = @Content),
       @ApiResponse(responseCode = "400",
@@ -115,9 +139,10 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "Category name is already taken", content = @Content),
   })
   @PutMapping("/group/{groupId}/update/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> updateCategory(@Valid @RequestBody Category category,
+  // @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> updateCategory(@Valid @RequestBody CategoryDTO categoryDTO,
       @PathVariable("id") @Min(1) Long id, @Min(1) Long groupId) {
+    Category category = convertCategoryToEntity(categoryDTO);
     return categoryService.updateCategory(category, id, groupId);
   }
 
@@ -128,7 +153,7 @@ public class CategoryController {
       @ApiResponse(responseCode = "404", description = "Category is not found", content = @Content),
   })
   @DeleteMapping("/delete/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  // @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> deleteCategory(@PathVariable("id") @Min(1) Long id) {
     return categoryService.deleteCategory(id);
   }
@@ -142,9 +167,20 @@ public class CategoryController {
           description = "There are some categories still in the group", content = @Content),
   })
   @DeleteMapping("/group/delete/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  // @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> deleteCategoryGroup(@PathVariable("id") @Min(1) Long id) {
     return categoryService.deleteCategoryGroup(id);
   }
 
+  private Category convertCategoryToEntity(CategoryDTO categoryDTO) {
+    return modelMapper.map(categoryDTO, Category.class);
+  }
+
+  private CategoryGroupDTO convertCategoryGroupToDto(CategoryGroup categoryGroup) {
+    return modelMapper.map(categoryGroup, CategoryGroupDTO.class);
+  }
+
+  private CategoryGroup convertCategoryGroupToEntity(CategoryGroupDTO categoryGroupDTO) {
+    return modelMapper.map(categoryGroupDTO, CategoryGroup.class);
+  }
 }

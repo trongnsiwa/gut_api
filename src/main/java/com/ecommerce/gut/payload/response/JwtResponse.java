@@ -2,7 +2,15 @@ package com.ecommerce.gut.payload.response;
 
 import java.util.List;
 import java.util.UUID;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode
 public class JwtResponse {
   private String token;
   private String type = "Bearer";
@@ -20,58 +28,6 @@ public class JwtResponse {
     this.firstName = firstName;
     this.lastName = lastName;
     this.roles = roles;
-  }
-
-  public String getAccessToken() {
-    return token;
-  }
-
-  public void setAccessToken(String accessToken) {
-    this.token = accessToken;
-  }
-
-  public String getTokenType() {
-    return type;
-  }
-
-  public void setTokenType(String tokenType) {
-    this.type = tokenType;
-  }
-
-  public UUID getId() {
-    return id;
-  }
-
-  public void setId(UUID id) {
-    this.id = id;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  public String getFirstName() {
-    return firstName;
-  }
-
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
-
-  public String getLastName() {
-    return lastName;
-  }
-
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
-  }
-
-  public List<String> getRoles() {
-    return roles;
   }
 
 }

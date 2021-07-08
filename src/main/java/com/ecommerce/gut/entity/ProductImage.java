@@ -42,10 +42,10 @@ public class ProductImage {
   @Column(name = "title", length = 255)
   private String title;
 
-  @Column(name = "color_code", nullable = false)
-  private Integer colorCode;
+  @Column(name = "color_code")
+  private Long colorCode;
 
-  public ProductImage(Long id, String imageUrl, String title, Integer colorCode) {
+  public ProductImage(Long id, String imageUrl, String title, Long colorCode) {
     this.id = id;
     this.imageUrl = imageUrl;
     this.title = title;

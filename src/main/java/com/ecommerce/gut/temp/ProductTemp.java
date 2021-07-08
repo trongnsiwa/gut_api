@@ -1,7 +1,5 @@
-package com.ecommerce.gut.dto;
+package com.ecommerce.gut.temp;
 
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +9,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ImageListDTO {
+public class ProductTemp {
   
-  private List<ProductImageDTO> images = new ArrayList<>();
+  private Long productId;
+  private String productName;
+  private Double price;
+  private String shortDesc;
 
 }

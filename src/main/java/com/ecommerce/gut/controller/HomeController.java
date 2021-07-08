@@ -2,7 +2,9 @@ package com.ecommerce.gut.controller;
 
 import java.util.Collection;
 import javax.validation.constraints.Min;
-import com.ecommerce.gut.entity.Product;
+import javax.validation.constraints.NotNull;
+import com.ecommerce.gut.dto.ProductDTO;
+import com.ecommerce.gut.dto.SaleProductDTO;
 import com.ecommerce.gut.service.HomeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -25,18 +27,19 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 public class HomeController {
   
   @Autowired
-  HomeService homeService;
+  private HomeService homeService;
 
   @Operation(summary = "Get all new products")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Found all new products",
           content = @Content(
-              array = @ArraySchema(schema = @Schema(implementation = Product.class)),
+              array = @ArraySchema(schema = @Schema(implementation = ProductDTO.class)),
               mediaType = "application/json")),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
   @GetMapping("/new")
-  public  Collection<Product> getNewProducts(@RequestParam @Min(1) Integer size) {
+  // @PreAuthorize("hasRole('USER')")
+  public  Collection<ProductDTO> getNewProducts(@RequestParam @NotNull @Min(1) Integer size) {
     return homeService.getNewProducts(size);
   }
 
@@ -44,12 +47,13 @@ public class HomeController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Found all sale products",
           content = @Content(
-              array = @ArraySchema(schema = @Schema(implementation = Product.class)),
+              array = @ArraySchema(schema = @Schema(implementation = SaleProductDTO.class)),
               mediaType = "application/json")),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
   @GetMapping("/sale")
-  public Collection<Product> getSaleProducts(@RequestParam @Min(1) Integer size) {
+  // @PreAuthorize("hasRole('USER')")
+  public Collection<SaleProductDTO> getSaleProducts(@RequestParam @NotNull @Min(1) Integer size) {
     return homeService.getSaleProducts(size);
   }
 

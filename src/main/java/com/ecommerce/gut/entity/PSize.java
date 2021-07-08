@@ -6,7 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.validation.constraints.Size;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,9 +23,8 @@ public class PSize {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   @Column(name = "size_id")
-  private Integer id;
+  private Long id;
 
-  @Size(max = 10, message = "Size name must be lower than 10.")
   @Column(name = "size_name", length = 10)
   private String name;
 

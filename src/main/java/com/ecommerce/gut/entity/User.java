@@ -2,7 +2,6 @@ package com.ecommerce.gut.entity;
 
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -21,7 +20,17 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 @Entity
 @Table(
     name = "users",
@@ -101,110 +110,5 @@ public class User {
       inverseJoinColumns = @JoinColumn(
           name = "role_id"))
   private Set<Role> roles = new HashSet<>();
-
-
-  public User() {
-  }
-
-  public UUID getId() {
-    return this.id;
-  }
-
-  public void setId(UUID id) {
-    this.id = id;
-  }
-
-  public String getEmail() {
-    return this.email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  public String getPassword() {
-    return this.password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public String getFirstName() {
-    return this.firstName;
-  }
-
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
-
-  public String getLastName() {
-    return this.lastName;
-  }
-
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
-  }
-
-  public String getPhone() {
-    return this.phone;
-  }
-
-  public void setPhone(String phone) {
-    this.phone = phone;
-  }
-
-  public String getAddress() {
-    return this.address;
-  }
-
-  public void setAddress(String address) {
-    this.address = address;
-  }
-
-  public Date getRegistrationDate() {
-    return this.registrationDate;
-  }
-
-  public void setRegistrationDate(Date registrationDate) {
-    this.registrationDate = registrationDate;
-  }
-
-  public boolean isEnabled() {
-    return this.enabled;
-  }
-
-  public boolean getEnabled() {
-    return this.enabled;
-  }
-
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
-  }
-
-  public Set<Role> getRoles() {
-    return this.roles;
-  }
-
-  public void setRoles(Set<Role> roles) {
-    this.roles = roles;
-  }
-
-
-  @Override
-    public boolean equals(Object o) {
-        if (o == this)
-            return true;
-        if (!(o instanceof User)) {
-            return false;
-        }
-        User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(email, user.email) && Objects.equals(password, user.password) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(phone, user.phone) && Objects.equals(address, user.address) && Objects.equals(registrationDate, user.registrationDate) && enabled == user.enabled && Objects.equals(roles, user.roles);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(id, email, password, firstName, lastName, phone, address, registrationDate, enabled, roles);
-  }
 
 }
