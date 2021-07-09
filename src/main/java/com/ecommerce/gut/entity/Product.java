@@ -17,7 +17,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
+import javax.persistence.Transient;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -107,6 +107,10 @@ public class Product {
   @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<ProductColorSize> colorSizes = new HashSet<>();
 
+  @Transient
+  @JsonIgnore
+  private Set<Color> colors = new HashSet<>();
+
   public Product(String name, Double price, String shortDesc, String longDesc,
       String material, String handling, boolean brandNew, boolean sale, Double priceSale,
       Date saleFromDate, Date saleToDate, Category category,
@@ -125,6 +129,18 @@ public class Product {
     this.category = category;
     this.productImages = productImages;
   }
+
+  public Product(Long id, String name, Double price, String shortDesc, Double priceSale,
+      Date saleFromDate, Date saleToDate) {
+    this.id = id;
+    this.name = name;
+    this.price = price;
+    this.shortDesc = shortDesc;
+    this.priceSale = priceSale;
+    this.saleFromDate = saleFromDate;
+    this.saleToDate = saleToDate;
+  }
+
 
   public void addColorSize(Color color, PSize size, int quantity) {
     ProductColorSize colorSize = new ProductColorSize(this, color, size);

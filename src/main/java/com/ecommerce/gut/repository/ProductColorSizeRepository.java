@@ -1,10 +1,13 @@
 package com.ecommerce.gut.repository;
 
 import java.util.List;
+import java.util.Set;
+import com.ecommerce.gut.entity.Product;
 import com.ecommerce.gut.entity.ProductColorSize;
 import com.ecommerce.gut.entity.ProductColorSizeId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -17,6 +20,13 @@ public interface ProductColorSizeRepository extends JpaRepository<ProductColorSi
     nativeQuery = true
   )
   List<Long> findColorsByProductId(Long productId); 
+
+  @Query(
+    value = "SELECT p " 
+          + "FROM ProductColorSize p "
+          + "WHERE p.product = :product"
+  )
+  Set<ProductColorSize> findColorSizesByProductId(@Param("product") Product product); 
 
   @Query(
     value = "SELECT EXISTS(SELECT 1 "

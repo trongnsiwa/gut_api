@@ -1,6 +1,7 @@
 package com.ecommerce.gut.repository;
 
 import java.util.List;
+import java.util.Optional;
 import com.ecommerce.gut.entity.ProductImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -43,5 +44,5 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
           + "WHERE product_id = :id AND color_code = :code",
     nativeQuery = true
   )
-  ProductImage findImageByProductIdAndColorCode(@Param("id") Long productId, @Param("code") Long colorCode);
+  Optional<ProductImage> findImageByProductIdAndColorCode(@Param("id") Long productId, @Param("code") Long colorCode);
 }

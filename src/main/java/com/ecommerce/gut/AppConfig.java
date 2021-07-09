@@ -1,7 +1,7 @@
-package com.ecommerce.gut.configuration;
+package com.ecommerce.gut;
 
 import com.google.common.collect.Lists;
-
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,7 +14,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 
 @Configuration
-public class OpenApiConfig {
+public class AppConfig {
 
   @Bean
   public OpenAPI customOpenAPI() {
@@ -32,6 +32,11 @@ public class OpenApiConfig {
                 .in(SecurityScheme.In.HEADER)
                 .name("Authorization")))
         .addSecurityItem(new SecurityRequirement().addList("mySecretHeader"));
+  }
+  
+  @Bean
+  public ModelMapper modelMapper() {
+    return new ModelMapper();
   }
 
 }

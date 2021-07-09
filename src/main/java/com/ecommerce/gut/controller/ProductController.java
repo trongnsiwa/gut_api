@@ -1,10 +1,14 @@
 package com.ecommerce.gut.controller;
 
+import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import com.ecommerce.gut.dto.ColorDTO;
 import com.ecommerce.gut.dto.ImageListDTO;
+import com.ecommerce.gut.dto.PagingProductDTO;
 import com.ecommerce.gut.dto.ProductColorSizeDTO;
 import com.ecommerce.gut.dto.ProductDetailDTO;
 import com.ecommerce.gut.dto.ProductImageDTO;
@@ -28,12 +32,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
@@ -49,6 +55,23 @@ public class ProductController {
 
   @Autowired
   private ModelMapper modelMapper;
+
+  @Operation(summary = "Get products by category Id per page")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Found the page's products",
+          content = @Content(
+              array = @ArraySchema(schema = @Schema(implementation = PagingProductDTO.class)),
+              mediaType = "application/json")),
+      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Category Id is not found",
+          content = @Content),
+  })
+  @GetMapping("/page")
+  public List<PagingProductDTO> getProductsByCategoryIdPerPage(@RequestParam("category") @NotNull @Min(1) Long categoryId, @RequestParam("num") @Min(1) Integer pageNumber,
+  @RequestParam("size") @Min(1) Integer pageSize, @RequestParam("sort") @NotNull @NotBlank String sortBy) {
+    return productService.getProductsByCategoryIdPerPage(categoryId, pageNumber, pageSize, sortBy).stream()
+        .map(this::convertPagingProductToDto).collect(Collectors.toList());
+  }
 
   @Operation(summary = "Get the detail of product")
   @ApiResponses(value = {
@@ -133,6 +156,20 @@ public class ProductController {
     );
 
     return productDetailDTO;
+  }
+
+  private PagingProductDTO convertPagingProductToDto(Product product) {
+    PagingProductDTO pagingProductDTO = modelMapper.map(product, PagingProductDTO.class);
+    pagingProductDTO.setImages(
+        product.getProductImages().stream()
+            .map(this::convertProductImageToDto)
+            .collect(Collectors.toList()));
+    pagingProductDTO.setColors(
+        product.getColors().stream()
+            .map(this::convertColorToDto)
+            .collect(Collectors.toSet()));
+    
+    return pagingProductDTO;
   }
 
   private ProductImageDTO convertProductImageToDto(ProductImage productImage) {

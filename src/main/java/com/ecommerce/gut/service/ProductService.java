@@ -1,5 +1,6 @@
 package com.ecommerce.gut.service;
 
+import java.util.List;
 import com.ecommerce.gut.dto.ImageListDTO;
 import com.ecommerce.gut.entity.Product;
 import com.ecommerce.gut.payload.request.ProductRequest;
@@ -7,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface ProductService {
   
-  // Page<Product> getProductsByCategoryIdPerPage(Long categoryId, int pageNumber, int pageSize, String sortBy);
+  List<Product> getProductsByCategoryIdPerPage(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy);
 
   Product getProductDetail(Long id);
 

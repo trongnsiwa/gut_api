@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UpdateTimestamp;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -99,6 +100,11 @@ public class User {
   @Column(name = "registration_date")
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   private Date registrationDate;
+
+  @UpdateTimestamp
+  @Column(name = "modified_date")
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+  private Date modifiedDate;
 
   private boolean enabled;
 

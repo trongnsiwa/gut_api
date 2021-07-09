@@ -88,7 +88,7 @@ public class AuthServiceImpl implements AuthService {
     user.setLastName(signUpRequest.getLastName());
     user.setEnabled(true);
 
-    Set<String> strRoles = signUpRequest.getRole();
+    Set<String> strRoles = signUpRequest.getRoles();
     Set<Role> roles = new HashSet<>();
 
     if (strRoles == null) {

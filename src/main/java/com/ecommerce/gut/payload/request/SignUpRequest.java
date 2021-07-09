@@ -1,10 +1,12 @@
 package com.ecommerce.gut.payload.request;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import com.ecommerce.gut.validation.PasswordMatches;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,6 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
+@PasswordMatches
 public class SignUpRequest {
   @Pattern(
       regexp = "^[_A-Za-z0-9-+]+(.[_A-Za-z0-9-]+)*@"
@@ -49,6 +52,6 @@ public class SignUpRequest {
   )
   private String lastName;
 
-  private Set<String> role;
+  private Set<String> roles = new HashSet<>();
 
 }

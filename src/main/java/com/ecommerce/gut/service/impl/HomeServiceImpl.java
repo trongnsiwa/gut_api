@@ -82,7 +82,7 @@ public class HomeServiceImpl implements HomeService {
                 .map(color -> {
 
                   ProductImage image = productImageRepository
-                      .findImageByProductIdAndColorCode(product.getProductId(), color.getId());
+                      .findImageByProductIdAndColorCode(product.getProductId(), color.getId()).orElse(null);
 
                   return new ProductImageDTO(image.getId(), image.getImageUrl(),
                       image.getTitle(), image.getColorCode());
