@@ -141,6 +141,29 @@ public class Product {
     this.saleToDate = saleToDate;
   }
 
+  public Product(Long id, String name, Double price, Date updatedDate, boolean brandNew, boolean sale, Category category) {
+    this.id = id;
+    this.name = name;
+    this.price = price;
+    this.updatedDate = updatedDate;
+    this.brandNew = brandNew;
+    this.sale = sale;
+    this.category = category;
+  }
+
+  public Product(Long id, String name, Double price, Date updatedDate, boolean brandNew,
+      boolean sale, Double priceSale, Date saleFromDate, Date saleToDate, Category category) {
+    this.id = id;
+    this.name = name;
+    this.price = price;
+    this.updatedDate = updatedDate;
+    this.brandNew = brandNew;
+    this.sale = sale;
+    this.priceSale = priceSale;
+    this.saleFromDate = saleFromDate;
+    this.saleToDate = saleToDate;
+    this.category = category;
+  }
 
   public void addColorSize(Color color, PSize size, int quantity) {
     ProductColorSize colorSize = new ProductColorSize(this, color, size);

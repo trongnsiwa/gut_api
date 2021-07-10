@@ -27,8 +27,6 @@ import com.ecommerce.gut.service.ProductService;
 
 import com.ecommerce.gut.util.CustomResponseEntity;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -43,26 +41,32 @@ import org.springframework.data.domain.Sort;
 @Service
 public class ProductServiceImpl implements ProductService {
 
-  @Autowired
   private ProductRepository productRepository;
 
-  @Autowired
   private ColorRepository colorRepository;
 
-  @Autowired
   private PSizeRepository pSizeRepository;
 
-  @Autowired
   private ProductImageRepository imageRepository;
 
-  @Autowired
   private CategoryRepository categoryRepository;
 
-  @Autowired
   private CustomResponseEntity customResponseEntity;
 
-  @Autowired
   private ProductColorSizeRepository productColorSizeRepository;
+
+  public ProductServiceImpl(ProductRepository productRepository, ColorRepository colorRepository,
+      PSizeRepository pSizeRepository, ProductImageRepository imageRepository,
+      CategoryRepository categoryRepository, CustomResponseEntity customResponseEntity,
+      ProductColorSizeRepository productColorSizeRepository) {
+    this.productRepository = productRepository;
+    this.colorRepository = colorRepository;
+    this.pSizeRepository = pSizeRepository;
+    this.imageRepository = imageRepository;
+    this.categoryRepository = categoryRepository;
+    this.customResponseEntity = customResponseEntity;
+    this.productColorSizeRepository = productColorSizeRepository;
+  }
 
   @Override
   public List<Product> getProductsByCategoryIdPerPage(Long categoryId, Integer pageNumber,

@@ -61,4 +61,9 @@ public class Category {
   @Schema(hidden = true)
   private List<Product> products = new ArrayList<>();
 
+  public Category(Long id, String name) {
+    this.id = id;
+    this.name = name;
+  }
+
 }

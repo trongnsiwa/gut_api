@@ -31,27 +31,31 @@ import lombok.Setter;
 @EqualsAndHashCode
 @Entity
 @Table(
-    name = "category_groups",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "category_groups_un",
-            columnNames = "group_name"
-        )
-    })
+        name = "category_groups",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "category_groups_un",
+                        columnNames = "group_name")
+        })
 public class CategoryGroup {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "group_id")
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "group_id")
+    private Long id;
 
-  @Column(name = "group_name", length = 50)
-  private String name;
+    @Column(name = "group_name", length = 50)
+    private String name;
 
-  @OneToMany(fetch = FetchType.EAGER, mappedBy = "categoryGroup")
-  @JsonManagedReference
-  @Schema(accessMode = AccessMode.READ_ONLY)
-  private Collection<Category> categories = new ArrayList<>();
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "categoryGroup")
+    @JsonManagedReference
+    @Schema(accessMode = AccessMode.READ_ONLY)
+    private Collection<Category> categories = new ArrayList<>();
+
+    public CategoryGroup(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 
 }
 
