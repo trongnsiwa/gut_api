@@ -16,12 +16,12 @@ import lombok.Setter;
 public class ProductImageDTO {
   private Long id;
 
-  @NotBlank(message = "Image URL must not be blank.")
+  @NotBlank(message = "{productImage.url.notBlank}")
   private String imageUrl;
 
   private String title;
 
-  @Min(0)
+  @Min(value = 0, message = "{productImage.colorCode.min}")
   private Long colorCode;
 
 }

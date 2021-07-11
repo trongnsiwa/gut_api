@@ -3,9 +3,10 @@ package com.ecommerce.gut.security.service;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,11 +29,15 @@ public class UserDetailsImpl implements UserDetails {
 
   private String lastName;
 
+  private String phone;
+  
+  private String address;
+
   private boolean enabled;
 
   private Collection<? extends GrantedAuthority> authorities;
 
-  public UserDetailsImpl(UUID id, String email, String password, String firstName, String lastName,
+  public UserDetailsImpl(UUID id, String email, String password, String firstName, String lastName, String phone, String address,
       boolean enabled,
       Collection<? extends GrantedAuthority> authorities) {
     this.id = id;
@@ -40,6 +45,8 @@ public class UserDetailsImpl implements UserDetails {
     this.password = password;
     this.firstName = firstName;
     this.lastName = lastName;
+    this.phone = phone;
+    this.address = address;
     this.enabled = enabled;
     this.authorities = authorities;
   }
@@ -57,6 +64,8 @@ public class UserDetailsImpl implements UserDetails {
         user.getPassword(),
         user.getFirstName(), 
         user.getLastName(), 
+        user.getPhone(),
+        user.getAddress(),
         user.isEnabled(), 
         authorities
     );
@@ -88,6 +97,45 @@ public class UserDetailsImpl implements UserDetails {
   public String getLastName() {
     return lastName;
   }
+
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
+
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
+
+  public String getFullName() {
+    return this.firstName + " " + this.lastName;
+  }
+
+  public String getPhone() {
+    return phone;
+  }
+
+  public void setPhone(String phone) {
+    this.phone = phone;
+  }
+
+  public String getAddress() {
+    return address;
+  }
+
+  public void setAddress(String address) {
+    this.address = address;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
+
+  public void setAuthorities(Set<Role> roles) {
+    this.authorities = roles.stream()
+        .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+        .collect(Collectors.toList());
+  }
+  
 
   @Override
   public boolean isAccountNonExpired() {

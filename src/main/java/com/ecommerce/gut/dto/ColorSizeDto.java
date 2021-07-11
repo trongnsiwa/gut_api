@@ -22,11 +22,11 @@ import lombok.Setter;
 public class ColorSizeDTO {
 
   @Positive
-  @Min(1)
-  @NotNull(message = "Color Id must not be null.")
+  @Min(value = 1, message = "{colorSize.colorId.min}")
+  @NotNull(message = "{colorSize.colorId.notNull}")
   private Long colorId;
 
-  @NotEmpty(message = "Please give size Id and quantity of its size.")
+  @NotEmpty(message = "{colorSize.sizes.notEmpty}")
   private Map<Long, Integer> sizes = new HashMap<>();
   
 }

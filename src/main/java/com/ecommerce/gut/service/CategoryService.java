@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface CategoryService {
 
-  List<CategoryGroup> getAllCategoryGroups();
+  List<CategoryGroup> getCategoryGroupsPerPage(Integer pageNum, Integer pageSize, String sortBy);
 
   CategoryGroup getCategoryGroupById(Long groupId);
 

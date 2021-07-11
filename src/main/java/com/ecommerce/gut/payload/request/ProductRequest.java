@@ -26,29 +26,29 @@ import lombok.Setter;
 public class ProductRequest {
   private Long id;
 
-  @NotBlank(message = "Name must not be blank.")
-  @Size(min = 1, max = 100)
+  @NotBlank(message = "{product.name.notBlank}")
+  @Size(min = 1, max = 100, message = "{product.name.size}")
   private String name;
 
-  @NotNull(message = "Price must not be null.")
-  @Min(value = 1000, message = "Price must be equal or greater than 1000.")
+  @NotNull(message = "{product.price.notNull}")
+  @Min(value = 1000, message = "{product.price.min}")
   private Double price;
 
-  @Size(max = 1000, message = "Short description must lower than 1000 characters.")
+  @Size(max = 1000, message = "{product.shortDesc.size}")
   private String shortDesc;
 
   private String longDesc;
 
-  @Size(max = 255, message = "Material must lower than 1000 characters.")
+  @Size(max = 255, message = "{product.material.size}")
   private String material;
 
-  @Size(max = 255, message = "Handling must lower than 1000 characters.")
+  @Size(max = 255, message = "{product.handling.size}")
   private String handling;
 
-  @NotNull(message = "Brand new must not be null")
+  @NotNull(message = "{product.brandNew.notNull}")
   private boolean brandNew;
 
-  @NotNull(message = "Sale must not be null")
+  @NotNull(message = "{product.sale.notNull}")
   private boolean sale;
 
   private Double priceSale;
@@ -57,7 +57,7 @@ public class ProductRequest {
 
   private Date saleToDate;
   
-  @NotEmpty(message = "Please provide color and its sizes for this product.")
+  @NotEmpty(message = "{product.colors.notEmpty}")
   private Set<ColorSizeDTO> colors = new HashSet<>();
 
 }

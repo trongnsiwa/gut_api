@@ -14,10 +14,10 @@ import lombok.Setter;
 @EqualsAndHashCode
 public class LoginRequest {
   
-  @NotBlank
+  @NotBlank(message = "{login.email.notBlank}")
   private String email;
 
-  @NotBlank
+  @NotBlank(message = "{login.password.notBlank}")
   private String password;
 
 }

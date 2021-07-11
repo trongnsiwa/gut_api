@@ -20,8 +20,8 @@ public class CategoryGroupDTO {
 
   private Long id;
 
-  @NotBlank(message = "Name must not be blank.")
-  @Size(max = 50, message = "Name must not be higher than 50 characters.")
+  @NotBlank(message = "{name.notBlanks}")
+  @Size(max = 50, message = "{name.notHigherThan50Chars}")
   private String name;
   
   private Collection<Category> categories = new ArrayList<>();

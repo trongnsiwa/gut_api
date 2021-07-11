@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import com.ecommerce.gut.dto.CategoryDTO;
 import com.ecommerce.gut.dto.CategoryGroupDTO;
 import com.ecommerce.gut.entity.Category;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,17 +49,18 @@ public class CategoryController {
   @Autowired
   private ModelMapper modelMapper;
 
-  @Operation(summary = "Get all category groups with their categories")
+  @Operation(summary = "Getcategory groups with their categories per page")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Found all category book even if empty",
           content = @Content(
-              array = @ArraySchema(schema = @Schema(implementation = CategoryGroup.class)),
+              array = @ArraySchema(schema = @Schema(implementation = CategoryGroupDTO.class)),
               mediaType = "application/json")),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
   @GetMapping("/all")
-  public List<CategoryGroupDTO> getAllCategoryGroups() {
-    return categoryService.getAllCategoryGroups().stream()
+  public List<CategoryGroupDTO> getAllCategoryGroups(@RequestParam("num") @Min(1) Integer pageNumber,
+  @RequestParam("size") @Min(1) Integer pageSize, @RequestParam("sort") @NotNull @NotBlank String sortBy) {
+    return categoryService.getCategoryGroupsPerPage(pageNumber, pageSize, sortBy).stream()
         .map(this::convertCategoryGroupToDto)
         .collect(Collectors.toList());
   }
@@ -66,7 +69,7 @@ public class CategoryController {
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Found the category group",
           content = @Content(
-              schema = @Schema(implementation = CategoryGroup.class),
+              schema = @Schema(implementation = CategoryGroupDTO.class),
               mediaType = "application/json")),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
       @ApiResponse(responseCode = "404", description = "Not found category group", content = @Content),
@@ -74,6 +77,20 @@ public class CategoryController {
   @GetMapping("/group/{id}")
   public CategoryGroupDTO getCategoryGroupById(@PathVariable("id") @Min(1) Long groupId) {
     return convertCategoryGroupToDto(categoryService.getCategoryGroupById(groupId));
+  }
+
+  @Operation(summary = "Get a category by its id")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Found the category",
+          content = @Content(
+              schema = @Schema(implementation = CategoryDTO.class),
+              mediaType = "application/json")),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Not found category", content = @Content),
+  })
+  @GetMapping("/{id}")
+  public CategoryDTO getCategoryById(Long id) {
+    return convertCategoryToDto(categoryService.getCategoryById(id));
   }
 
   @Operation(summary = "Add a category group",
@@ -174,6 +191,10 @@ public class CategoryController {
 
   private Category convertCategoryToEntity(CategoryDTO categoryDTO) {
     return modelMapper.map(categoryDTO, Category.class);
+  }
+
+  private CategoryDTO convertCategoryToDto(Category category) {
+    return modelMapper.map(category, CategoryDTO.class);
   }
 
   private CategoryGroupDTO convertCategoryGroupToDto(CategoryGroup categoryGroup) {

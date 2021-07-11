@@ -1,12 +1,11 @@
-package com.ecommerce.gut.payload.request;
+package com.ecommerce.gut.dto;
 
 import java.util.HashSet;
 import java.util.Set;
-
+import java.util.UUID;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import com.ecommerce.gut.validation.PasswordMatches;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -18,40 +17,43 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-@PasswordMatches(message = "{}")
-public class SignUpRequest {
+public class UserProfileDTO {
+
+  private UUID id;
+
   @Pattern(
       regexp = "^[_A-Za-z0-9-+]+(.[_A-Za-z0-9-]+)*@"
           + "[A-Za-z0-9-]+(.[A-Za-z0-9]+)*(.[A-Za-z]{2,})$",
-      message = "{signup.email.invalid}"
+      message = "{profile.email.invalid}"
   )
   private String email;
 
-  @NotBlank(message = "{signup.password.notBlank}")
-  @Size(
-      min = 5,
-      message = "{signup.password.size}"
-  )
-  private String password;
-
-  private String retypePassword;
-
-  @NotBlank(message = "{signup.firstName.notBlank}")
+  @NotBlank(message = "{profile.firstName.notBlank}")
   @Size(
       min = 1,
       max = 50,
-      message = "{signup.firstName.size}"
+      message = "{profile.firstName.size}"
   )
   private String firstName;
 
-  @NotBlank(message = "{signup.lastName.notBlank}")
+  @NotBlank(message = "{profile.lastName.notBlank}")
   @Size(
       min = 1,
       max = 50,
-      message = "{signup.lastName.size}"
+      message = "{profile.lastName.size}"
   )
   private String lastName;
 
-  private Set<String> roles = new HashSet<>();
+  @Pattern(
+    regexp = "(84|0[3|5|7|8|9])+([0-9]{8})\\b",
+    message = "{profile.phone.invalid}"
+  )
+  private String phone;
+
+  private String address;
+
+  private boolean enabled;
+  
+  private Set<RoleDTO> roles = new HashSet<>();
 
 }

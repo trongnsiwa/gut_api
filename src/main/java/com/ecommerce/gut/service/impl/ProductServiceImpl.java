@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 import com.ecommerce.gut.dto.ImageListDTO;
 import com.ecommerce.gut.dto.ProductImageDTO;
 import com.ecommerce.gut.entity.Category;
@@ -29,6 +31,8 @@ import com.ecommerce.gut.util.CustomResponseEntity;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.context.MessageSource;
 
 import org.springframework.stereotype.Service;
 
@@ -55,10 +59,15 @@ public class ProductServiceImpl implements ProductService {
 
   private ProductColorSizeRepository productColorSizeRepository;
 
+  private MessageSource messages;
+
+  private HttpServletRequest request;
+
   public ProductServiceImpl(ProductRepository productRepository, ColorRepository colorRepository,
       PSizeRepository pSizeRepository, ProductImageRepository imageRepository,
       CategoryRepository categoryRepository, CustomResponseEntity customResponseEntity,
-      ProductColorSizeRepository productColorSizeRepository) {
+      ProductColorSizeRepository productColorSizeRepository,
+      MessageSource messages, HttpServletRequest request) {
     this.productRepository = productRepository;
     this.colorRepository = colorRepository;
     this.pSizeRepository = pSizeRepository;
@@ -66,6 +75,8 @@ public class ProductServiceImpl implements ProductService {
     this.categoryRepository = categoryRepository;
     this.customResponseEntity = customResponseEntity;
     this.productColorSizeRepository = productColorSizeRepository;
+    this.messages = messages;
+    this.request = request;
   }
 
   @Override
@@ -73,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
       Integer pageSize, String sortBy) {
     Optional<Category> existedCategory = categoryRepository.findById(categoryId);
     if (!existedCategory.isPresent()) {
-      throw new CustomNotFoundException(String.format("Category %d", categoryId));
+      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateNotFound", null, request.getLocale()), categoryId));
     }
 
     Sort sort = null;
@@ -118,9 +129,9 @@ public class ProductServiceImpl implements ProductService {
         break;
     }
 
-    PageRequest request = PageRequest.of(pageNumber - 1, pageSize, sort);
+    PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, sort);
     List<Product> products =
-        productRepository.getProductsByCategoryId(existedCategory.get(), request).getContent();
+        productRepository.getProductsByCategoryId(existedCategory.get(), pageRequest).getContent();
     return products.stream().map(product -> {
       Set<ProductColorSize> colorSizes =
           productColorSizeRepository.findColorSizesByProductId(product);
@@ -143,21 +154,24 @@ public class ProductServiceImpl implements ProductService {
   @Override
   public Product getProductDetail(Long id) {
     return productRepository.findById(id)
-        .orElseThrow(() -> new CustomNotFoundException(String.format("Product %d", id)));
+        .orElseThrow(() -> new CustomNotFoundException(String.format(messages.getMessage("product.message.notFound", null, request.getLocale()), id)));
   }
 
   @Override
   public ResponseEntity<?> addProductToCategory(ProductRequest productRequest, Long categoryId) {
+
+    Locale locale = request.getLocale();
+
     Optional<Category> existedCategory = categoryRepository.findById(categoryId);
     if (!existedCategory.isPresent()) {
-      throw new CustomNotFoundException(String.format("Category %d", categoryId));
+      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateNotFound", null, locale), categoryId));
     }
 
     if (productRequest.getId() > 0) {
       boolean existedProduct = productRepository.existsById(productRequest.getId());
       if (existedProduct) {
         return customResponseEntity.generateMessageResponseEntity(
-            String.format("Product %d is already taken.", productRequest.getId()),
+            String.format(messages.getMessage("product.message.alreadyTaken", null, locale), productRequest.getId()),
             HttpStatus.CONFLICT);
       }
     }
@@ -175,13 +189,13 @@ public class ProductServiceImpl implements ProductService {
     productRequest.getColors().stream().forEach(colorSize -> {
       Color color = colorRepository.findById(colorSize.getColorId())
           .orElseThrow(
-              () -> new CustomNotFoundException(String.format("Color %d", colorSize.getColorId())));
+              () -> new CustomNotFoundException(String.format(messages.getMessage("color.message.notFound", null, locale), colorSize.getColorId())));
 
       colorSize.getSizes().entrySet().stream()
           .forEach(entry -> {
             PSize size = pSizeRepository.findById(entry.getKey())
                 .orElseThrow(
-                    () -> new CustomNotFoundException(String.format("Size %s", entry.getKey())));
+                    () -> new CustomNotFoundException(String.format(messages.getMessage("size.message.notFound", null, locale), entry.getKey())));
 
             product.addColorSize(color, size, entry.getValue());
           });
@@ -190,22 +204,25 @@ public class ProductServiceImpl implements ProductService {
     productRepository.save(product);
 
     return customResponseEntity
-        .generateMessageResponseEntity(String.format("Add product %s to category %s successful!",
+        .generateMessageResponseEntity(String.format(messages.getMessage("product.message.addSucc", null, locale),
             product.getName(), existedCategory.get().getName()), HttpStatus.CREATED);
   }
 
   @Override
   public ResponseEntity<?> updateProduct(ProductRequest productRequest, Long id, Long categoryId) {
+
+    Locale locale = request.getLocale();
+
     Optional<Category> existedCategory =
         categoryRepository.findById(categoryId);
     if (!existedCategory.isPresent()) {
       throw new CustomNotFoundException(
-          String.format("Category %d", categoryId));
+          String.format(messages.getMessage("category.message.cateNotFound", null, locale), categoryId));
     }
 
     Optional<Product> existedProduct = productRepository.findById(id);
     if (!existedProduct.isPresent()) {
-      throw new CustomNotFoundException(String.format("Product %d", id));
+      throw new CustomNotFoundException(String.format(messages.getMessage("product.message.notFound", null, locale), id));
     }
 
     Product product = existedProduct.get();
@@ -226,13 +243,13 @@ public class ProductServiceImpl implements ProductService {
     productRequest.getColors().stream().forEach(colorSize -> {
       Color color = colorRepository.findById(colorSize.getColorId())
           .orElseThrow(
-              () -> new CustomNotFoundException(String.format("Color %d", colorSize.getColorId())));
+              () -> new CustomNotFoundException(String.format(messages.getMessage("color.message.notFound", null, locale), colorSize.getColorId())));
 
       colorSize.getSizes().entrySet().stream()
           .forEach(entry -> {
             PSize size = pSizeRepository.findById(entry.getKey())
                 .orElseThrow(
-                    () -> new CustomNotFoundException(String.format("Size %s", entry.getKey())));
+                    () -> new CustomNotFoundException(String.format(messages.getMessage("size.message.notFound", null, locale), entry.getKey())));
 
             product.addColorSize(color, size, entry.getValue());
           });
@@ -241,15 +258,18 @@ public class ProductServiceImpl implements ProductService {
     productRepository.save(product);
 
     return customResponseEntity.generateMessageResponseEntity(
-        String.format("Update product %d successful!", id), HttpStatus.OK);
+        String.format(messages.getMessage("product.message.updateSucc", null, locale), id), HttpStatus.OK);
   }
 
   @Override
   @Transactional
   public ResponseEntity<?> deleteProduct(Long id) {
+
+    Locale locale = request.getLocale();
+
     Optional<Product> existedProduct = productRepository.findById(id);
     if (!existedProduct.isPresent()) {
-      throw new CustomNotFoundException(String.format("Product %d", id));
+      throw new CustomNotFoundException(String.format(messages.getMessage("product.message.notFound", null, locale), id));
     }
 
     Product product = existedProduct.get();
@@ -259,7 +279,7 @@ public class ProductServiceImpl implements ProductService {
     Optional<Category> existedCategory = categoryRepository.findById(product.getCategory().getId());
     if (!existedCategory.isPresent()) {
       throw new CustomNotFoundException(
-          String.format("Category %d", product.getCategory().getId()));
+          String.format(messages.getMessage("category.message.cateNotFound", null, locale), product.getCategory().getId()));
     }
 
     Category category = existedCategory.get();
@@ -267,14 +287,17 @@ public class ProductServiceImpl implements ProductService {
     categoryRepository.save(category);
 
     return customResponseEntity.generateMessageResponseEntity(
-        String.format("Delete category %d successful.", id), HttpStatus.OK);
+        String.format(messages.getMessage("product.message.delSucc", null, locale), id), HttpStatus.OK);
   }
 
   @Override
   public ResponseEntity<?> replaceImagesOfProduct(ImageListDTO imageListRequest, Long id) {
+
+    Locale locale = request.getLocale();
+
     Optional<Product> existedProduct = productRepository.findById(id);
     if (!existedProduct.isPresent()) {
-      throw new CustomNotFoundException(String.format("Product %d", id));
+      throw new CustomNotFoundException(String.format(messages.getMessage("product.message.notFound", null, locale), id));
     }
 
     Collection<ProductImageDTO> images = imageListRequest.getImages();
@@ -283,7 +306,7 @@ public class ProductServiceImpl implements ProductService {
       imageRepository.deleteAllByProductId(id);
 
       return customResponseEntity.generateMessageResponseEntity(
-          String.format("Delete all images of product %d successful.", id), HttpStatus.OK);
+          String.format(messages.getMessage("product.message.delAllImagesSucc", null, locale), id), HttpStatus.OK);
     }
 
     List<Long> colorCodes = new ArrayList<>();
@@ -295,7 +318,7 @@ public class ProductServiceImpl implements ProductService {
         colorCodes.add(image.getColorCode());
 
         if (!color.isPresent()) {
-          throw new CustomNotFoundException(String.format("Color %d", image.getColorCode()));
+          throw new CustomNotFoundException(String.format(messages.getMessage("color.message.notFound", null, locale), image.getColorCode()));
         }
       }
     });
@@ -303,7 +326,7 @@ public class ProductServiceImpl implements ProductService {
     Set<Long> colorCodeSet = new HashSet<>(colorCodes);
     if (colorCodeSet.size() < colorCodes.size()) {
       return customResponseEntity.generateMessageResponseEntity(
-          "Cannot exist two same colors in the images list.", HttpStatus.CONFLICT);
+        messages.getMessage("product.message.notExistTwoSameColors", null, locale), HttpStatus.CONFLICT);
     }
 
     List<ProductImage> existedImages = imageRepository.findImagesByProductId(id);
@@ -334,7 +357,7 @@ public class ProductServiceImpl implements ProductService {
         }));
 
     return customResponseEntity.generateMessageResponseEntity(
-        String.format("Update images of product %d successful.", id), HttpStatus.OK);
+        String.format(messages.getMessage("product.message.updateImagesSucc", null, locale), id), HttpStatus.OK);
   }
 
 }

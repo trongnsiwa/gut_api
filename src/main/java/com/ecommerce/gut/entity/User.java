@@ -34,87 +34,79 @@ import lombok.Setter;
 @EqualsAndHashCode
 @Entity
 @Table(
-    name = "users",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "users_email_key", 
-            columnNames = "email"
-        )
-    })
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "users_email_key",
+                        columnNames = "email")
+        })
 public class User {
 
-  @Id
-  @GenericGenerator(
-      name = "UUID", 
-      strategy = "org.hibernate.id.UUIDGenerator"
-  )
-  @GeneratedValue(generator = "UUID")
-  @Column(
-      name = "user_id", 
-      unique = true, 
-      nullable = false
-  )
-  private UUID id;
+    @Id
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(generator = "UUID")
+    @Column(
+            name = "user_id",
+            unique = true,
+            nullable = false)
+    private UUID id;
 
-  @Column(
-      name = "email",
-      nullable = false, 
-      columnDefinition = "TEXT"
-  )
-  private String email;
+    @Column(
+            name = "email",
+            nullable = false,
+            columnDefinition = "TEXT")
+    private String email;
 
-  @Column(
-      name = "password",
-      nullable = false, 
-      columnDefinition = "TEXT"
-  )
-  private String password;
+    @Column(
+            name = "password",
+            nullable = false,
+            columnDefinition = "TEXT")
+    private String password;
 
-  @Column(
-      name = "first_name",
-      nullable = false,
-      length = 50
-  )
-  private String firstName;
+    @Column(
+            name = "first_name",
+            nullable = false,
+            length = 50)
+    private String firstName;
 
-  @Column(
-      name = "last_name",
-      nullable = false,
-      length = 50
-  )
-  private String lastName;
+    @Column(
+            name = "last_name",
+            nullable = false,
+            length = 50)
+    private String lastName;
 
-  @Column(
-      name = "phone",
-      length = 20
-  )
-  private String phone;
+    @Column(
+            name = "phone",
+            length = 20)
+    private String phone;
 
-  @Column(
-      name = "address",
-      columnDefinition = "TEXT"
-  )
-  private String address;
+    @Column(
+            name = "address",
+            columnDefinition = "TEXT")
+    private String address;
 
-  @CreationTimestamp
-  @Column(name = "registration_date")
-  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date registrationDate;
+    @CreationTimestamp
+    @Column(name = "registration_date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date registrationDate;
 
-  @UpdateTimestamp
-  @Column(name = "modified_date")
-  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date modifiedDate;
+    @UpdateTimestamp
+    @Column(name = "modified_date")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date modifiedDate;
 
-  private boolean enabled;
+    @Column(name = "enabled")
+    private boolean enabled;
 
-  @ManyToMany(fetch = FetchType.LAZY)
-  @JoinTable(
-      name = "user_roles",
-      joinColumns = @JoinColumn(
-          name = "user_id"),
-      inverseJoinColumns = @JoinColumn(
-          name = "role_id"))
-  private Set<Role> roles = new HashSet<>();
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(
+                    name = "user_id"),
+            inverseJoinColumns = @JoinColumn(
+                    name = "role_id"))
+    private Set<Role> roles = new HashSet<>();
 
 }

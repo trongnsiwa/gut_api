@@ -104,12 +104,11 @@ public class ProductController {
 
   @Operation(summary = "Update a product by its Id",
       requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-          description = "Product object to to updated"))
+          description = "Product object to updated"))
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Add a product successful", content = @Content),
+      @ApiResponse(responseCode = "200", description = "Update a product successful", content = @Content),
       @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
       @ApiResponse(responseCode = "404", description = "Product Id is not found", content = @Content),
-      @ApiResponse(responseCode = "409", description = "Product Id is already taken", content = @Content),
   })
   @PutMapping("/update/{id}/{categoryId}")
   // @PreAuthorize("hasRole('ADMIN')")

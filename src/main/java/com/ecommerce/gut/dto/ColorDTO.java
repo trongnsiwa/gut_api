@@ -15,11 +15,11 @@ public class ColorDTO {
   
   private Long id;
 
-  @NotBlank(message = "Color name must not be blank.")
-  @Size(max = 50, message = "Color name must be lower than 50 characters.")
+  @NotBlank(message = "{color.name.notBlank}")
+  @Size(max = 50, message = "{color.name.lowerThan50Chars}")
   private String name;
 
-  @NotBlank(message = "Source must not be blank.")
+  @NotBlank(message = "{color.source.notBlank}")
   private String source;
 
 }

@@ -17,8 +17,8 @@ public class CategoryDTO {
   
   private Long id;
 
-  @NotBlank(message = "Name must not be blank.")
-  @Size(max = 50, message = "Name must not be higher than 50 characters.")
+  @NotBlank(message = "{name.notBlank}")
+  @Size(max = 50, message = "{name.notHigherThan50Chars}")
   private String name;
 
 }

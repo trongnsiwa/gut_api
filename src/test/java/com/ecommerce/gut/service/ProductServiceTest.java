@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
 import com.ecommerce.gut.dto.ColorSizeDTO;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -58,11 +60,17 @@ public class ProductServiceTest {
   @Mock
   private ProductColorSizeRepository productColorSizeRepository;
 
+  @Mock
+  private MessageSource messages;
+
+  @Mock
+  private HttpServletRequest request;
+
   private ProductService productService;
 
   @BeforeEach
   void setUp() {
-    productService = new ProductServiceImpl(productRepository, colorRepository, pSizeRepository, imageRepository, categoryRepository, customResponseEntity, productColorSizeRepository);
+    productService = new ProductServiceImpl(productRepository, colorRepository, pSizeRepository, imageRepository, categoryRepository, customResponseEntity, productColorSizeRepository, messages, request);
   }
 
   @Test
