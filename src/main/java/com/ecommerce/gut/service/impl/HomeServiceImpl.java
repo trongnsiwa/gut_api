@@ -10,7 +10,7 @@ import com.ecommerce.gut.dto.ProductImageDTO;
 import com.ecommerce.gut.dto.SaleProductDTO;
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.entity.ProductImage;
-import com.ecommerce.gut.exception.CustomNotFoundException;
+import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.repository.ColorRepository;
 import com.ecommerce.gut.repository.ProductColorSizeRepository;
 import com.ecommerce.gut.repository.ProductImageRepository;
@@ -51,7 +51,7 @@ public class HomeServiceImpl implements HomeService {
                 .collect(Collectors.toList());
 
             List<Color> colors = productColorSizeRepository.findColorsByProductId(product.getProductId()).stream()
-                .map(colorId -> colorRepository.findById(colorId).orElseThrow(() -> new CustomNotFoundException(String.format("Color %d", colorId))))
+                .map(colorId -> colorRepository.findById(colorId).orElseThrow(() -> new DataNotFoundException(String.format("Color %d", colorId))))
                 .collect(Collectors.toList());
             
             List<ColorDTO> colorDTOs = colors.stream().map(color -> new ColorDTO(color.getId(), color.getName(), color.getSource())).collect(Collectors.toList());
@@ -73,7 +73,7 @@ public class HomeServiceImpl implements HomeService {
       return products.stream()
           .map(product -> {
             List<Color> colors = productColorSizeRepository.findColorsByProductId(product.getProductId()).stream()
-                .map(colorId -> colorRepository.findById(colorId).orElseThrow(() -> new CustomNotFoundException(String.format("Color %d", colorId))))
+                .map(colorId -> colorRepository.findById(colorId).orElseThrow(() -> new DataNotFoundException(String.format("Color %d", colorId))))
                 .collect(Collectors.toList());
             
             List<ColorDTO> colorDTOs = colors.stream().map(color -> new ColorDTO(color.getId(), color.getName(), color.getSource())).collect(Collectors.toList());

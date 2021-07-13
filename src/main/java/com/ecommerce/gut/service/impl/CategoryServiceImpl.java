@@ -1,42 +1,36 @@
 package com.ecommerce.gut.service.impl;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
+import com.ecommerce.gut.dto.ErrorCode;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
-import com.ecommerce.gut.exception.CustomNotFoundException;
+import com.ecommerce.gut.exception.CreateDataFailException;
+import com.ecommerce.gut.exception.DataNotFoundException;
+import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.DuplicateDataException;
+import com.ecommerce.gut.exception.RestrictDataException;
+import com.ecommerce.gut.exception.UpdateDataFailException;
 import com.ecommerce.gut.repository.CategoryGroupRepository;
 import com.ecommerce.gut.repository.CategoryRepository;
 import com.ecommerce.gut.service.CategoryService;
-import com.ecommerce.gut.util.CustomResponseEntity;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(CategoryServiceImpl.class);
 
   @Autowired
   private CategoryGroupRepository categoryGroupRepository;
 
   @Autowired
   private CategoryRepository categoryRepository;
-
-  @Autowired
-  private CustomResponseEntity customResponseEntity;
-
-  @Autowired
-  private MessageSource messages;
-
-  @Autowired
-  private HttpServletRequest request;
 
   @Override
   public List<CategoryGroup> getCategoryGroupsPerPage(Integer pageNum, Integer pageSize,
@@ -55,156 +49,168 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   public CategoryGroup getCategoryGroupById(Long groupId) {
     return categoryGroupRepository.findById(groupId)
-        .orElseThrow(() -> new CustomNotFoundException(String.format(messages.getMessage("category.message.cateGroupNotFound", null, request.getLocale()), groupId)));
+        .orElseThrow(() -> {
+          LOGGER.info("Category group %d is not found", groupId);
+          return new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
+        });
   }
 
   @Override
   public Category getCategoryById(Long id) {
     return categoryRepository.findById(id)
-        .orElseThrow(() -> new CustomNotFoundException(String.format(messages.getMessage("category.message.cateNotFound", null, request.getLocale()), id)));
+        .orElseThrow(() -> {
+          LOGGER.info("Category %d is not found", id);
+          return new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+        });
   }
 
   @Override
-  public ResponseEntity<?> addCategoryGroup(CategoryGroup categoryGroup) {
-
-    Locale locale = request.getLocale();
-
-    boolean existed = categoryGroupRepository.existsById(categoryGroup.getId());
-    if (existed) {
-      return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.cateGroupTaken", null, locale), categoryGroup.getId()), HttpStatus.CONFLICT);
+  public boolean createCategoryGroup(CategoryGroup categoryGroup) throws CreateDataFailException {
+    try {
+      boolean isUniqueName = categoryGroupRepository.existsByName(categoryGroup.getName());
+      if (isUniqueName) {
+        LOGGER.info("Category group name %s is already existed", categoryGroup.getName());
+        throw new DuplicateDataException(ErrorCode.ERR_GROUP_NAME_EXISTED);
+      }
+  
+      categoryGroupRepository.save(categoryGroup);
+    } catch (Exception ex) {
+      LOGGER.info("Fail to create category group %d", categoryGroup.getId());
+      throw new CreateDataFailException(ErrorCode.ERR_CATEGORY_GROUP_CREATED_FAIL);
     }
-
-    boolean isUniqueName = categoryGroupRepository.existsByName(categoryGroup.getName());
-    if (isUniqueName) {
-      return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.groupNameExisted", null, locale), categoryGroup.getName()), HttpStatus.CONFLICT);
-    }
-
-    categoryGroupRepository.save(categoryGroup);
-
-    return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.cateGroupAddSucc", null, locale), categoryGroup.getName()), HttpStatus.CREATED);
-  }
-
-  @Override
-  public ResponseEntity<?> addCategoryToGroup(Category category, Long groupId) {
-
-    Locale locale = request.getLocale();
-
-    boolean existed = categoryRepository.existsById(category.getId());
-    if (existed) {
-      return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.cateTaken", null, locale), category.getId()),
-          HttpStatus.CONFLICT);
-    }
-
-    Optional<CategoryGroup> group = categoryGroupRepository.findById(groupId);
-    if (!group.isPresent()) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateNotFound", null, locale), groupId));
-    }
-
-    boolean isUniqueName = categoryRepository.existsByName(category.getName());
-    if (isUniqueName) {
-      return customResponseEntity.generateMessageResponseEntity(
-          String.format(messages.getMessage("category.message.cateNameExisted", null, locale), category.getName()),
-          HttpStatus.CONFLICT);
-    }
-
-    var categoryGroup = group.get();
-    category.setCategoryGroup(categoryGroup);
-    categoryRepository.save(category);
-
-    return customResponseEntity.generateMessageResponseEntity(
-        String.format(messages.getMessage("category.message.cateAddSucc", null, locale), category.getName()), HttpStatus.CREATED);
-  }
-
-  @Override
-  public ResponseEntity<?> updateCategoryGroup(CategoryGroup categoryGroup, Long id) {
-
-    Locale locale = request.getLocale();
-
-    Optional<CategoryGroup> oldCategoryGroup = categoryGroupRepository.findById(id);
-    if (!oldCategoryGroup.isPresent()) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateGroupNotFound", null, locale), id));
-    }
-
-    boolean isUniqueName = categoryGroupRepository.existsByName(categoryGroup.getName());
-    if (isUniqueName) {
-      return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.groupNameExisted", null, locale), categoryGroup.getName()), HttpStatus.CONFLICT);
-    }
-
-    var newCategory = oldCategoryGroup.get();
-    newCategory.setName(categoryGroup.getName());
     
-    categoryGroupRepository.save(newCategory);
-
-    return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.cateGroupUpdateSucc", null, locale), id), HttpStatus.OK);
+    return true;
   }
 
   @Override
-  public ResponseEntity<?> updateCategory(Category category, Long id, Long groupId) {
+  public boolean addCategoryToGroup(Category category, Long groupId) throws CreateDataFailException {
+    try {
+      Optional<CategoryGroup> group = categoryGroupRepository.findById(groupId);
+      if (!group.isPresent()) {
+        LOGGER.info("Category group %d is not found", groupId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
+      }
+  
+      boolean isUniqueName = categoryRepository.existsByName(category.getName());
+      if (isUniqueName) {
+        LOGGER.info("Category name %s is already existed", category.getName());
+        throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
+      }
+  
+      var categoryGroup = group.get();
+      category.setCategoryGroup(categoryGroup);
+      categoryRepository.save(category);
+    } catch (Exception ex) {
+      LOGGER.info("Fail to add category %d to group %d", category.getId(), groupId);
+      throw new CreateDataFailException(ErrorCode.ERR_CATEGORY_CREATED_FAIL);
+    }
+    
+    return true;
+  }
 
-    Locale locale = request.getLocale();
+  @Override
+  public CategoryGroup updateCategoryGroup(CategoryGroup categoryGroup, Long id) throws UpdateDataFailException {
+    try {
+      Optional<CategoryGroup> oldCategoryGroup = categoryGroupRepository.findById(id);
+      if (!oldCategoryGroup.isPresent()) {
+        LOGGER.info("Category group %d is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
+      }
+  
+      boolean isUniqueName = categoryGroupRepository.existsByName(categoryGroup.getName());
+      if (isUniqueName) {
+        LOGGER.info("Category group name %s is already existed", categoryGroup.getName());
+        throw new DuplicateDataException(ErrorCode.ERR_GROUP_NAME_EXISTED);
+      }
+  
+      var newCategory = oldCategoryGroup.get();
+      newCategory.setName(categoryGroup.getName());
+      
+      return categoryGroupRepository.save(newCategory);
+    } catch (Exception ex) {
+      LOGGER.info("Fail to update category group %d", id);
+      throw new UpdateDataFailException(ErrorCode.ERR_CATEGORY_GROUP_UPDATED_FAIL);
+    }
+  }
 
-    Optional<Category> oldCategory = categoryRepository.findById(id);
-    if (!oldCategory.isPresent()) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateNotFound", null, locale), id));
+  @Override
+  public Category updateCategory(Category category, Long id, Long groupId) throws UpdateDataFailException {
+    try {
+      Optional<Category> oldCategory = categoryRepository.findById(id);
+      if (!oldCategory.isPresent()) {
+        LOGGER.info("Category %d is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      }
+  
+      boolean existedGroupId = categoryGroupRepository.existsById(groupId);
+      if (!existedGroupId) {
+        LOGGER.info("Category group %d is not found", groupId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
+      }
+  
+      Long categoryGroupId = categoryRepository.getGroupIdbyId(id);
+  
+      if (!categoryGroupId.equals(groupId)) {
+        LOGGER.info("Category %d is not in group %d", id, groupId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_IN_GROUP);
+      }
+  
+      boolean isUniqueName = categoryRepository.existsByName(category.getName());
+      if (isUniqueName) {
+        LOGGER.info("Category name %s is already existed", category.getName());
+        throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
+      }
+  
+      var newCategory = oldCategory.get();
+      newCategory.setName(category.getName());
+  
+      return categoryRepository.save(newCategory);
+    } catch (Exception ex) {
+      LOGGER.info("Fail to update category %d", id);
+      throw new UpdateDataFailException(ErrorCode.ERR_CATEGORY_UPDATED_FAIL);
+    }
+  }
+
+  @Override
+  public boolean deleteCategory(Long id) throws DeleteDataFailException {
+    try {
+      boolean existed = categoryRepository.existsById(id);
+      if (!existed) {
+        LOGGER.info("Category %d is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      }
+  
+      categoryRepository.deleteById(id);
+    } catch (Exception ex) {
+      LOGGER.info("Fail to delete category %d", id);
+      throw new DeleteDataFailException(ErrorCode.ERR_CATEGORY_DELETED_FAIL);
     }
 
-    boolean existedGroupId = categoryGroupRepository.existsById(groupId);
+    return true;
+  }
+
+  @Override
+  public boolean deleteCategoryGroup(Long id) throws DeleteDataFailException {
+    try {
+      boolean existedGroupId = categoryGroupRepository.existsById(id);
     if (!existedGroupId) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateGroupNotFound", null, locale), groupId));
-    }
-
-    Long categoryGroupId = categoryRepository.getGroupIdbyId(id);
-
-    if (!categoryGroupId.equals(groupId)) {
-      return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.cateNotInGroup", null, locale), id, groupId), HttpStatus.CONFLICT);
-    }
-
-    boolean isUniqueName = categoryRepository.existsByName(category.getName());
-    if (isUniqueName) {
-      return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.cateNameExisted", null, locale), category.getName()), HttpStatus.CONFLICT);
-    }
-
-    var newCategory = oldCategory.get();
-    newCategory.setName(category.getName());
-
-    categoryRepository.save(newCategory);
-
-    return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.cateUpdateSucc", null, locale), id), HttpStatus.OK);
-  }
-
-  @Override
-  public ResponseEntity<?> deleteCategory(Long id) {
-
-    Locale locale = request.getLocale();
-
-    boolean existed = categoryRepository.existsById(id);
-    if (!existed) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateNotFound", null, locale), id));
-    }
-
-    categoryRepository.deleteById(id);
-
-    return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.cateDelSucc", null, locale), id), HttpStatus.OK);
-  }
-
-  @Override
-  public ResponseEntity<?> deleteCategoryGroup(Long id) {
-
-    Locale locale = request.getLocale();
-
-    boolean existedGroupId = categoryGroupRepository.existsById(id);
-    if (!existedGroupId) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateGroupNotFound", null, locale), id));
+      LOGGER.info("Category group %d is not found", id);
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
     }
 
     boolean stillHaveCategory = categoryRepository.existsByGroupId(id);
     if (stillHaveCategory) {
-      return customResponseEntity.generateMessageResponseEntity(messages.getMessage("category.message.cateStillInGroup", null, locale), HttpStatus.CONFLICT);
+      LOGGER.info("Category group %d still have categories", id);
+      throw new RestrictDataException(ErrorCode.ERR_CATEGORY_STILL_IN_GROUP);
     }
 
     categoryGroupRepository.deleteById(id);
-
-    return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("category.message.cateGroupDelSucc", null, locale), id), HttpStatus.OK);
+    } catch (Exception e) {
+      LOGGER.info("Fail to delete category group %d", id);
+      throw new DeleteDataFailException(ErrorCode.ERR_CATEGORY_GROUP_DELETED_FAIL);
+    }
+    
+    return true;
   }
   
 }

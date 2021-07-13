@@ -1,7 +1,7 @@
 package com.ecommerce.gut.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +28,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.AccessMode;
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -37,7 +36,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
 @Entity
 @Table(name = "products")
 public class Product {
@@ -68,12 +66,12 @@ public class Product {
   @CreationTimestamp
   @Column(name = "created_date", updatable = false)
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date createdDate;
+  private LocalDateTime createdDate;
 
   @UpdateTimestamp
   @Column(name = "updated_date")
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date updatedDate;
+  private LocalDateTime updatedDate;
 
   @Column(name = "brandnew")
   private boolean brandNew;
@@ -86,11 +84,11 @@ public class Product {
 
   @Column(name = "sale_from_date")
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date saleFromDate;
+  private LocalDateTime saleFromDate;
 
   @Column(name = "sale_to_date")
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date saleToDate;
+  private LocalDateTime saleToDate;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "category_id")
@@ -110,28 +108,33 @@ public class Product {
   @Transient
   @JsonIgnore
   private Set<Color> colors = new HashSet<>();
+  
+  @Column(name = "is_deleted")
+  private boolean deleted;
 
-  public Product(String name, Double price, String shortDesc, String longDesc,
-      String material, String handling, boolean brandNew, boolean sale, Double priceSale,
-      Date saleFromDate, Date saleToDate, Category category,
-      List<ProductImage> productImages) {
-    this.name = name;
-    this.price = price;
-    this.shortDesc = shortDesc;
-    this.longDesc = longDesc;
-    this.material = material;
-    this.handling = handling;
-    this.brandNew = brandNew;
-    this.sale = sale;
-    this.priceSale = priceSale;
-    this.saleFromDate = saleFromDate;
-    this.saleToDate = saleToDate;
-    this.category = category;
-    this.productImages = productImages;
+  @Column(name = "in_stock")
+  private boolean inStock;
+
+  public Product(String name, Double price, String shortDesc, String longDesc, String material,
+      String handling, boolean brandNew, boolean sale, Double priceSale, LocalDateTime saleFromDate,
+      LocalDateTime saleToDate, Category category) {
+        this.name = name;
+        this.price = price;
+        this.shortDesc = shortDesc;
+        this.longDesc = longDesc;
+        this.material = material;
+        this.handling = handling;
+        this.brandNew = brandNew;
+        this.sale = sale;
+        this.priceSale = priceSale;
+        this.saleFromDate = saleFromDate;
+        this.saleToDate = saleToDate;
+        this.category = category;
+        this.deleted = false;
   }
 
   public Product(Long id, String name, Double price, String shortDesc, Double priceSale,
-      Date saleFromDate, Date saleToDate) {
+  LocalDateTime saleFromDate, LocalDateTime saleToDate) {
     this.id = id;
     this.name = name;
     this.price = price;
@@ -141,7 +144,7 @@ public class Product {
     this.saleToDate = saleToDate;
   }
 
-  public Product(Long id, String name, Double price, Date updatedDate, boolean brandNew, boolean sale, Category category) {
+  public Product(Long id, String name, Double price, LocalDateTime updatedDate, boolean brandNew, boolean sale, Category category) {
     this.id = id;
     this.name = name;
     this.price = price;
@@ -151,8 +154,8 @@ public class Product {
     this.category = category;
   }
 
-  public Product(Long id, String name, Double price, Date updatedDate, boolean brandNew,
-      boolean sale, Double priceSale, Date saleFromDate, Date saleToDate, Category category) {
+  public Product(Long id, String name, Double price, LocalDateTime updatedDate, boolean brandNew,
+      boolean sale, Double priceSale, LocalDateTime saleFromDate, LocalDateTime saleToDate, Category category) {
     this.id = id;
     this.name = name;
     this.price = price;
@@ -169,69 +172,6 @@ public class Product {
     ProductColorSize colorSize = new ProductColorSize(this, color, size);
     colorSize.setQuantity(quantity);
     colorSizes.add(colorSize);
-  }
-
-  public static class Builder {
-    private String name;
-    private double price;
-    private String shortDesc;
-    private String longDesc;
-    private String material;
-    private String handling;
-    private boolean brandNew;
-    private boolean sale;
-    private double priceSale;
-    private Date saleFromDate;
-    private Date saleToDate;
-    private Category category;
-    private List<ProductImage> images;
-
-    public Builder(String name) {
-      this.name = name;
-    }
-
-    public Builder withPrice(double price) {
-      this.price = price;
-      return this;
-    }
-
-    public Builder withDescription(String shortDesc, String longDesc, String material,
-        String handling) {
-      this.shortDesc = shortDesc;
-      this.longDesc = longDesc;
-      this.material = material;
-      this.handling = handling;
-      return this;
-    }
-
-    public Builder withNew(boolean brandNew) {
-      this.brandNew = brandNew;
-      return this;
-    }
-
-    public Builder withSale(boolean sale, double priceSale, Date saleFromDate, Date saleToDate) {
-      this.sale = sale;
-      this.priceSale = priceSale;
-      this.saleFromDate = saleFromDate;
-      this.saleToDate = saleToDate;
-      return this;
-    }
-
-    public Builder withCategory(Category category) {
-      this.category = category;
-      return this;
-    }
-
-    public Builder withImages(List<ProductImage> images) {
-      this.images = images;
-      return this;
-    }
-
-    public Product build() {
-      return new Product(this.name, this.price, this.shortDesc, this.longDesc, this.material,
-          this.handling, this.brandNew, this.sale, this.priceSale, this.saleFromDate,
-          this.saleToDate, this.category, this.images);
-    }
   }
 
 }

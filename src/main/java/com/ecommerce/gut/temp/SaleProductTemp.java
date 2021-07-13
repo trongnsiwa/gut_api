@@ -1,6 +1,6 @@
 package com.ecommerce.gut.temp;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,7 @@ public class SaleProductTemp {
   private Double price;
   private String shortDesc;
   private Double priceSale;
-  private Date saleFromDate;
-  private Date saleToDate;
+  private LocalDateTime saleFromDate;
+  private LocalDateTime saleToDate;
 
 }

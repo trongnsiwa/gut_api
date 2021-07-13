@@ -1,6 +1,6 @@
 package com.ecommerce.gut.dto;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.Getter;
@@ -13,12 +13,12 @@ import lombok.Setter;
 public class SaleProductDTO extends ProductDTO {
   
   private Double salePrice;
-  private Date saleFromDate;
-  private Date saleToDate;
+  private LocalDateTime saleFromDate;
+  private LocalDateTime saleToDate;
 
   public SaleProductDTO(Long id, String name, Double price, String shortDesc,
-      List<ProductImageDTO> images, List<ColorDTO> colors, Double salePrice, Date saleFromDate,
-      Date saleToDate) {
+      List<ProductImageDTO> images, List<ColorDTO> colors, Double salePrice, LocalDateTime saleFromDate,
+      LocalDateTime saleToDate) {
     super(id, name, price, shortDesc, images, colors);
     this.salePrice = salePrice;
     this.saleFromDate = saleFromDate;

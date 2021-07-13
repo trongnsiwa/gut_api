@@ -1,22 +1,21 @@
 package com.ecommerce.gut.controller;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-
+import com.ecommerce.gut.dto.ErrorCode;
+import com.ecommerce.gut.dto.ResponseDTO;
+import com.ecommerce.gut.dto.SuccessCode;
+import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.payload.request.LoginRequest;
 import com.ecommerce.gut.payload.request.SignUpRequest;
+import com.ecommerce.gut.payload.response.JwtResponse;
 import com.ecommerce.gut.service.AuthService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.WebRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,7 +24,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @Tag(name = "auth")
 public class AuthController {
 
@@ -43,8 +42,11 @@ public class AuthController {
       @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
   })
   @PostMapping("/login")
-  public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-    return authService.authenticateUser(loginRequest);
+  public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    JwtResponse jwtResponse = authService.authenticateUser(loginRequest);
+    return ResponseEntity.ok()
+        .header("AUTHORIZATION", jwtResponse.getType() + " " + jwtResponse.getToken())
+        .body(jwtResponse);
   }
 
   @Operation(summary = "Create new user", 
@@ -57,19 +59,19 @@ public class AuthController {
       @ApiResponse(responseCode = "409", description = "Email is already taken", content = @Content),
   })
   @PostMapping("/signup")
-  public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest, HttpServletRequest request) {
-    return authService.registerUser(signUpRequest, request);
-  }
-
-  @Operation(summary = "Confirm verified token after register")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Confirm successful", content = @Content),
-      @ApiResponse(responseCode = "400", description = "Token is expired", content = @Content),
-      @ApiResponse(responseCode = "404", description = "Token is invalid", content = @Content),
-  })
-  @GetMapping("/confirm")
-  public ResponseEntity<?> confirmRegistration(WebRequest request, @RequestParam("token") String token) {
-    return authService.confirmRegistration(request, token);
+  public ResponseEntity<ResponseDTO> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) throws CreateDataFailException {
+    ResponseDTO response = new ResponseDTO();
+    try {
+      boolean registered = authService.registerUser(signUpRequest);
+      if (registered) {
+        response.setData(null);
+        response.setSuccessCode(SuccessCode.USER_SIGNUP_SUCCESS);
+      }
+    } catch (Exception ex) {
+      response.setErrorCode(ErrorCode.ERR_USER_CREATED_FAIL);
+      throw new CreateDataFailException(ErrorCode.ERR_USER_CREATED_FAIL);
+    }
+    return ResponseEntity.ok().body(response);
   }
 
 }

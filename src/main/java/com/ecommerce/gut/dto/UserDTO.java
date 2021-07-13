@@ -21,7 +21,8 @@ public class UserDTO {
   private UUID id;
   private String email;
   private String fullName;
-  private boolean enabled;
+  private String status;
+  private boolean deleted;
   private Set<String> roles = new HashSet<>();
   
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

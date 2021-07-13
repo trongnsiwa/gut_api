@@ -3,7 +3,9 @@ package com.ecommerce.gut.service;
 import java.util.List;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.CategoryGroup;
-import org.springframework.http.ResponseEntity;
+import com.ecommerce.gut.exception.CreateDataFailException;
+import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface CategoryService {
 
@@ -13,16 +15,16 @@ public interface CategoryService {
 
   Category getCategoryById(Long id);
 
-  ResponseEntity<?> addCategoryGroup(CategoryGroup categoryGroup);
+  boolean createCategoryGroup(CategoryGroup categoryGroup) throws CreateDataFailException;
 
-  ResponseEntity<?> addCategoryToGroup(Category category, Long groupId);
+  boolean addCategoryToGroup(Category category, Long groupId) throws CreateDataFailException;
 
-  ResponseEntity<?> updateCategoryGroup(CategoryGroup categoryGroup, Long id);
+  CategoryGroup updateCategoryGroup(CategoryGroup categoryGroup, Long id) throws UpdateDataFailException;
 
-  ResponseEntity<?> updateCategory(Category category, Long id, Long groupId);
+  Category updateCategory(Category category, Long id, Long groupId) throws UpdateDataFailException;
 
-  ResponseEntity<?> deleteCategory(Long id);
+  boolean deleteCategory(Long id) throws DeleteDataFailException;
 
-  ResponseEntity<?> deleteCategoryGroup(Long id);
+  boolean deleteCategoryGroup(Long id) throws DeleteDataFailException;
 
 }

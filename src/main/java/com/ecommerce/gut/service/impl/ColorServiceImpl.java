@@ -1,111 +1,113 @@
 package com.ecommerce.gut.service.impl;
 
-import java.util.Locale;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
+import com.ecommerce.gut.dto.ErrorCode;
 import com.ecommerce.gut.entity.Color;
-import com.ecommerce.gut.exception.CustomNotFoundException;
+import com.ecommerce.gut.exception.CreateDataFailException;
+import com.ecommerce.gut.exception.DataNotFoundException;
+import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.DuplicateDataException;
+import com.ecommerce.gut.exception.RestrictDataException;
+import com.ecommerce.gut.exception.UpdateDataFailException;
 import com.ecommerce.gut.repository.ColorRepository;
 import com.ecommerce.gut.repository.ProductColorSizeRepository;
 import com.ecommerce.gut.service.ColorService;
-import com.ecommerce.gut.util.CustomResponseEntity;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ColorServiceImpl implements ColorService {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ColorServiceImpl.class);
+
   @Autowired
   private ColorRepository colorRepository;
 
   @Autowired
-  private CustomResponseEntity customResponseEntity;
-
-  @Autowired
   private ProductColorSizeRepository productColorSizeRepository;
-
-  @Autowired
-  private MessageSource messages;
-
-  @Autowired
-  private HttpServletRequest request;
 
   @Override
   public Color getColorById(Long id) {
     return colorRepository.findById(id)
-        .orElseThrow(() -> new CustomNotFoundException(String.format(messages.getMessage("color.message.notFound", null, request.getLocale()), id)));
+        .orElseThrow(() -> {
+          LOGGER.info("Color %d is not found", id);
+          return new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
+        });
   }
 
   @Override
-  public ResponseEntity<?> addColor(Color color) {
+  public boolean createColor(Color color) throws CreateDataFailException {
+    try {
+      Optional<Color> existedColor = colorRepository.findById(color.getId());
+      if (existedColor.isPresent()) {
+        LOGGER.info("Color %d is already taken", color.getId());
+        throw new DuplicateDataException(ErrorCode.ERR_COLOR_ALREADY_EXISTED);
+      }
 
-    Locale locale = request.getLocale();
+      boolean isUniqueName = colorRepository.existsByName(color.getName());
+      if (isUniqueName) {
+        LOGGER.info("Color name %d is already taken", color.getName());
+        throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
+      }
 
-    Optional<Color> existedColor = colorRepository.findById(color.getId());
-    if (existedColor.isPresent()) {
-      return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("color.message.alreadyExisted", null, locale), color.getId()), HttpStatus.CONFLICT);
+      colorRepository.save(color);
+    } catch (Exception e) {
+      LOGGER.info("Fail to create color %d", color.getId());
+      throw new CreateDataFailException(ErrorCode.ERR_COLOR_CREATED_FAIL);
     }
 
-    boolean isUniqueName = colorRepository.existsByName(color.getName());
-    if (isUniqueName) {
-      return customResponseEntity.generateMessageResponseEntity(
-          String.format(messages.getMessage("color.message.nameAlreadyTaken", null, locale), color.getName()),
-          HttpStatus.CONFLICT);
-    }
-
-    colorRepository.save(color);
-    return customResponseEntity.generateMessageResponseEntity(
-        String.format(messages.getMessage("color.message.addSucc", null, locale), color.getName()), HttpStatus.CREATED);
+    return true;
   }
 
   @Override
-  public ResponseEntity<?> updateColor(Color color, Long id) {
+  public Color updateColor(Color color, Long id) throws UpdateDataFailException {
+    try {
+      Optional<Color> oldColor = colorRepository.findById(id);
+      if (!oldColor.isPresent()) {
+        LOGGER.info("Color %d is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
+      }
 
-    Locale locale = request.getLocale();
+      boolean isUniqueName = colorRepository.existsByName(color.getName());
+      if (isUniqueName) {
+        LOGGER.info("Color name %d is already taken", color.getName());
+        throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
+      }
 
-    Optional<Color> oldColor = colorRepository.findById(id);
-    if (!oldColor.isPresent()) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("color.message.notFound", null, locale), id));
+      var newCategory = oldColor.get();
+      newCategory.setName(color.getName());
+      newCategory.setSource(color.getSource());
+
+      return colorRepository.save(newCategory);
+    } catch (Exception e) {
+      LOGGER.info("Fail to update color %d", id);
+      throw new UpdateDataFailException(ErrorCode.ERR_COLOR_UPDATED_FAIL);
     }
-
-    boolean isUniqueName = colorRepository.existsByName(color.getName());
-    if (isUniqueName) {
-      return customResponseEntity.generateMessageResponseEntity(
-          String.format(messages.getMessage("color.message.nameAlreadyTaken", null, locale), color.getName()),
-          HttpStatus.CONFLICT);
-    }
-
-    var newCategory = oldColor.get();
-    newCategory.setName(color.getName());
-    newCategory.setSource(color.getSource());
-    
-    colorRepository.save(newCategory);
-
-    return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("color.message.updateSucc", null, locale), id), HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<?> deleteColor(Long id) {
+  public boolean deleteColor(Long id) throws DeleteDataFailException {
+    try {
+      boolean existedColorId = colorRepository.existsById(id);
+      if (!existedColorId) {
+        LOGGER.info("Color %d is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
+      }
 
-    Locale locale = request.getLocale();
+      boolean stillJoining = productColorSizeRepository.existsJoiningColor(id);
+      if (stillJoining) {
+        throw new RestrictDataException(ErrorCode.ERR_PRODUCT_STILL_HAVE_COLOR);
+      }
 
-    boolean existedColorId = colorRepository.existsById(id);
-    if (!existedColorId) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("color.message.notFound", null, locale), id));
+      colorRepository.deleteById(id);
+    } catch (Exception e) {
+      LOGGER.info("Fail to delete color %d", id);
+      throw new DeleteDataFailException(ErrorCode.ERR_COLOR_DELETED_FAIL);
     }
 
-    boolean stillJoining = productColorSizeRepository.existsJoiningColor(id);
-    if (stillJoining) {
-      return customResponseEntity.generateMessageResponseEntity(messages.getMessage("color.message.productStillHave", null, locale), HttpStatus.CONFLICT);
-    }
-
-    colorRepository.deleteById(id);
-
-    return customResponseEntity.generateMessageResponseEntity(String.format(messages.getMessage("color.message.delSucc", null, locale), id), HttpStatus.OK);
+    return true;
   }
-  
+
 }

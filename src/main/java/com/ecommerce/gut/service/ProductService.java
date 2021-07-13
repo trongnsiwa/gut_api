@@ -1,10 +1,14 @@
 package com.ecommerce.gut.service;
 
 import java.util.List;
+import java.util.Optional;
+import com.ecommerce.gut.dto.CreateProductDTO;
 import com.ecommerce.gut.dto.ImageListDTO;
+import com.ecommerce.gut.dto.UpdateProductDTO;
 import com.ecommerce.gut.entity.Product;
-import com.ecommerce.gut.payload.request.ProductRequest;
-import org.springframework.http.ResponseEntity;
+import com.ecommerce.gut.exception.CreateDataFailException;
+import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface ProductService {
   
@@ -12,11 +16,11 @@ public interface ProductService {
 
   Product getProductDetail(Long id);
 
-  ResponseEntity<?> addProductToCategory(ProductRequest productRequest, Long categoryId);
+  boolean addProductToCategory(CreateProductDTO productDTO, Long categoryId) throws CreateDataFailException;
 
-  ResponseEntity<?> updateProduct(ProductRequest productRequest, Long id, Long categoryId);
+  Product updateProduct(UpdateProductDTO productDTO, Long id, Long categoryId) throws UpdateDataFailException;
 
-  ResponseEntity<?> deleteProduct(Long id);
+  boolean deleteProduct(Long id) throws DeleteDataFailException;
 
-  ResponseEntity<?> replaceImagesOfProduct(ImageListDTO imageListRequest, Long id);
+  Optional<Product> replaceImagesOfProduct(ImageListDTO imageListRequest, Long id) throws UpdateDataFailException;
 }

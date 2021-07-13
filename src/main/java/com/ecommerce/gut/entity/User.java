@@ -1,6 +1,6 @@
 package com.ecommerce.gut.entity;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -24,12 +24,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
 @Entity
@@ -90,17 +88,20 @@ public class User {
     @CreationTimestamp
     @Column(name = "registration_date")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date registrationDate;
+    private LocalDateTime registrationDate;
 
     @UpdateTimestamp
     @Column(name = "modified_date")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date modifiedDate;
+    private LocalDateTime modifiedDate;
 
-    @Column(name = "enabled")
-    private boolean enabled;
+    @Column(name = "is_deleted")
+    private boolean deleted;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @Column(name = "status", length = 20)
+    private String status;
+
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(
@@ -108,5 +109,9 @@ public class User {
             inverseJoinColumns = @JoinColumn(
                     name = "role_id"))
     private Set<Role> roles = new HashSet<>();
+
+    public User() {
+      this.deleted = false;
+    }
 
 }

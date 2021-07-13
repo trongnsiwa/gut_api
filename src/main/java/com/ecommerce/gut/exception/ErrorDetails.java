@@ -1,7 +1,7 @@
-package com.ecommerce.gut.payload.response;
+package com.ecommerce.gut.exception;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,9 +10,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
-public class MessageResponse {
+public class ErrorDetails {
   
+  private LocalDateTime datetime;
   private String message;
+  private String description;
 
 }

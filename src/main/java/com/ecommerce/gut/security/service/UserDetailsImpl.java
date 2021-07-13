@@ -38,7 +38,7 @@ public class UserDetailsImpl implements UserDetails {
   private Collection<? extends GrantedAuthority> authorities;
 
   public UserDetailsImpl(UUID id, String email, String password, String firstName, String lastName, String phone, String address,
-      boolean enabled,
+      String status,
       Collection<? extends GrantedAuthority> authorities) {
     this.id = id;
     this.email = email;
@@ -47,8 +47,12 @@ public class UserDetailsImpl implements UserDetails {
     this.lastName = lastName;
     this.phone = phone;
     this.address = address;
-    this.enabled = enabled;
     this.authorities = authorities;
+    if ("ACTIVE".equalsIgnoreCase(status)) {
+      this.enabled = true;
+    } else {
+      this.enabled = false;
+    }
   }
 
   public static UserDetailsImpl build(User user) {
@@ -66,7 +70,7 @@ public class UserDetailsImpl implements UserDetails {
         user.getLastName(), 
         user.getPhone(),
         user.getAddress(),
-        user.isEnabled(), 
+        user.getStatus(), 
         authorities
     );
   }
@@ -124,10 +128,6 @@ public class UserDetailsImpl implements UserDetails {
 
   public void setAddress(String address) {
     this.address = address;
-  }
-
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
   }
 
   public void setAuthorities(Set<Role> roles) {

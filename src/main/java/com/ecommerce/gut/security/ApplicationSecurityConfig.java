@@ -58,11 +58,11 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
         .authorizeRequests()
             .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
-            .antMatchers("/api/auth/**").permitAll()
-            .antMatchers("/api/home/**").permitAll()
-            .antMatchers("/api/category/**").permitAll()
-            .antMatchers("/api/color/**").permitAll()
-            .antMatchers("/api/product/**").permitAll()
+            .antMatchers("/auth/**").permitAll()
+            .antMatchers("/home/**").permitAll()
+            .antMatchers("/category/**").permitAll()
+            .antMatchers("/color/**").permitAll()
+            .antMatchers("/product/**").permitAll()
             .anyRequest().authenticated()
         .and()
         .logout()
@@ -86,6 +86,6 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/swagger-ui/**", "/v3/api-docs/**");
+		web.ignoring().antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**",  "/swagger-resources");
 	}
 }

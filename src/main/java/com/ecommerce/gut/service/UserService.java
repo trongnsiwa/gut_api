@@ -5,7 +5,8 @@ import java.util.Set;
 import java.util.UUID;
 import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
-import org.springframework.http.ResponseEntity;
+import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface UserService {
   
@@ -13,16 +14,16 @@ public interface UserService {
 
   User getUserProfileById(UUID id);
 
-  ResponseEntity<?> editUserProfile(User user, UUID id);
+  User editUserProfile(User user, UUID id) throws UpdateDataFailException;
 
-  ResponseEntity<?> editCurrentUserProfile(User user, UUID id);
+  User editCurrentUserProfile(User user, UUID id) throws UpdateDataFailException;
 
-  ResponseEntity<?> deleteUser(UUID id);
+  boolean deleteUser(UUID id) throws DeleteDataFailException;
 
-  ResponseEntity<?> deactivateUser(UUID id);
+  User deactivateUser(UUID id) throws UpdateDataFailException;
 
-  ResponseEntity<?> activateUser(UUID id);
+  User activateUser(UUID id) throws UpdateDataFailException;
 
-  ResponseEntity<?> changeUserRoles(UUID id, Set<Role> roles);
+  User changeUserRoles(UUID id, Set<Role> roles) throws UpdateDataFailException;
 
 }

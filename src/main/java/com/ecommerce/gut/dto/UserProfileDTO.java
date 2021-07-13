@@ -52,7 +52,9 @@ public class UserProfileDTO {
 
   private String address;
 
-  private boolean enabled;
+  private String status;
+
+  private boolean deleted;
   
   private Set<RoleDTO> roles = new HashSet<>();
 

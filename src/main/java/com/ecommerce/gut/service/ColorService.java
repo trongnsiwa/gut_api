@@ -1,16 +1,18 @@
 package com.ecommerce.gut.service;
 
 import com.ecommerce.gut.entity.Color;
-import org.springframework.http.ResponseEntity;
+import com.ecommerce.gut.exception.CreateDataFailException;
+import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface ColorService {
 
   Color getColorById(Long id);
   
-  ResponseEntity<?> addColor(Color color);
+  boolean createColor(Color color) throws CreateDataFailException;
 
-  ResponseEntity<?> updateColor(Color color, Long id);
+  Color updateColor(Color color, Long id) throws UpdateDataFailException;
 
-  ResponseEntity<?> deleteColor(Long id);
+  boolean deleteColor(Long id) throws DeleteDataFailException;
 
 }

@@ -1,0 +1,59 @@
+package com.ecommerce.gut.dto;
+
+public class ErrorCode {
+  
+  // AUTH
+  public static final String ERR_ROLE_NOT_FOUND = "ERR_ROLE_NOT_FOUND";
+  public static final String ERR_EMAIL_ALREADY_TAKEN = "ERR_EMAIL_ALREADY_TAKEN";
+  public static final String ERR_USER_CREATED_FAIL = "ERR_USER_CREATED_FAIL";
+
+  // CATEGORY
+  public static final String ERR_CATEGORY_GROUP_NOT_FOUND = "ERR_CATEGORY_GROUP_NOT_FOUND";
+  public static final String ERR_CATEGORY_NOT_FOUND = "ERR_CATEGORY_NOT_FOUND";
+  public static final String ERR_CATEGORY_GROUP_ALREADY_TAKEN = "ERR_CATEGORY_GROUP_TAKEN";
+  public static final String ERR_CATEGORY_ALREADY_TAKEN = "ERR_CATEGORY_TAKEN";
+  public static final String ERR_GROUP_NAME_EXISTED = "ERR_GROUP_NAME_EXISTED";
+  public static final String ERR_CATEGORY_NAME_EXISTED = "ERR_CATEGORY_NAME_EXISTED";
+  public static final String ERR_CATEGORY_NOT_IN_GROUP = "ERR_CATEGORY_NOT_IN_GROUP";
+  public static final String ERR_CATEGORY_STILL_IN_GROUP = "ERR_CATEGORY_STILL_IN_GROUP";
+  public static final String ERR_CATEGORY_GROUP_CREATED_FAIL = "ERR_CATEGORY_GROUP_CREATED_FAIL";
+  public static final String ERR_CATEGORY_CREATED_FAIL = "ERR_CATEGORY_CREATED_FAIL";
+  public static final String ERR_CATEGORY_GROUP_UPDATED_FAIL = "ERR_CATEGORY_GROUP_UPDATED_FAIL";
+  public static final String ERR_CATEGORY_UPDATED_FAIL = "ERR_CATEGORY_UPDATED_FAIL";
+  public static final String ERR_CATEGORY_GROUP_DELETED_FAIL = "ERR_CATEGORY_GROUP_DELETED_FAIL";
+  public static final String ERR_CATEGORY_DELETED_FAIL = "ERR_CATEGORY_DELETED_FAIL";
+
+  // COLOR
+  public static final String ERR_COLOR_NOT_FOUND = "ERR_COLOR_NOT_FOUND";
+  public static final String ERR_COLOR_ALREADY_EXISTED = "ERR_COLOR_ALREADY_EXISTED";
+  public static final String ERR_COLOR_NAME_ALREADY_TAKEN = "ERR_COLOR_NAME_ALREADY_TAKEN";
+  public static final String ERR_PRODUCT_STILL_HAVE_COLOR = "ERR_PRODUCT_STILL_HAVE_COLOR";
+  public static final String ERR_COLOR_LOADED_FAIL = "ERR_COLOR_LOADED_FAIL";
+  public static final String ERR_COLOR_CREATED_FAIL = "ERR_COLOR_CREATED_FAIL";
+  public static final String ERR_COLOR_UPDATED_FAIL = "ERR_COLOR_UPDATED_FAIL";
+  public static final String ERR_COLOR_DELETED_FAIL = "ERR_COLOR_DELETED_FAIL";
+
+  // SIZE
+  public static final String ERR_SIZE_NOT_FOUND = "ERR_SIZE_NOT_FOUND";
+
+  // PRODUCT
+  public static final String ERR_PRODUCT_NOT_FOUND = "ERR_PRODUCT_NOT_FOUND"; 
+  public static final String ERR_PRODUCT_ALREADY_TAKEN = "ERR_PRODUCT_ALREADY_TAKEN"; 
+  public static final String ERR_NOT_EXIST_TWO_SAME_COLORS = "ERR_NOT_EXIST_TWO_SAME_COLORS";
+  public static final String ERR_PRODUCT_LOADED_FAIL = "ERR_PRODUCT_LOADED_FAIL";
+  public static final String ERR_PRODUCT_CREATED_FAIL = "ERR_PRODUCT_CREATED_FAIL";
+  public static final String ERR_PRODUCT_UPDATED_FAIL = "ERR_PRODUCT_UPDATED_FAIL";
+  public static final String ERR_PRODUCT_DELETED_FAIL = "ERR_PRODUCT_DELETED_FAIL";
+  public static final String ERR_PRODUCT_IMAGES_REPLACED_FAIL = "ERR_PRODUCT_IMAGES_REPLACED_FAIL";
+
+  // USER
+  public static final String ERR_USER_NOT_FOUND = "ERR_USER_NOT_FOUND"; 
+  public static final String ERR_USER_PROFILE_LOADED_FAIL = "ERR_USER_PROFILE_LOADED_FAIL"; 
+  public static final String ERR_USER_PROFILE_EDITED_FAIL = "ERR_USER_PROFILE_EDITED_FAIL"; 
+  public static final String ERR_CURRENT_USER_PROFILE_EDITED_FAIL = "ERR_CURRENT_USER_PROFILE_PROFILE";
+  public static final String ERR_USER_DELETED_FAIL = "ERR_USER_DELETED_FAIL";
+  public static final String ERR_USER_DEACTIVATED_FAIL = "ERR_USER_DEACTIVATED_FAIL";
+  public static final String ERR_USER_ACTIVATED_FAIL = "ERR_USER_ACTIVATED_FAIL";
+  public static final String ERR_USER_ROLES_CHANGED_FAIL = "ERR_USER_ROLES_CHANGED_FAIL";
+
+}

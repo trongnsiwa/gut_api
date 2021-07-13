@@ -2,23 +2,28 @@ package com.ecommerce.gut.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
+import com.ecommerce.gut.dto.CreateProductDTO;
+import com.ecommerce.gut.dto.ErrorCode;
 import com.ecommerce.gut.dto.ImageListDTO;
 import com.ecommerce.gut.dto.ProductImageDTO;
+import com.ecommerce.gut.dto.UpdateProductDTO;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.entity.PSize;
 import com.ecommerce.gut.entity.Product;
 import com.ecommerce.gut.entity.ProductColorSize;
 import com.ecommerce.gut.entity.ProductImage;
-import com.ecommerce.gut.exception.CustomNotFoundException;
-import com.ecommerce.gut.payload.request.ProductRequest;
+import com.ecommerce.gut.exception.CreateDataFailException;
+import com.ecommerce.gut.exception.DataNotFoundException;
+import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.DuplicateDataException;
+import com.ecommerce.gut.exception.UpdateDataFailException;
 import com.ecommerce.gut.repository.CategoryRepository;
 import com.ecommerce.gut.repository.ColorRepository;
 import com.ecommerce.gut.repository.PSizeRepository;
@@ -27,23 +32,19 @@ import com.ecommerce.gut.repository.ProductImageRepository;
 import com.ecommerce.gut.repository.ProductRepository;
 import com.ecommerce.gut.service.ProductService;
 
-import com.ecommerce.gut.util.CustomResponseEntity;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
-import org.springframework.context.MessageSource;
-
 import org.springframework.stereotype.Service;
-
-import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 @Service
 public class ProductServiceImpl implements ProductService {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ProductServiceImpl.class);
 
   private ProductRepository productRepository;
 
@@ -55,28 +56,18 @@ public class ProductServiceImpl implements ProductService {
 
   private CategoryRepository categoryRepository;
 
-  private CustomResponseEntity customResponseEntity;
-
   private ProductColorSizeRepository productColorSizeRepository;
-
-  private MessageSource messages;
-
-  private HttpServletRequest request;
 
   public ProductServiceImpl(ProductRepository productRepository, ColorRepository colorRepository,
       PSizeRepository pSizeRepository, ProductImageRepository imageRepository,
-      CategoryRepository categoryRepository, CustomResponseEntity customResponseEntity,
-      ProductColorSizeRepository productColorSizeRepository,
-      MessageSource messages, HttpServletRequest request) {
+      CategoryRepository categoryRepository,
+      ProductColorSizeRepository productColorSizeRepository) {
     this.productRepository = productRepository;
     this.colorRepository = colorRepository;
     this.pSizeRepository = pSizeRepository;
     this.imageRepository = imageRepository;
     this.categoryRepository = categoryRepository;
-    this.customResponseEntity = customResponseEntity;
     this.productColorSizeRepository = productColorSizeRepository;
-    this.messages = messages;
-    this.request = request;
   }
 
   @Override
@@ -84,7 +75,8 @@ public class ProductServiceImpl implements ProductService {
       Integer pageSize, String sortBy) {
     Optional<Category> existedCategory = categoryRepository.findById(categoryId);
     if (!existedCategory.isPresent()) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateNotFound", null, request.getLocale()), categoryId));
+      LOGGER.info("Category %d is not found", categoryId);
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     }
 
     Sort sort = null;
@@ -154,210 +146,237 @@ public class ProductServiceImpl implements ProductService {
   @Override
   public Product getProductDetail(Long id) {
     return productRepository.findById(id)
-        .orElseThrow(() -> new CustomNotFoundException(String.format(messages.getMessage("product.message.notFound", null, request.getLocale()), id)));
+        .orElseThrow(() -> {
+          LOGGER.info("Product %d is not found", id);
+          return new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+        });
   }
 
   @Override
-  public ResponseEntity<?> addProductToCategory(ProductRequest productRequest, Long categoryId) {
-
-    Locale locale = request.getLocale();
-
-    Optional<Category> existedCategory = categoryRepository.findById(categoryId);
-    if (!existedCategory.isPresent()) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("category.message.cateNotFound", null, locale), categoryId));
-    }
-
-    if (productRequest.getId() > 0) {
-      boolean existedProduct = productRepository.existsById(productRequest.getId());
-      if (existedProduct) {
-        return customResponseEntity.generateMessageResponseEntity(
-            String.format(messages.getMessage("product.message.alreadyTaken", null, locale), productRequest.getId()),
-            HttpStatus.CONFLICT);
+  public boolean addProductToCategory(CreateProductDTO productDTO, Long categoryId)
+      throws CreateDataFailException {
+    try {
+      Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+      if (!existedCategory.isPresent()) {
+        LOGGER.info("Category %d is not found", categoryId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
+
+      Product product = new Product(productDTO.getName(),
+          productDTO.getPrice(),
+          productDTO.getShortDesc(),
+          productDTO.getLongDesc(),
+          productDTO.getMaterial(),
+          productDTO.getHandling(),
+          true,
+          productDTO.isSale(),
+          productDTO.getPriceSale(),
+          productDTO.getSaleFromDate(),
+          productDTO.getSaleToDate(),
+          existedCategory.get());
+
+      product.setInStock(false);
+
+      productDTO.getColors().stream().forEach(colorSize -> {
+        Color color = colorRepository.findById(colorSize.getColorId())
+            .orElseThrow(
+                () -> {
+                  LOGGER.info("Color %d is not found", colorSize.getColorId());
+                  return new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
+                });
+
+        colorSize.getSizes().entrySet().stream()
+            .forEach(entry -> {
+              PSize size = pSizeRepository.findById(entry.getKey())
+                  .orElseThrow(
+                      () -> {
+                        LOGGER.info("Size %d is not found", entry.getKey());
+                        return new DataNotFoundException(ErrorCode.ERR_SIZE_NOT_FOUND);
+                      });
+
+              product.addColorSize(color, size, entry.getValue());
+              if (entry.getValue() > 0) {
+                product.setInStock(true);
+              }
+            });
+      });
+
+      productRepository.save(product);
+    } catch (Exception e) {
+      LOGGER.info("Fail to create product %s", productDTO.getName());
+      throw new CreateDataFailException(ErrorCode.ERR_PRODUCT_CREATED_FAIL);
     }
 
-    Product product = new Product.Builder(productRequest.getName())
-        .withPrice(productRequest.getPrice())
-        .withDescription(productRequest.getShortDesc(), productRequest.getLongDesc(),
-            productRequest.getMaterial(), productRequest.getHandling())
-        .withNew(true)
-        .withSale(productRequest.isSale(), productRequest.getPriceSale(),
-            productRequest.getSaleFromDate(), productRequest.getSaleToDate())
-        .withCategory(existedCategory.get())
-        .build();
-
-    productRequest.getColors().stream().forEach(colorSize -> {
-      Color color = colorRepository.findById(colorSize.getColorId())
-          .orElseThrow(
-              () -> new CustomNotFoundException(String.format(messages.getMessage("color.message.notFound", null, locale), colorSize.getColorId())));
-
-      colorSize.getSizes().entrySet().stream()
-          .forEach(entry -> {
-            PSize size = pSizeRepository.findById(entry.getKey())
-                .orElseThrow(
-                    () -> new CustomNotFoundException(String.format(messages.getMessage("size.message.notFound", null, locale), entry.getKey())));
-
-            product.addColorSize(color, size, entry.getValue());
-          });
-    });
-
-    productRepository.save(product);
-
-    return customResponseEntity
-        .generateMessageResponseEntity(String.format(messages.getMessage("product.message.addSucc", null, locale),
-            product.getName(), existedCategory.get().getName()), HttpStatus.CREATED);
+    return true;
   }
 
   @Override
-  public ResponseEntity<?> updateProduct(ProductRequest productRequest, Long id, Long categoryId) {
+  public Product updateProduct(UpdateProductDTO productDTO, Long id, Long categoryId)
+      throws UpdateDataFailException {
+    try {
+      Optional<Category> existedCategory =
+          categoryRepository.findById(categoryId);
+      if (!existedCategory.isPresent()) {
+        LOGGER.info("Category %d is not found", categoryId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      }
 
-    Locale locale = request.getLocale();
+      Optional<Product> existedProduct = productRepository.findById(id);
+      if (!existedProduct.isPresent()) {
+        LOGGER.info("Product %d is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+      }
 
-    Optional<Category> existedCategory =
-        categoryRepository.findById(categoryId);
-    if (!existedCategory.isPresent()) {
-      throw new CustomNotFoundException(
-          String.format(messages.getMessage("category.message.cateNotFound", null, locale), categoryId));
+      Product product = existedProduct.get();
+      product.setName(productDTO.getName());
+      product.setPrice(productDTO.getPrice());
+      product.setShortDesc(productDTO.getShortDesc());
+      product.setLongDesc(productDTO.getLongDesc());
+      product.setMaterial(productDTO.getMaterial());
+      product.setHandling(productDTO.getHandling());
+      product.setBrandNew(false);
+      product.setSale(productDTO.isSale());
+      product.setPriceSale(productDTO.getPriceSale());
+      product.setSaleFromDate(productDTO.getSaleFromDate());
+      product.setSaleToDate(productDTO.getSaleToDate());
+      product.setCategory(existedCategory.get());
+      product.getColorSizes().clear();
+
+      product.setInStock(false);
+
+      productDTO.getColors().stream().forEach(colorSize -> {
+        Color color = colorRepository.findById(colorSize.getColorId())
+            .orElseThrow(
+                () -> {
+                  LOGGER.info("Color %d is not found", colorSize.getColorId());
+                  return new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
+                });
+
+        colorSize.getSizes().entrySet().stream()
+            .forEach(entry -> {
+              PSize size = pSizeRepository.findById(entry.getKey())
+                  .orElseThrow(
+                      () -> {
+                        LOGGER.info("Size %d is not found", entry.getKey());
+                        return new DataNotFoundException(ErrorCode.ERR_SIZE_NOT_FOUND);
+                      });
+
+              product.addColorSize(color, size, entry.getValue());
+              if (entry.getValue() > 0) {
+                product.setInStock(true);
+              }
+            });
+      });
+
+      return productRepository.save(product);
+    } catch (Exception e) {
+      LOGGER.info("Fail to update product %d", id);
+      throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_UPDATED_FAIL);
     }
-
-    Optional<Product> existedProduct = productRepository.findById(id);
-    if (!existedProduct.isPresent()) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("product.message.notFound", null, locale), id));
-    }
-
-    Product product = existedProduct.get();
-    product.setName(productRequest.getName());
-    product.setPrice(productRequest.getPrice());
-    product.setShortDesc(productRequest.getShortDesc());
-    product.setLongDesc(productRequest.getLongDesc());
-    product.setMaterial(productRequest.getMaterial());
-    product.setHandling(productRequest.getHandling());
-    product.setBrandNew(false);
-    product.setSale(productRequest.isSale());
-    product.setPriceSale(productRequest.getPriceSale());
-    product.setSaleFromDate(productRequest.getSaleFromDate());
-    product.setSaleToDate(productRequest.getSaleToDate());
-    product.setCategory(existedCategory.get());
-    product.getColorSizes().clear();
-
-    productRequest.getColors().stream().forEach(colorSize -> {
-      Color color = colorRepository.findById(colorSize.getColorId())
-          .orElseThrow(
-              () -> new CustomNotFoundException(String.format(messages.getMessage("color.message.notFound", null, locale), colorSize.getColorId())));
-
-      colorSize.getSizes().entrySet().stream()
-          .forEach(entry -> {
-            PSize size = pSizeRepository.findById(entry.getKey())
-                .orElseThrow(
-                    () -> new CustomNotFoundException(String.format(messages.getMessage("size.message.notFound", null, locale), entry.getKey())));
-
-            product.addColorSize(color, size, entry.getValue());
-          });
-    });
-
-    productRepository.save(product);
-
-    return customResponseEntity.generateMessageResponseEntity(
-        String.format(messages.getMessage("product.message.updateSucc", null, locale), id), HttpStatus.OK);
   }
 
   @Override
-  @Transactional
-  public ResponseEntity<?> deleteProduct(Long id) {
+  public boolean deleteProduct(Long id) throws DeleteDataFailException {
+    try {
+      Optional<Product> existedProduct = productRepository.findById(id);
+      if (!existedProduct.isPresent()) {
+        LOGGER.info("Product %d is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+      }
 
-    Locale locale = request.getLocale();
+      Product product = existedProduct.get();
+      product.setDeleted(true);
 
-    Optional<Product> existedProduct = productRepository.findById(id);
-    if (!existedProduct.isPresent()) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("product.message.notFound", null, locale), id));
+      productRepository.save(product);
+    } catch (Exception e) {
+      LOGGER.info("Fail to delete product %d", id);
+      throw new DeleteDataFailException(ErrorCode.ERR_PRODUCT_DELETED_FAIL);
     }
 
-    Product product = existedProduct.get();
-    product.getProductImages().clear();
-    product.getColorSizes().clear();
-
-    Optional<Category> existedCategory = categoryRepository.findById(product.getCategory().getId());
-    if (!existedCategory.isPresent()) {
-      throw new CustomNotFoundException(
-          String.format(messages.getMessage("category.message.cateNotFound", null, locale), product.getCategory().getId()));
-    }
-
-    Category category = existedCategory.get();
-    category.getProducts().remove(product);
-    categoryRepository.save(category);
-
-    return customResponseEntity.generateMessageResponseEntity(
-        String.format(messages.getMessage("product.message.delSucc", null, locale), id), HttpStatus.OK);
+    return true;
   }
 
   @Override
-  public ResponseEntity<?> replaceImagesOfProduct(ImageListDTO imageListRequest, Long id) {
+  public Optional<Product> replaceImagesOfProduct(ImageListDTO imageListRequest, Long id) throws UpdateDataFailException {
+    try {
+      Optional<Product> existedProduct = productRepository.findById(id);
+      if (!existedProduct.isPresent()) {
+        LOGGER.info("Product %d is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+      }
 
-    Locale locale = request.getLocale();
+      Collection<ProductImageDTO> images = imageListRequest.getImages();
 
-    Optional<Product> existedProduct = productRepository.findById(id);
-    if (!existedProduct.isPresent()) {
-      throw new CustomNotFoundException(String.format(messages.getMessage("product.message.notFound", null, locale), id));
-    }
+      if (images.isEmpty()) {
+        LOGGER.info("Delete all images of product %d successful", id);
+        imageRepository.deleteAllByProductId(id);
 
-    Collection<ProductImageDTO> images = imageListRequest.getImages();
+        Product product = existedProduct.get();
+        product.setProductImages(Collections.emptyList());
 
-    if (images.isEmpty()) {
-      imageRepository.deleteAllByProductId(id);
+        return Optional.of(product);
+      }
 
-      return customResponseEntity.generateMessageResponseEntity(
-          String.format(messages.getMessage("product.message.delAllImagesSucc", null, locale), id), HttpStatus.OK);
-    }
+      List<Long> colorCodes = new ArrayList<>();
 
-    List<Long> colorCodes = new ArrayList<>();
+      imageListRequest.getImages().stream().forEach(image -> {
+        if (image.getColorCode() > 0) {
+          Optional<Color> color = colorRepository.findById(image.getColorCode());
 
-    imageListRequest.getImages().stream().forEach(image -> {
-      if (image.getColorCode() > 0) {
-        Optional<Color> color = colorRepository.findById(image.getColorCode());
+          colorCodes.add(image.getColorCode());
 
-        colorCodes.add(image.getColorCode());
-
-        if (!color.isPresent()) {
-          throw new CustomNotFoundException(String.format(messages.getMessage("color.message.notFound", null, locale), image.getColorCode()));
+          if (!color.isPresent()) {
+            LOGGER.info("Color %d is not found", image.getColorCode());
+            throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
+          }
         }
-      }
-    });
+      });
 
-    Set<Long> colorCodeSet = new HashSet<>(colorCodes);
-    if (colorCodeSet.size() < colorCodes.size()) {
-      return customResponseEntity.generateMessageResponseEntity(
-        messages.getMessage("product.message.notExistTwoSameColors", null, locale), HttpStatus.CONFLICT);
+      Set<Long> colorCodeSet = new HashSet<>(colorCodes);
+      if (colorCodeSet.size() < colorCodes.size()) {
+        LOGGER.info("Cannot exist two same colors in the list");
+        throw new DuplicateDataException(ErrorCode.ERR_NOT_EXIST_TWO_SAME_COLORS);
+      }
+
+      List<ProductImage> existedImages = imageRepository.findImagesByProductId(id);
+
+      existedImages.stream().forEach(image -> {
+        boolean notReplaced =
+            imageListRequest.getImages().stream()
+                .noneMatch(img -> img.getId().equals(image.getId()));
+
+        if (notReplaced) {
+          imageRepository.deleteByIdAndProductId(Long.valueOf(String.valueOf(image.getId())), id);
+        }
+      });
+
+      imageListRequest.getImages().stream().forEach(image -> imageRepository.findById(image.getId())
+          .map(existedImage -> {
+            existedImage.setImageUrl(image.getImageUrl());
+            existedImage.setProduct(existedProduct.get());
+            existedImage.setColorCode(image.getColorCode());
+
+            return imageRepository.save(existedImage);
+          })
+          .orElseGet(() -> {
+            var productImage =
+                new ProductImage(image.getId(), existedProduct.get(), image.getImageUrl(),
+                    image.getTitle(), image.getColorCode());
+
+            return imageRepository.save(productImage);
+          }));
+
+      Optional<Product> updatedProduct = productRepository.findById(id);
+      if (!updatedProduct.isPresent()) {
+        LOGGER.info("Product %d is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+      }
+
+      return updatedProduct;
+    } catch (Exception e) {
+      LOGGER.info("Fail to replace images of product %d", id);
+      throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_IMAGES_REPLACED_FAIL);
     }
-
-    List<ProductImage> existedImages = imageRepository.findImagesByProductId(id);
-
-    existedImages.stream().forEach(image -> {
-      boolean notReplaced =
-          imageListRequest.getImages().stream().noneMatch(img -> img.getId().equals(image.getId()));
-
-      if (notReplaced) {
-        imageRepository.deleteByIdAndProductId(Long.valueOf(String.valueOf(image.getId())), id);
-      }
-    });
-
-    imageListRequest.getImages().stream().forEach(image -> imageRepository.findById(image.getId())
-        .map(existedImage -> {
-          existedImage.setImageUrl(image.getImageUrl());
-          existedImage.setProduct(existedProduct.get());
-          existedImage.setColorCode(image.getColorCode());
-
-          return imageRepository.save(existedImage);
-        })
-        .orElseGet(() -> {
-          var productImage =
-              new ProductImage(image.getId(), existedProduct.get(), image.getImageUrl(),
-                  image.getTitle(), image.getColorCode());
-
-          return imageRepository.save(productImage);
-        }));
-
-    return customResponseEntity.generateMessageResponseEntity(
-        String.format(messages.getMessage("product.message.updateImagesSucc", null, locale), id), HttpStatus.OK);
   }
 
 }
