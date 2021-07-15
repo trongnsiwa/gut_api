@@ -2,29 +2,31 @@ package com.ecommerce.gut.service;
 
 import java.util.List;
 import com.ecommerce.gut.entity.Category;
-import com.ecommerce.gut.entity.CategoryGroup;
 import com.ecommerce.gut.exception.CreateDataFailException;
+import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.DuplicateDataException;
+import com.ecommerce.gut.exception.RestrictDataException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface CategoryService {
 
-  List<CategoryGroup> getCategoryGroupsPerPage(Integer pageNum, Integer pageSize, String sortBy);
+  List<Category> getParentCategoriesPerPage(Integer pageNum, Integer pageSize, String sortBy);
 
-  CategoryGroup getCategoryGroupById(Long groupId);
+  Category getParentCategoryById(Long parentId);
 
   Category getCategoryById(Long id);
 
-  boolean createCategoryGroup(CategoryGroup categoryGroup) throws CreateDataFailException;
+  boolean createParentCategory(Category parentCategory) throws CreateDataFailException, DuplicateDataException;
 
-  boolean addCategoryToGroup(Category category, Long groupId) throws CreateDataFailException;
+  boolean addCategoryToParent(Category category, Long parentId) throws CreateDataFailException, DataNotFoundException, DuplicateDataException;
 
-  CategoryGroup updateCategoryGroup(CategoryGroup categoryGroup, Long id) throws UpdateDataFailException;
+  Category updateParentCategory(Category parentCategory, Long id) throws UpdateDataFailException, DataNotFoundException, DuplicateDataException;
 
-  Category updateCategory(Category category, Long id, Long groupId) throws UpdateDataFailException;
+  Category updateCategory(Category category, Long id, Long parentId) throws UpdateDataFailException, DataNotFoundException, DuplicateDataException;
 
-  boolean deleteCategory(Long id) throws DeleteDataFailException;
+  boolean deleteCategory(Long id) throws DeleteDataFailException, DataNotFoundException;
 
-  boolean deleteCategoryGroup(Long id) throws DeleteDataFailException;
+  boolean deleteParentCategory(Long id) throws DeleteDataFailException, DataNotFoundException, RestrictDataException;
 
 }

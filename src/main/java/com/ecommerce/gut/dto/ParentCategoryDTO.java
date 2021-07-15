@@ -16,7 +16,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class CategoryGroupDTO {
+public class ParentCategoryDTO {
 
   private Long id;
 

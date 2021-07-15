@@ -1,4 +1,4 @@
-package com.ecommerce.gut.dto;
+package com.ecommerce.gut.payload.response;
 
 public class ErrorCode {
   
@@ -8,19 +8,19 @@ public class ErrorCode {
   public static final String ERR_USER_CREATED_FAIL = "ERR_USER_CREATED_FAIL";
 
   // CATEGORY
-  public static final String ERR_CATEGORY_GROUP_NOT_FOUND = "ERR_CATEGORY_GROUP_NOT_FOUND";
+  public static final String ERR_CATEGORY_PARENT_NOT_FOUND = "ERR_CATEGORY_PARENT_NOT_FOUND";
   public static final String ERR_CATEGORY_NOT_FOUND = "ERR_CATEGORY_NOT_FOUND";
-  public static final String ERR_CATEGORY_GROUP_ALREADY_TAKEN = "ERR_CATEGORY_GROUP_TAKEN";
+  public static final String ERR_CATEGORY_PARENT_ALREADY_TAKEN = "ERR_CATEGORY_PARENT_TAKEN";
   public static final String ERR_CATEGORY_ALREADY_TAKEN = "ERR_CATEGORY_TAKEN";
-  public static final String ERR_GROUP_NAME_EXISTED = "ERR_GROUP_NAME_EXISTED";
+  public static final String ERR_PARENT_NAME_EXISTED = "ERR_PARENT_NAME_EXISTED";
   public static final String ERR_CATEGORY_NAME_EXISTED = "ERR_CATEGORY_NAME_EXISTED";
-  public static final String ERR_CATEGORY_NOT_IN_GROUP = "ERR_CATEGORY_NOT_IN_GROUP";
-  public static final String ERR_CATEGORY_STILL_IN_GROUP = "ERR_CATEGORY_STILL_IN_GROUP";
-  public static final String ERR_CATEGORY_GROUP_CREATED_FAIL = "ERR_CATEGORY_GROUP_CREATED_FAIL";
+  public static final String ERR_CATEGORY_NOT_IN_PARENT = "ERR_CATEGORY_NOT_IN_PARENT";
+  public static final String ERR_CATEGORY_STILL_IN_PARENT = "ERR_CATEGORY_STILL_IN_PARENT";
+  public static final String ERR_CATEGORY_PARENT_CREATED_FAIL = "ERR_CATEGORY_PARENT_CREATED_FAIL";
   public static final String ERR_CATEGORY_CREATED_FAIL = "ERR_CATEGORY_CREATED_FAIL";
-  public static final String ERR_CATEGORY_GROUP_UPDATED_FAIL = "ERR_CATEGORY_GROUP_UPDATED_FAIL";
+  public static final String ERR_CATEGORY_PARENT_UPDATED_FAIL = "ERR_CATEGORY_PARENT_UPDATED_FAIL";
   public static final String ERR_CATEGORY_UPDATED_FAIL = "ERR_CATEGORY_UPDATED_FAIL";
-  public static final String ERR_CATEGORY_GROUP_DELETED_FAIL = "ERR_CATEGORY_GROUP_DELETED_FAIL";
+  public static final String ERR_CATEGORY_PARENT_DELETED_FAIL = "ERR_CATEGORY_PARENT_DELETED_FAIL";
   public static final String ERR_CATEGORY_DELETED_FAIL = "ERR_CATEGORY_DELETED_FAIL";
 
   // COLOR
@@ -55,5 +55,17 @@ public class ErrorCode {
   public static final String ERR_USER_DEACTIVATED_FAIL = "ERR_USER_DEACTIVATED_FAIL";
   public static final String ERR_USER_ACTIVATED_FAIL = "ERR_USER_ACTIVATED_FAIL";
   public static final String ERR_USER_ROLES_CHANGED_FAIL = "ERR_USER_ROLES_CHANGED_FAIL";
+  public static final String ERR_LOAD_USERS_FAIL = "ERR_LOAD_USERS_FAIL";
+
+  // CART
+  public static final String ERR_ADD_TO_CART_FAIL = "ERR_ADD_TO_CART_FAIL";
+  public static final String ERR_REMOVE_ITEM_FAIL = "ERR_REMOVE_ITEM_FAIL";
+  public static final String ERR_UPDATE_ITEM_QUANTITY_FAIL = "ERR_UPDATE_ITEM_QUANTITY_FAIL";
+  public static final String ERR_CLEAR_CART_FAIL = "ERR_CLEAR_CART_FAIL";
+  public static final String ERR_CART_NOT_FOUND = "ERR_CART_NOT_FOUND";
+  public static final String ERR_ITEM_CART_NOT_FOUND = "ERR_ITEM_CART_NOT_FOUND";
+
+  public static final String ERR_DATA_CONVERT_FAIL = "ERR_DATA_CONVERT_FAIL";
+  
 
 }

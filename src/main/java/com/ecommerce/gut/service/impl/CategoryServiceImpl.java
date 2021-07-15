@@ -2,16 +2,14 @@ package com.ecommerce.gut.service.impl;
 
 import java.util.List;
 import java.util.Optional;
-import com.ecommerce.gut.dto.ErrorCode;
 import com.ecommerce.gut.entity.Category;
-import com.ecommerce.gut.entity.CategoryGroup;
 import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DeleteDataFailException;
 import com.ecommerce.gut.exception.DuplicateDataException;
 import com.ecommerce.gut.exception.RestrictDataException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
-import com.ecommerce.gut.repository.CategoryGroupRepository;
+import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.repository.CategoryRepository;
 import com.ecommerce.gut.service.CategoryService;
 import org.slf4j.Logger;
@@ -27,31 +25,28 @@ public class CategoryServiceImpl implements CategoryService {
   private static final Logger LOGGER = LoggerFactory.getLogger(CategoryServiceImpl.class);
 
   @Autowired
-  private CategoryGroupRepository categoryGroupRepository;
-
-  @Autowired
   private CategoryRepository categoryRepository;
 
   @Override
-  public List<CategoryGroup> getCategoryGroupsPerPage(Integer pageNum, Integer pageSize,
+  public List<Category> getParentCategoriesPerPage(Integer pageNum, Integer pageSize,
       String sortBy) {
     Sort sort = null;
     if ("Z-A".equals(sortBy)) {
       sort = Sort.by("name").descending();
     } else {
-      sort = Sort.by("name");
+      sort = Sort.by("name").ascending();
     }
 
     PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
-    return categoryGroupRepository.findAll(pageRequest).getContent();
+    return categoryRepository.getParentCategoryPerPage(pageRequest).getContent();
   }
 
   @Override
-  public CategoryGroup getCategoryGroupById(Long groupId) {
-    return categoryGroupRepository.findById(groupId)
+  public Category getParentCategoryById(Long parentId) {
+    return categoryRepository.findById(parentId)
         .orElseThrow(() -> {
-          LOGGER.info("Category group %d is not found", groupId);
-          return new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
+          LOGGER.info("Category parent {} is not found", parentId);
+          return new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
         });
   }
 
@@ -59,130 +54,160 @@ public class CategoryServiceImpl implements CategoryService {
   public Category getCategoryById(Long id) {
     return categoryRepository.findById(id)
         .orElseThrow(() -> {
-          LOGGER.info("Category %d is not found", id);
+          LOGGER.info("Category {} is not found", id);
           return new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
         });
   }
 
   @Override
-  public boolean createCategoryGroup(CategoryGroup categoryGroup) throws CreateDataFailException {
+  public boolean createParentCategory(Category parentCategory)
+      throws CreateDataFailException, DuplicateDataException {
     try {
-      boolean isUniqueName = categoryGroupRepository.existsByName(categoryGroup.getName());
+      boolean isUniqueName = categoryRepository.existsByName(parentCategory.getName());
       if (isUniqueName) {
-        LOGGER.info("Category group name %s is already existed", categoryGroup.getName());
-        throw new DuplicateDataException(ErrorCode.ERR_GROUP_NAME_EXISTED);
+        LOGGER.info("Category parent name {} is already existed", parentCategory.getName());
+        throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
       }
-  
-      categoryGroupRepository.save(categoryGroup);
+
+      categoryRepository.save(parentCategory);
+    } catch (DuplicateDataException ex) {
+      throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
     } catch (Exception ex) {
-      LOGGER.info("Fail to create category group %d", categoryGroup.getId());
-      throw new CreateDataFailException(ErrorCode.ERR_CATEGORY_GROUP_CREATED_FAIL);
+      LOGGER.info("Fail to create category group {}", parentCategory.getId());
+      throw new CreateDataFailException(ErrorCode.ERR_CATEGORY_PARENT_CREATED_FAIL);
     }
-    
+
     return true;
   }
 
   @Override
-  public boolean addCategoryToGroup(Category category, Long groupId) throws CreateDataFailException {
+  public boolean addCategoryToParent(Category category, Long parentId)
+      throws CreateDataFailException, DataNotFoundException,  DuplicateDataException {
     try {
-      Optional<CategoryGroup> group = categoryGroupRepository.findById(groupId);
-      if (!group.isPresent()) {
-        LOGGER.info("Category group %d is not found", groupId);
-        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
+      Optional<Category> parent = categoryRepository.findById(parentId);
+      if (!parent.isPresent()) {
+        LOGGER.info("Category parent {} is not found", parentId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       }
-  
+
       boolean isUniqueName = categoryRepository.existsByName(category.getName());
       if (isUniqueName) {
-        LOGGER.info("Category name %s is already existed", category.getName());
+        LOGGER.info("Category name {} is already existed", category.getName());
         throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
       }
-  
-      var categoryGroup = group.get();
-      category.setCategoryGroup(categoryGroup);
+
+      category.setParent(parent.get());
       categoryRepository.save(category);
+    } catch (DuplicateDataException ex) {
+      throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
+    } catch (DataNotFoundException ex) {
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
     } catch (Exception ex) {
-      LOGGER.info("Fail to add category %d to group %d", category.getId(), groupId);
+      LOGGER.info("Fail to add category {} to parent {}", category.getId(), parentId);
       throw new CreateDataFailException(ErrorCode.ERR_CATEGORY_CREATED_FAIL);
     }
-    
+
     return true;
   }
 
   @Override
-  public CategoryGroup updateCategoryGroup(CategoryGroup categoryGroup, Long id) throws UpdateDataFailException {
+  public Category updateParentCategory(Category parentCategory, Long id)
+      throws UpdateDataFailException, DataNotFoundException,  DuplicateDataException {
     try {
-      Optional<CategoryGroup> oldCategoryGroup = categoryGroupRepository.findById(id);
+      Optional<Category> oldCategoryGroup = categoryRepository.findById(id);
       if (!oldCategoryGroup.isPresent()) {
-        LOGGER.info("Category group %d is not found", id);
-        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
+        LOGGER.info("Category parent {} is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       }
-  
-      boolean isUniqueName = categoryGroupRepository.existsByName(categoryGroup.getName());
+
+      boolean isUniqueName = categoryRepository.existsByName(parentCategory.getName());
       if (isUniqueName) {
-        LOGGER.info("Category group name %s is already existed", categoryGroup.getName());
-        throw new DuplicateDataException(ErrorCode.ERR_GROUP_NAME_EXISTED);
+        LOGGER.info("Category parent name {} is already existed", parentCategory.getName());
+        throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
       }
-  
+
       var newCategory = oldCategoryGroup.get();
-      newCategory.setName(categoryGroup.getName());
-      
-      return categoryGroupRepository.save(newCategory);
+      newCategory.setName(parentCategory.getName());
+
+      return categoryRepository.save(newCategory);
+    } catch (DuplicateDataException ex) {
+      throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
+    } catch (DataNotFoundException ex) {
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
     } catch (Exception ex) {
-      LOGGER.info("Fail to update category group %d", id);
-      throw new UpdateDataFailException(ErrorCode.ERR_CATEGORY_GROUP_UPDATED_FAIL);
+      LOGGER.info("Fail to update category parent {}", id);
+      throw new UpdateDataFailException(ErrorCode.ERR_CATEGORY_PARENT_UPDATED_FAIL);
     }
   }
 
   @Override
-  public Category updateCategory(Category category, Long id, Long groupId) throws UpdateDataFailException {
+  public Category updateCategory(Category category, Long id, Long groupId)
+      throws UpdateDataFailException, DataNotFoundException,  DuplicateDataException {
     try {
       Optional<Category> oldCategory = categoryRepository.findById(id);
       if (!oldCategory.isPresent()) {
-        LOGGER.info("Category %d is not found", id);
+        LOGGER.info("Category {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
-  
-      boolean existedGroupId = categoryGroupRepository.existsById(groupId);
+
+      boolean existedGroupId = categoryRepository.existsById(groupId);
       if (!existedGroupId) {
-        LOGGER.info("Category group %d is not found", groupId);
-        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
+        LOGGER.info("Category group {} is not found", groupId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       }
-  
-      Long categoryGroupId = categoryRepository.getGroupIdbyId(id);
-  
-      if (!categoryGroupId.equals(groupId)) {
-        LOGGER.info("Category %d is not in group %d", id, groupId);
-        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_IN_GROUP);
+
+      Long categoryParentId = categoryRepository.getParentIdbyId(id);
+
+      if (!categoryParentId.equals(groupId)) {
+        LOGGER.info("Category {} is not in parent {}", id, groupId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_IN_PARENT);
       }
-  
+
       boolean isUniqueName = categoryRepository.existsByName(category.getName());
       if (isUniqueName) {
-        LOGGER.info("Category name %s is already existed", category.getName());
+        LOGGER.info("Category name {} is already existed", category.getName());
         throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
       }
-  
+
       var newCategory = oldCategory.get();
       newCategory.setName(category.getName());
-  
+      newCategory.setParent(category.getParent());
+
       return categoryRepository.save(newCategory);
+
+    } catch (DuplicateDataException ex) {
+      throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
+    } catch (DataNotFoundException ex) {
+      String message = ex.getMessage();
+
+      if (message.equals(ErrorCode.ERR_CATEGORY_NOT_FOUND)) {
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      } else if (message.equals(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND)) {
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
+      } else {
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_IN_PARENT);
+      }
+
     } catch (Exception ex) {
-      LOGGER.info("Fail to update category %d", id);
+      LOGGER.info("Fail to update category {}", id);
       throw new UpdateDataFailException(ErrorCode.ERR_CATEGORY_UPDATED_FAIL);
     }
   }
 
   @Override
-  public boolean deleteCategory(Long id) throws DeleteDataFailException {
+  public boolean deleteCategory(Long id) throws DeleteDataFailException, DataNotFoundException {
     try {
       boolean existed = categoryRepository.existsById(id);
       if (!existed) {
-        LOGGER.info("Category %d is not found", id);
+        LOGGER.info("Category {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
-  
+
       categoryRepository.deleteById(id);
+    } catch (DataNotFoundException ex) {
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     } catch (Exception ex) {
-      LOGGER.info("Fail to delete category %d", id);
+      LOGGER.info("Fail to delete category {}", id);
       throw new DeleteDataFailException(ErrorCode.ERR_CATEGORY_DELETED_FAIL);
     }
 
@@ -190,27 +215,31 @@ public class CategoryServiceImpl implements CategoryService {
   }
 
   @Override
-  public boolean deleteCategoryGroup(Long id) throws DeleteDataFailException {
+  public boolean deleteParentCategory(Long id) throws DeleteDataFailException, DataNotFoundException, RestrictDataException {
     try {
-      boolean existedGroupId = categoryGroupRepository.existsById(id);
-    if (!existedGroupId) {
-      LOGGER.info("Category group %d is not found", id);
-      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_GROUP_NOT_FOUND);
-    }
+      boolean existedGroupId = categoryRepository.existsById(id);
+      if (!existedGroupId) {
+        LOGGER.info("Category parent {} is not found", id);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
+      }
 
-    boolean stillHaveCategory = categoryRepository.existsByGroupId(id);
-    if (stillHaveCategory) {
-      LOGGER.info("Category group %d still have categories", id);
-      throw new RestrictDataException(ErrorCode.ERR_CATEGORY_STILL_IN_GROUP);
-    }
+      boolean stillHaveCategory = categoryRepository.existsByParentId(id);
+      if (stillHaveCategory) {
+        LOGGER.info("Category parent {} still have categories", id);
+        throw new RestrictDataException(ErrorCode.ERR_CATEGORY_STILL_IN_PARENT);
+      }
 
-    categoryGroupRepository.deleteById(id);
+      categoryRepository.deleteById(id);
+    } catch (RestrictDataException e) {
+      throw new RestrictDataException(ErrorCode.ERR_CATEGORY_STILL_IN_PARENT);
+    } catch (DataNotFoundException e) {
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
     } catch (Exception e) {
-      LOGGER.info("Fail to delete category group %d", id);
-      throw new DeleteDataFailException(ErrorCode.ERR_CATEGORY_GROUP_DELETED_FAIL);
+      LOGGER.info("Fail to delete category group {}", id);
+      throw new DeleteDataFailException(ErrorCode.ERR_CATEGORY_PARENT_DELETED_FAIL);
     }
-    
+
     return true;
   }
-  
+
 }

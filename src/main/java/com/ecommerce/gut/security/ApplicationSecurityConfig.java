@@ -63,6 +63,7 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/category/**").permitAll()
             .antMatchers("/color/**").permitAll()
             .antMatchers("/product/**").permitAll()
+            .antMatchers("/cart/**").permitAll()
             .anyRequest().authenticated()
         .and()
         .logout()

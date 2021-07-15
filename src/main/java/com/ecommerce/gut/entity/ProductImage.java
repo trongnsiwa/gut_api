@@ -8,8 +8,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -22,36 +20,28 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode
 @Entity
-@Table(name = "product_images")
+@Table(
+    name = "product_images")
 public class ProductImage {
-  
+
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
-  @Column(name = "image_id")
   private Long id;
 
   @ManyToOne
-  @JoinColumn(name = "product_id", nullable = false)
-  @JsonBackReference
-  @Schema(hidden = true)
+  @JoinColumn(name = "product_id")
   private Product product;
 
-  @Column(name = "image_url", columnDefinition = "TEXT", nullable = false)
-  private String imageUrl;
-
-  @Column(name = "title", length = 255)
-  private String title;
+  @ManyToOne
+  @JoinColumn(name = "image_id")
+  private Image image;
 
   @Column(name = "color_code")
   private Long colorCode;
 
-  public ProductImage(Long id, String imageUrl, String title, Long colorCode) {
-    this.id = id;
-    this.imageUrl = imageUrl;
-    this.title = title;
-    this.colorCode = colorCode;
+  public ProductImage(Product product, Image image) {
+    this.product = product;
+    this.image = image;
   }
-
-  
 
 }

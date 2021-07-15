@@ -7,20 +7,20 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import com.ecommerce.gut.converters.UserConverter;
-import com.ecommerce.gut.dto.ErrorCode;
-import com.ecommerce.gut.dto.ResponseDTO;
-import com.ecommerce.gut.dto.RoleDTO;
-import com.ecommerce.gut.dto.SuccessCode;
+import com.ecommerce.gut.dto.RoleSetDTO;
 import com.ecommerce.gut.dto.UserDTO;
 import com.ecommerce.gut.dto.UserProfileDTO;
 import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
 import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
+import com.ecommerce.gut.payload.response.ErrorCode;
+import com.ecommerce.gut.payload.response.ResponseDTO;
+import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,12 +68,22 @@ public class UserController {
       @ApiResponse(responseCode = "400", description = "Invalid data", content = @Content),
   })
   @GetMapping("/page")
-  public List<UserDTO> getUsersPerPage(@RequestParam("num") @Min(1) Integer pageNum,
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<ResponseDTO> getUsersPerPage(@RequestParam("num") @Min(1) Integer pageNum,
       @RequestParam("size") @Min(1) Integer pageSize,
-      @RequestParam("sort") @NotNull @NotBlank String sortBy) {
-    return userService.getUsersPerPage(pageNum, pageSize, sortBy).stream()
-        .map(user -> converter.convertUserToDto(user))
-        .collect(Collectors.toList());
+      @RequestParam("sort") @NotNull String sortBy) throws LoadDataFailException {
+    ResponseDTO response = new ResponseDTO();
+    try {
+      List<UserDTO> users = userService.getUsersPerPage(pageNum, pageSize, sortBy).stream()
+          .map(user -> converter.convertUserToDto(user))
+          .collect(Collectors.toList());
+      response.setSuccessCode(SuccessCode.USER_LOADED_SUCCESS);
+      response.setData(users);
+    } catch (Exception ex) {
+      throw new LoadDataFailException(ErrorCode.ERR_LOAD_USERS_FAIL);
+    }
+
+    return ResponseEntity.ok().body(response);
   }
 
   @Operation(summary = "Get the profile of user")
@@ -86,6 +96,7 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @GetMapping("/profile/{id}")
+  @PreAuthorize("hasRole('ADMIN') || hasRole('USER')")
   public ResponseEntity<ResponseDTO> getUserProfileById(@PathVariable("id") @NotNull UUID id) {
     ResponseDTO response = new ResponseDTO();
     try {
@@ -111,45 +122,19 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @PutMapping("/edit/profile/{id}")
+  @PreAuthorize("hasRole('ADMIN') || hasRole('USER')")
   public ResponseEntity<ResponseDTO> editUserProfile(@Valid @RequestBody UserProfileDTO userDto,
       @PathVariable("id") @NotNull UUID id) throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
     try {
       User user = converter.convertUserProfileToEntity(userDto);
       User updatedUser = userService.editUserProfile(user, id);
-      response.setData(updatedUser);
+      UserProfileDTO dto = converter.convertUserProfileToDto(updatedUser);
+      response.setData(dto);
       response.setSuccessCode(SuccessCode.USER_PROFILE_EDITED_SUCCESS);
     } catch (Exception ex) {
       response.setErrorCode(ErrorCode.ERR_USER_PROFILE_EDITED_FAIL);
       throw new UpdateDataFailException(ErrorCode.ERR_USER_PROFILE_EDITED_FAIL);
-    }
-
-    return ResponseEntity.ok().body(response);
-  }
-
-  @Operation(summary = "Edit the profile of current user by Id",
-      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-          description = "User profile object to updated"))
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Update a user profile successful",
-          content = @Content),
-      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
-      @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
-  })
-  @PutMapping("/edit/current/profile/{id}")
-  @PreAuthorize("isAuthenticated()")
-  public ResponseEntity<ResponseDTO> editCurrentUserProfile(
-      @Valid @RequestBody UserProfileDTO userDto, @PathVariable("id") @NotNull UUID id)
-      throws UpdateDataFailException {
-    ResponseDTO response = new ResponseDTO();
-    try {
-      User user = converter.convertUserProfileToEntity(userDto);
-      User updatedUser = userService.editCurrentUserProfile(user, id);
-      response.setData(updatedUser);
-      response.setSuccessCode(SuccessCode.CURRENT_USER_PROFILE_EDITED_SUCCESS);
-    } catch (Exception ex) {
-      response.setErrorCode(ErrorCode.ERR_CURRENT_USER_PROFILE_EDITED_FAIL);
-      throw new UpdateDataFailException(ErrorCode.ERR_CURRENT_USER_PROFILE_EDITED_FAIL);
     }
 
     return ResponseEntity.ok().body(response);
@@ -162,6 +147,7 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @DeleteMapping("/delete/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> deleteUser(@PathVariable("id") @NotNull UUID id)
       throws DeleteDataFailException {
     ResponseDTO response = new ResponseDTO();
@@ -186,6 +172,7 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @PatchMapping("/deactivate/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> deactivateUser(@PathVariable("id") @NotNull UUID id)
       throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
@@ -210,6 +197,7 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @PatchMapping("/activate/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> activateUser(@PathVariable("id") @NotNull UUID id)
       throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
@@ -234,12 +222,13 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id or roles are not found",
           content = @Content),
   })
-  @PatchMapping("/roles/change/{id}")
-  public ResponseEntity<ResponseDTO> changeUserRoles(@PathVariable("id") @NotNull UUID id,
-      @Valid @RequestBody Set<RoleDTO> roleDtos) throws UpdateDataFailException {
+  @PatchMapping("/changeRoles/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<ResponseDTO> changeUserRoles(
+    @PathVariable("id") @NotNull UUID id,  @RequestBody RoleSetDTO roleDto) throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
     try {
-      Set<Role> roles = roleDtos.stream()
+      Set<Role> roles = roleDto.getRoles().stream()
           .map(role -> converter.convertRoleToEntity(role))
           .collect(Collectors.toSet());
       User updatedUser = userService.changeUserRoles(id, roles);

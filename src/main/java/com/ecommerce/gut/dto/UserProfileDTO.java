@@ -58,4 +58,6 @@ public class UserProfileDTO {
   
   private Set<RoleDTO> roles = new HashSet<>();
 
+  private UserAvatarDTO avatar;
+
 }

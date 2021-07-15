@@ -1,13 +1,13 @@
 package com.ecommerce.gut.controller;
 
 import javax.validation.Valid;
-import com.ecommerce.gut.dto.ErrorCode;
-import com.ecommerce.gut.dto.ResponseDTO;
-import com.ecommerce.gut.dto.SuccessCode;
 import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.payload.request.LoginRequest;
 import com.ecommerce.gut.payload.request.SignUpRequest;
+import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.payload.response.JwtResponse;
+import com.ecommerce.gut.payload.response.ResponseDTO;
+import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -42,24 +42,31 @@ public class AuthController {
       @ApiResponse(responseCode = "404", description = "Not found", content = @Content),
   })
   @PostMapping("/login")
-  public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+  public ResponseEntity<ResponseDTO> authenticateUser(
+      @Valid @RequestBody LoginRequest loginRequest) {
+    ResponseDTO response = new ResponseDTO();
     JwtResponse jwtResponse = authService.authenticateUser(loginRequest);
+    response.setSuccessCode(SuccessCode.USER_LOGIN_SUCCESS);
+    response.setData(jwtResponse);
+
     return ResponseEntity.ok()
         .header("AUTHORIZATION", jwtResponse.getType() + " " + jwtResponse.getToken())
-        .body(jwtResponse);
+        .body(response);
   }
 
-  @Operation(summary = "Create new user", 
+  @Operation(summary = "Create new user",
       requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
           description = "Sign up information of user to be create new"))
   @ApiResponses(value = {
       @ApiResponse(responseCode = "201", description = "Signup successful", content = @Content),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
       @ApiResponse(responseCode = "404", description = "Role is not found", content = @Content),
-      @ApiResponse(responseCode = "409", description = "Email is already taken", content = @Content),
+      @ApiResponse(responseCode = "409", description = "Email is already taken",
+          content = @Content),
   })
   @PostMapping("/signup")
-  public ResponseEntity<ResponseDTO> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) throws CreateDataFailException {
+  public ResponseEntity<ResponseDTO> registerUser(@Valid @RequestBody SignUpRequest signUpRequest)
+      throws CreateDataFailException {
     ResponseDTO response = new ResponseDTO();
     try {
       boolean registered = authService.registerUser(signUpRequest);

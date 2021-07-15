@@ -94,6 +94,20 @@ public class GlobalExceptionHandler {
     ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(), ex.getMessage(), request.getDescription(false));
     return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
   }
+  
+  @ExceptionHandler(LoadDataFailException.class)
+  public ResponseEntity<?> handleRestrictDataException(
+    LoadDataFailException ex, WebRequest request) {
+    ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(), ex.getMessage(), request.getDescription(false));
+    return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+  }
+  
+  @ExceptionHandler(ConvertEntityDTOException.class)
+  public ResponseEntity<?> handleRestrictDataException(
+    ConvertEntityDTOException ex, WebRequest request) {
+    ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(), ex.getMessage(), request.getDescription(false));
+    return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+  }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
   public ResponseEntity<?> handleHttpMessageNotReadableException(

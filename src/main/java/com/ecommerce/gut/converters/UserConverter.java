@@ -3,9 +3,11 @@ package com.ecommerce.gut.converters;
 import java.util.Set;
 import java.util.stream.Collectors;
 import com.ecommerce.gut.dto.RoleDTO;
+import com.ecommerce.gut.dto.UserAvatarDTO;
 import com.ecommerce.gut.dto.UserDTO;
 import com.ecommerce.gut.dto.UserProfileDTO;
 import com.ecommerce.gut.entity.ERole;
+import com.ecommerce.gut.entity.Image;
 import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
 import org.modelmapper.ModelMapper;
@@ -20,11 +22,14 @@ public class UserConverter {
   
   public UserDTO convertUserToDto(User user) {
     UserDTO dto = modelMapper.map(user, UserDTO.class);
-    Set<String> roles = user.getRoles().stream()
-        .map(role -> role.getName().name())
+    Set<RoleDTO> roles = user.getRoles().stream()
+        .map(this::convertRoleToDTO)
         .collect(Collectors.toSet());
 
     dto.setRoles(roles);
+    if (user.getImage() != null) {
+      dto.setAvatar(convertImageToDTO(user.getImage()));
+    }
 
     return dto;
   }
@@ -42,6 +47,9 @@ public class UserConverter {
         .collect(Collectors.toSet());
 
     dto.setRoles(roles);
+    if (user.getImage() != null) {
+      dto.setAvatar(convertImageToDTO(user.getImage()));
+    }
 
     return dto;
   }
@@ -54,12 +62,16 @@ public class UserConverter {
         .collect(Collectors.toSet());
     
     user.setRoles(roles);
+    if (dto.getAvatar() != null) {
+      user.setImage(convertImageToEntity(dto.getAvatar()));
+    }
     
     return user;
   }
 
   public Role convertRoleToEntity(RoleDTO dto) {
-    Role role = modelMapper.map(dto, Role.class);
+    Role role = new Role();
+    role.setId(dto.getId());
 
     if (dto.getName().equals("Admin")) {
       role.setName(ERole.ROLE_ADMIN);
@@ -68,6 +80,26 @@ public class UserConverter {
     }
 
     return role;
+  }
+
+  public RoleDTO convertRoleToDTO(Role role) {
+    RoleDTO dto = new RoleDTO();
+    dto.setId(role.getId());
+    if (role.getName().equals(ERole.ROLE_ADMIN)) {
+      dto.setName("Admin");
+    } else {
+      dto.setName("User");
+    }
+
+    return dto;
+  }
+
+  public Image convertImageToEntity(UserAvatarDTO avatar) {
+    return modelMapper.map(avatar, Image.class);
+  }
+
+  public UserAvatarDTO convertImageToDTO(Image image) {
+    return modelMapper.map(image, UserAvatarDTO.class);
   }
 
 }

@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import com.ecommerce.gut.dto.ErrorCode;
 import com.ecommerce.gut.entity.ERole;
 import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
@@ -13,6 +12,7 @@ import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DuplicateDataException;
 import com.ecommerce.gut.payload.request.LoginRequest;
 import com.ecommerce.gut.payload.request.SignUpRequest;
+import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.payload.response.JwtResponse;
 import com.ecommerce.gut.repository.RoleRepository;
 import com.ecommerce.gut.repository.UserRepository;
@@ -75,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
     try {
       boolean existedEmail = userRepository.existsByEmail(signUpRequest.getEmail());
       if (existedEmail) {
-        LOGGER.info("Email %s is already taken", signUpRequest.getEmail());
+        LOGGER.info("Email {} is already taken", signUpRequest.getEmail());
         throw new DuplicateDataException(ErrorCode.ERR_EMAIL_ALREADY_TAKEN);
       }
 
@@ -93,16 +93,16 @@ public class AuthServiceImpl implements AuthService {
         Role userRole =
             roleRepository.findByName(ERole.ROLE_USER)
                 .orElseThrow(() -> {
-                  LOGGER.info("Role %s is not found", ERole.ROLE_USER.name());
+                  LOGGER.info("Role {} is not found", ERole.ROLE_USER.name());
                   return new DataNotFoundException(ErrorCode.ERR_ROLE_NOT_FOUND);
                 });
         roles.add(userRole);
       } else {
         strRoles.forEach(role -> {
-          if ("admin".equals(role)) {
+          if ("Admin".equalsIgnoreCase(role)) {
             Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
                 .orElseThrow(() -> {
-                  LOGGER.info("Role %s is not found", ERole.ROLE_ADMIN.name());
+                  LOGGER.info("Role {} is not found", ERole.ROLE_ADMIN.name());
                   return new DataNotFoundException(
                     ErrorCode.ERR_ROLE_NOT_FOUND);
                 });
@@ -111,7 +111,7 @@ public class AuthServiceImpl implements AuthService {
           } else {
             Role userRole = roleRepository.findByName(ERole.ROLE_USER)
                 .orElseThrow(() -> {
-                  LOGGER.info("Role %s is not found", ERole.ROLE_USER.name());
+                  LOGGER.info("Role {} is not found", ERole.ROLE_USER.name());
                   return new DataNotFoundException(
                     ErrorCode.ERR_ROLE_NOT_FOUND);
                 });
@@ -126,7 +126,7 @@ public class AuthServiceImpl implements AuthService {
       userRepository.save(user);
       return true;
     } catch (Exception ex) {
-      LOGGER.info("Fail to create new user %s", signUpRequest.getEmail());
+      LOGGER.info("Fail to create new user {}", signUpRequest.getEmail());
       throw new CreateDataFailException(ErrorCode.ERR_USER_CREATED_FAIL);
     }
   }

@@ -18,7 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-@PasswordMatches(message = "{}")
+@PasswordMatches(message = "{passwordMatches.message}")
 public class SignUpRequest {
   @Pattern(
       regexp = "^[_A-Za-z0-9-+]+(.[_A-Za-z0-9-]+)*@"

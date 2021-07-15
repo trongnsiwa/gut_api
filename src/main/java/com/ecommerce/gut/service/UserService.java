@@ -5,25 +5,25 @@ import java.util.Set;
 import java.util.UUID;
 import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
+import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DeleteDataFailException;
+import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface UserService {
   
-  List<User> getUsersPerPage(Integer pageNum, Integer pageSize, String sortBy);
+  List<User> getUsersPerPage(Integer pageNum, Integer pageSize, String sortBy) throws LoadDataFailException;
 
   User getUserProfileById(UUID id);
 
-  User editUserProfile(User user, UUID id) throws UpdateDataFailException;
+  User editUserProfile(User user, UUID id) throws UpdateDataFailException, DataNotFoundException;
 
-  User editCurrentUserProfile(User user, UUID id) throws UpdateDataFailException;
+  boolean deleteUser(UUID id) throws DeleteDataFailException, DataNotFoundException;
 
-  boolean deleteUser(UUID id) throws DeleteDataFailException;
+  User deactivateUser(UUID id) throws UpdateDataFailException, DataNotFoundException;
 
-  User deactivateUser(UUID id) throws UpdateDataFailException;
+  User activateUser(UUID id) throws UpdateDataFailException, DataNotFoundException;
 
-  User activateUser(UUID id) throws UpdateDataFailException;
-
-  User changeUserRoles(UUID id, Set<Role> roles) throws UpdateDataFailException;
+  User changeUserRoles(UUID id, Set<Role> roles) throws UpdateDataFailException, DataNotFoundException;
 
 }

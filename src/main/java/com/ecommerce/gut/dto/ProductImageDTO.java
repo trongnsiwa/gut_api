@@ -16,7 +16,7 @@ import lombok.Setter;
 public class ProductImageDTO {
   private Long id;
 
-  @NotBlank(message = "{productImage.url.notBlank}")
+  @NotBlank(message = "{image.url.notBlank}")
   private String imageUrl;
 
   private String title;

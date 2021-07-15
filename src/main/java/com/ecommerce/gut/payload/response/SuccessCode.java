@@ -1,4 +1,4 @@
-package com.ecommerce.gut.dto;
+package com.ecommerce.gut.payload.response;
 
 public class SuccessCode {
   
@@ -39,5 +39,12 @@ public class SuccessCode {
   public static final String USER_ACTIVATED_SUCCESS = "USER_ACTIVATED_SUCCESS";
   public static final String USER_ROLES_CHANGED_SUCCESS = "USER_ROLES_CHANGED_SUCCESS";
   public static final String USER_LOADED_SUCCESS = "USER_LOADED_SUCCESS";
+
+  // CART
+  public static final String ADD_TO_CART_SUCCESS = "ADD_TO_CART_SUCCESS";
+  public static final String REMOVE_ITEM_SUCCESS = "REMOVE_ITEM_SUCCESS";
+  public static final String UPDATE_ITEM_QUANTITY_SUCCESS = "UPDATE_ITEM_QUANTITY_SUCCESS";
+  public static final String CLEAR_CART_SUCCESS = "CLEAR_CART_SUCCESS";
+  public static final String LOAD_CART_SUCCESS = "LOAD_CART_SUCCESS";
 
 }

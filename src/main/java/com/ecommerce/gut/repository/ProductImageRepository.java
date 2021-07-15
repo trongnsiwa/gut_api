@@ -2,6 +2,7 @@ package com.ecommerce.gut.repository;
 
 import java.util.List;
 import java.util.Optional;
+import com.ecommerce.gut.entity.Product;
 import com.ecommerce.gut.entity.ProductImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -22,27 +23,18 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
   )
   int deleteAllByProductId(@Param("productId") Long productId);
 
-  @Modifying
   @Query(
-    value = "DELETE FROM product_images "
-          + "WHERE image_id = :id AND product_id = :productId",
-    nativeQuery = true
+    value = "SELECT i "
+          + "FROM ProductImage i "
+          + "WHERE i.product = :product"
   )
-  int deleteByIdAndProductId(@Param("id") Long id, @Param("productId") Long productId);
+  List<ProductImage> findImagesByProduct(@Param("product") Product product);
 
   @Query(
-    value = "SELECT image_id, product_id, image_url, title, color_code "
-          + "FROM product_images "
-          + "WHERE product_id = ?1",
-    nativeQuery = true
+    value = "SELECT i "
+          + "FROM ProductImage i "
+          + "WHERE i.product = :product AND i.colorCode = :code"
   )
-  List<ProductImage> findImagesByProductId(Long productId);
+  Optional<ProductImage> findImageByProductIdAndColorCode(@Param("product") Product product, @Param("code") Long colorCode);
 
-  @Query(
-    value = "SELECT image_id, product_id, image_url, title, color_code "
-          + "FROM product_images "
-          + "WHERE product_id = :id AND color_code = :code",
-    nativeQuery = true
-  )
-  Optional<ProductImage> findImageByProductIdAndColorCode(@Param("id") Long productId, @Param("code") Long colorCode);
 }

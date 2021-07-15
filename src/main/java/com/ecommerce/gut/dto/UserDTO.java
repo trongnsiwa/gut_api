@@ -1,10 +1,9 @@
 package com.ecommerce.gut.dto;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,14 +20,11 @@ public class UserDTO {
   private UUID id;
   private String email;
   private String fullName;
+  private UserAvatarDTO avatar;
   private String status;
   private boolean deleted;
-  private Set<String> roles = new HashSet<>();
-  
-  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date createdDate;
-
-  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-  private Date modifiedDate;
+  private Set<RoleDTO> roles = new HashSet<>();
+  private LocalDateTime registrationDate;
+  private LocalDateTime modifiedDate;
 
 }
