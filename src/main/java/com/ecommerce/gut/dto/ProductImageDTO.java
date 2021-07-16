@@ -24,4 +24,11 @@ public class ProductImageDTO {
   @Min(value = 0, message = "{productImage.colorCode.min}")
   private Long colorCode;
 
+  public ProductImageDTO(@NotBlank(message = "{image.url.notBlank}") String imageUrl, String title,
+      @Min(value = 0, message = "{productImage.colorCode.min}") Long colorCode) {
+    this.imageUrl = imageUrl;
+    this.title = title;
+    this.colorCode = colorCode;
+  }
+
 }

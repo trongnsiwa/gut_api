@@ -15,25 +15,25 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProductRepository extends PagingAndSortingRepository<Product, Long> {
 
-  @Query(
-      value = "SELECT NEW com.ecommerce.gut.temp.ProductTemp(p.id, p.name, p.price, p.shortDesc) "
-          + "FROM Product p "
-          + "WHERE p.brandNew = TRUE "
-          + "ORDER BY p.updatedDate DESC")
-  List<ProductTemp> getNewProducts(Pageable pageable);
+    @Query(
+            value = "SELECT NEW com.ecommerce.gut.temp.ProductTemp(p.id, p.name, p.price, p.shortDesc) "
+                    + "FROM Product p "
+                    + "WHERE p.brandNew = TRUE "
+                    + "ORDER BY p.updatedDate DESC")
+    List<ProductTemp> getNewProducts(Pageable pageable);
 
-  @Query(
-      value = "SELECT NEW com.ecommerce.gut.temp.SaleProductTemp(p.id, p.name, p.price, p.shortDesc, p.priceSale, p.saleFromDate, p.saleToDate) "
-          + "FROM Product p "
-          + "WHERE p.sale = TRUE "
-          + "ORDER BY p.updatedDate DESC")
-  List<SaleProductTemp> getSaleProducts(Pageable pageable);
+    @Query(
+            value = "SELECT NEW com.ecommerce.gut.temp.SaleProductTemp(p.id, p.name, p.price, p.shortDesc, p.priceSale, p.saleFromDate, p.saleToDate) "
+                    + "FROM Product p "
+                    + "WHERE p.sale = TRUE "
+                    + "ORDER BY p.updatedDate DESC")
+    List<SaleProductTemp> getSaleProducts(Pageable pageable);
 
-  @Query(
-      value = "SELECT NEW Product(p.id, p.name, p.price, p.shortDesc, p.priceSale, p.saleFromDate, p.saleToDate) "
-          + "FROM Product p "
-          + "INNER JOIN p.category c "
-          + "WHERE c = :category")
-  Page<Product> getProductsByCategoryId(@Param("category") Category category, Pageable pageable);
+    @Query(
+            value = "SELECT NEW Product(p.id, p.name, p.price, p.shortDesc, p.priceSale, p.saleFromDate, p.saleToDate) "
+                    + "FROM Product p "
+                    + "INNER JOIN p.category c "
+                    + "WHERE c = :category")
+    Page<Product> getProductsByCategoryId(@Param("category") Category category, Pageable pageable);
 
 }

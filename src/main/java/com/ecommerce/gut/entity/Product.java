@@ -15,10 +15,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -80,17 +78,22 @@ public class Product {
   @JoinColumn(name = "category_id")
   private Category category;
 
-  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "product", cascade = CascadeType.ALL,
+      orphanRemoval = true)
   private Set<ProductImage> productImages = new HashSet<>();
 
-  @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "product", cascade = CascadeType.ALL,
+      orphanRemoval = true)
   private Set<ColorSize> colorSizes = new HashSet<>();
-  
+
   @Column(name = "is_deleted")
   private boolean deleted;
 
   @Column(name = "in_stock")
   private boolean inStock;
+
+  @javax.persistence.Transient
+  private Set<Color> colors = new HashSet<>();
 
   public Product() {
     this.brandNew = true;
@@ -100,25 +103,21 @@ public class Product {
   }
 
   public Product(String name, Double price, String shortDesc, String longDesc, String material,
-      String handling, boolean brandNew, boolean sale, Double priceSale, LocalDateTime saleFromDate,
-      LocalDateTime saleToDate, Category category) {
-        this.name = name;
-        this.price = price;
-        this.shortDesc = shortDesc;
-        this.longDesc = longDesc;
-        this.material = material;
-        this.handling = handling;
-        this.brandNew = brandNew;
-        this.sale = sale;
-        this.priceSale = priceSale;
-        this.saleFromDate = saleFromDate;
-        this.saleToDate = saleToDate;
-        this.category = category;
-        this.deleted = false;
+      String handling, boolean brandNew, boolean sale, Double priceSale, LocalDateTime saleFromDate) {
+    this.name = name;
+    this.price = price;
+    this.shortDesc = shortDesc;
+    this.longDesc = longDesc;
+    this.material = material;
+    this.handling = handling;
+    this.brandNew = brandNew;
+    this.sale = sale;
+    this.priceSale = priceSale;
+    this.saleFromDate = saleFromDate;
   }
 
   public Product(Long id, String name, Double price, String shortDesc, Double priceSale,
-  LocalDateTime saleFromDate, LocalDateTime saleToDate) {
+      LocalDateTime saleFromDate, LocalDateTime saleToDate) {
     this.id = id;
     this.name = name;
     this.price = price;
@@ -128,7 +127,8 @@ public class Product {
     this.saleToDate = saleToDate;
   }
 
-  public Product(Long id, String name, Double price, LocalDateTime updatedDate, boolean brandNew, boolean sale, Category category) {
+  public Product(Long id, String name, Double price, LocalDateTime updatedDate, boolean brandNew,
+      boolean sale, Category category) {
     this.id = id;
     this.name = name;
     this.price = price;
@@ -139,7 +139,8 @@ public class Product {
   }
 
   public Product(Long id, String name, Double price, LocalDateTime updatedDate, boolean brandNew,
-      boolean sale, Double priceSale, LocalDateTime saleFromDate, LocalDateTime saleToDate, Category category) {
+      boolean sale, Double priceSale, LocalDateTime saleFromDate, LocalDateTime saleToDate,
+      Category category) {
     this.id = id;
     this.name = name;
     this.price = price;
