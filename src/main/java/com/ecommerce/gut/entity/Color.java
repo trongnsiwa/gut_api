@@ -21,9 +21,14 @@ import lombok.Setter;
 @EqualsAndHashCode
 @Entity
 @Table(name = "colors",
-    uniqueConstraints = @UniqueConstraint(
+    uniqueConstraints = {
+      @UniqueConstraint(
         name = "colors_un",
-        columnNames = "color_name"))
+        columnNames = "color_name"),
+      @UniqueConstraint(
+        name = "colors_source_un",
+        columnNames = "source"),
+      })
 public class Color {
   
   @Id

@@ -41,8 +41,6 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
@@ -61,10 +59,7 @@ public class UserController {
 
   @Operation(summary = "Get users per page")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Found the page's users",
-          content = @Content(
-              array = @ArraySchema(schema = @Schema(implementation = UserDTO.class)),
-              mediaType = "application/json")),
+      @ApiResponse(responseCode = "200", description = "Found the page's users", content = @Content),
       @ApiResponse(responseCode = "400", description = "Invalid data", content = @Content),
   })
   @GetMapping("/page")
@@ -88,10 +83,7 @@ public class UserController {
 
   @Operation(summary = "Get the profile of user")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Found the profile of user",
-          content = @Content(
-              schema = @Schema(implementation = UserProfileDTO.class),
-              mediaType = "application/json")),
+      @ApiResponse(responseCode = "200", description = "Found the profile of user", content = @Content),
       @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })

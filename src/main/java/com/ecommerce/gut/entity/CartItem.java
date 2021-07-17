@@ -39,8 +39,8 @@ public class CartItem {
   @Column(name = "price", nullable = false)
   private Double price;
 
-  @Column(name = "quantity", nullable = false)
-  private Integer quantity;
+  @Column(name = "amount", nullable = false)
+  private Integer amount;
 
   @CreationTimestamp
   @Column(name = "created_date")
@@ -50,8 +50,12 @@ public class CartItem {
   @Column(name = "updated_date")
   private LocalDateTime updatedDate;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "product_id")
+  private Product product;
+
   public CartItem() {
-    this.quantity = 0;
+    this.amount = 0;
   }
 
   

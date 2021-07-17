@@ -1,0 +1,25 @@
+package com.ecommerce.gut.dto;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateCartItemDTO {
+  
+  @NotNull(message = "{cart.userId.notNull}")
+  private String userId;
+  
+  @Min(value = 1, message = "{cart.productId.min}")
+  private Long productId;
+
+  @Min(value = 0, message = "{cart.amount.min}")
+  private Integer amount;
+
+}

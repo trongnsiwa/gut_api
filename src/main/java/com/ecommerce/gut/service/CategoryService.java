@@ -6,12 +6,13 @@ import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DeleteDataFailException;
 import com.ecommerce.gut.exception.DuplicateDataException;
+import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.exception.RestrictDataException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface CategoryService {
 
-  List<Category> getParentCategoriesPerPage(Integer pageNum, Integer pageSize, String sortBy);
+  List<Category> getParentCategoriesPerPage(Integer pageNum, Integer pageSize, String sortBy) throws LoadDataFailException;
 
   Category getParentCategoryById(Long parentId);
 

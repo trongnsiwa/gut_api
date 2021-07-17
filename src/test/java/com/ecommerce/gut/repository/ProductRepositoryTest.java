@@ -75,7 +75,7 @@ public class ProductRepositoryTest {
 
     ColorSize removedColorSize1 = colorSizeRepository.getColorSizeOfProduct(product, color, size).get();
 
-    Set<ColorSize> colorSizes = colorSizeRepository.findColorSizesByProductId(product);
+    Set<ColorSize> colorSizes = colorSizeRepository.findColorSizesByProductId(164L);
 
     product.getColorSizes().clear();
     colorSizes.remove(removedColorSize1);

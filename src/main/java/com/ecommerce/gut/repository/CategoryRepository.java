@@ -1,5 +1,6 @@
 package com.ecommerce.gut.repository;
 
+import java.util.Optional;
 import com.ecommerce.gut.entity.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,13 +19,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
   boolean existsByName(String name);
 
-  @Query(
-    value = "SELECT pc.parent_id " +
-            "FROM categories pc " +
-            "WHERE pc.category_id = ?1",
-    nativeQuery = true
-  )
-  Long getParentIdbyId(Long id);
+  Optional<Category> findByName(String name);
 
   @Query(
     value = "SELECT c "

@@ -2,6 +2,7 @@ package com.ecommerce.gut.service;
 
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.exception.DuplicateDataException;
+import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.exception.RestrictDataException;
 import com.ecommerce.gut.repository.CategoryRepository;
 import com.ecommerce.gut.service.impl.CategoryServiceImpl;
@@ -60,7 +61,7 @@ public class CategoryServiceTest {
   }
 
   @Test
-  public void testGetParentCategoriesPerPageSuccess() {
+  public void testGetParentCategoriesPerPageSuccess() throws LoadDataFailException {
     List<Category> categories = categoryService.getParentCategoriesPerPage(1, 2, "Z-A");
     assertEquals(2, categories.size());
     assertEquals("Parent 1", categories.get(0).getName());

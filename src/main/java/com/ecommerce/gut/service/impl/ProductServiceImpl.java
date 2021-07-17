@@ -84,7 +84,25 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
 
-      Sort sort = null;
+      Category category = existedCategory.get();
+
+      PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
+
+      if (category.getParent() == null) {
+        return productRepository.getProductsByParent(category, pageRequest).getContent();
+      }
+
+      return productRepository.getProductsByCategory(existedCategory.get(), pageRequest)
+          .getContent();
+    } catch (DataNotFoundException ex) {
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+    } catch (Exception ex) {
+      throw new LoadDataFailException(ErrorCode.ERR_PRODUCT_LOADED_FAIL);
+    }
+  }
+
+  private Sort generateSortProduct(String sortBy) {
+    Sort sort = null;
       switch (sortBy) {
         case "CHEAPEST":
           sort = Sort.by("price").ascending()
@@ -126,33 +144,7 @@ public class ProductServiceImpl implements ProductService {
           break;
       }
 
-      PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, sort);
-
-      List<Product> products =
-          productRepository.getProductsByCategoryId(existedCategory.get(), pageRequest)
-              .getContent();
-      return products.stream().map(product -> {
-        Set<ColorSize> colorSizes =
-            colorSizeRepository.findColorSizesByProductId(product);
-
-        Set<Color> colors = colorSizes.stream()
-            .map(ColorSize::getColor)
-            .collect(Collectors.toSet());
-
-        Set<ProductImage> images = colors.stream()
-            .map(color -> productImageRepository
-                .findImageByProductAndColorCode(product, color.getId()).orElse(null))
-            .collect(Collectors.toSet());
-
-        product.setColors(colors);
-        product.setProductImages(images);
-        return product;
-      }).collect(Collectors.toList());
-    } catch (DataNotFoundException ex) {
-      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
-    } catch (Exception ex) {
-      throw new LoadDataFailException(ErrorCode.ERR_PRODUCT_LOADED_FAIL);
-    }
+      return sort;
   }
 
   @Override
@@ -242,11 +234,9 @@ public class ProductServiceImpl implements ProductService {
       Product product = existedProduct.get();
       transferDataToExistProduct(product, productDTO);
       product.setCategory(existedCategory.get());
-
-      product.getColorSizes().clear();
       product.setInStock(false);
 
-      Set<ColorSize> colorSizes = colorSizeRepository.findColorSizesByProductId(product);
+      Set<ColorSize> colorSizes = colorSizeRepository.findColorSizesByProductId(id);
 
       setColorAndSizeToProduct(product, productDTO, colorSizes);
 
@@ -320,27 +310,27 @@ public class ProductServiceImpl implements ProductService {
       deleteIfNotReplacedImage(productImages, imageListRequest, product);
 
       imageListRequest.getImages().stream().forEach(img -> {
-        Optional<Image> foundedImage = imageRepository.findById(img.getId());
-        if (foundedImage.isPresent()) {
-          Image image = foundedImage.get();
-          image.setImageUrl(img.getImageUrl());
-          image.setTitle(img.getTitle());
+        if (img.getId() != null) {
+          Optional<Image> foundedImage = imageRepository.findById(img.getId());
+          if (foundedImage.isPresent()) {
+            Image image = foundedImage.get();
+            image.setImageUrl(img.getImageUrl());
+            image.setTitle(img.getTitle());
 
-          imageRepository.save(image);
+            imageRepository.save(image);
 
-          product.getProductImages().stream()
-              .forEach(productImg -> {
-                if (productImg.getImage().equals(image)) {
-                  productImg.setColorCode(img.getColorCode());
-                }
-              });
+            product.getProductImages().stream()
+                .forEach(productImg -> {
+                  if (productImg.getImage().equals(image)) {
+                    productImg.setColorCode(img.getColorCode());
+                  }
+                });
 
+          } else {
+            saveImageBeforeAddToProduct(img, product);
+          }
         } else {
-          Image image = new Image(img.getImageUrl(), img.getTitle());
-
-          imageRepository.save(image);
-
-          product.addImage(image, img.getColorCode());
+          saveImageBeforeAddToProduct(img, product);
         }
       });
 
@@ -352,12 +342,20 @@ public class ProductServiceImpl implements ProductService {
       if (message.equals(ErrorCode.ERR_PRODUCT_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
       } else {
-        throw new DuplicateDataException(ErrorCode.ERR_NOT_EXIST_TWO_SAME_COLORS);
+        throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
       }
     } catch (Exception e) {
       LOGGER.info("Fail to replace images of product {}", id);
       throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_IMAGES_REPLACED_FAIL);
     }
+  }
+
+  private void saveImageBeforeAddToProduct(ProductImageDTO img, Product product) {
+    Image image = new Image(img.getImageUrl(), img.getTitle());
+
+    imageRepository.save(image);
+
+    product.addImage(image, img.getColorCode());
   }
 
   private void transferDataToExistProduct(Product product, UpdateProductDTO productDTO) {
@@ -372,10 +370,13 @@ public class ProductServiceImpl implements ProductService {
     product.setPriceSale(productDTO.getPriceSale());
     product.setSaleFromDate(productDTO.getSaleFromDate());
     product.setSaleToDate(productDTO.getSaleToDate());
+    product.setDeleted(productDTO.isDeleted());
   }
 
   private void setColorAndSizeToProduct(Product product, UpdateProductDTO productDTO,
       Set<ColorSize> colorSizes) {
+    product.getColorSizes().clear();
+
     productDTO.getColors().stream().forEach(colorSize -> {
       Color color = colorRepository.findById(colorSize.getColorId())
           .orElseThrow(
@@ -409,7 +410,8 @@ public class ProductServiceImpl implements ProductService {
     });
   }
 
-  private Optional<Product> checkIfImagesRequestIsEmpty(Set<ProductImage> productImages, Product product) {
+  private Optional<Product> checkIfImagesRequestIsEmpty(Set<ProductImage> productImages,
+      Product product) {
     LOGGER.info("Delete all images of product {} successful", product.getId());
 
     Product savedProduct = productRepository.save(product);
@@ -419,30 +421,32 @@ public class ProductServiceImpl implements ProductService {
     return Optional.of(savedProduct);
   }
 
-  private void checkIfExistedTwoSameColors(ImageListDTO imageListRequest) throws DuplicateDataException {
+  private void checkIfExistedTwoSameColors(ImageListDTO imageListRequest)
+      throws DuplicateDataException {
     List<Long> colorCodes = new ArrayList<>();
 
-      imageListRequest.getImages().stream().forEach(image -> {
-        if (image.getColorCode() > 0) {
-          Optional<Color> color = colorRepository.findById(image.getColorCode());
+    imageListRequest.getImages().stream().forEach(image -> {
+      if (image.getColorCode() > -1) {
+        Optional<Color> color = colorRepository.findById(image.getColorCode());
 
-          colorCodes.add(image.getColorCode());
+        colorCodes.add(image.getColorCode());
 
-          if (!color.isPresent()) {
-            LOGGER.info("Color {} is not found", image.getColorCode());
-            throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
-          }
+        if (!color.isPresent()) {
+          LOGGER.info("Color {} is not found", image.getColorCode());
+          throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
         }
-      });
-
-      Set<Long> colorCodeSet = new HashSet<>(colorCodes);
-      if (colorCodeSet.size() < colorCodes.size()) {
-        LOGGER.info("Cannot exist two same colors in the list");
-        throw new DuplicateDataException(ErrorCode.ERR_NOT_EXIST_TWO_SAME_COLORS);
       }
+    });
+
+    Set<Long> colorCodeSet = new HashSet<>(colorCodes);
+    if (colorCodeSet.size() < colorCodes.size()) {
+      LOGGER.info("Cannot exist two same colors in the list");
+      throw new DuplicateDataException(ErrorCode.ERR_NOT_EXIST_TWO_SAME_COLORS);
+    }
   }
 
-  private void deleteIfNotReplacedImage(Set<ProductImage> productImages, ImageListDTO imageListRequest, Product product) {
+  private void deleteIfNotReplacedImage(Set<ProductImage> productImages,
+      ImageListDTO imageListRequest, Product product) {
     List<ProductImage> imagesToRemove = new ArrayList<>();
 
     productImages.stream().forEach(image -> {
@@ -458,7 +462,7 @@ public class ProductServiceImpl implements ProductService {
     if (!imagesToRemove.isEmpty()) {
       imagesToRemove.stream().forEach(image -> {
         product.getProductImages().remove(image);
-        imageRepository.deleteById(image.getId());
+        imageRepository.deleteById(image.getImage().getId());
       });
     }
   }

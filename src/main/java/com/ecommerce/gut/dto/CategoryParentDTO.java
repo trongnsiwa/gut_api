@@ -1,5 +1,7 @@
 package com.ecommerce.gut.dto;
 
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,10 +13,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class ProductColorSizeDTO {
+public class CategoryParentDTO {
   
-  private ColorDTO color;
-  private SizeDTO size;
-  private int quantity;
+  private Long id;
+  private String name;
+  private Set<CategoryDTO> subCategories = new HashSet<>();
 
 }

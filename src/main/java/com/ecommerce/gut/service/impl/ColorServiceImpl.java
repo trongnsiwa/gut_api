@@ -40,16 +40,16 @@ public class ColorServiceImpl implements ColorService {
   @Override
   public boolean createColor(Color color) throws CreateDataFailException, DuplicateDataException {
     try {
-      Optional<Color> existedColor = colorRepository.findById(color.getId());
-      if (existedColor.isPresent()) {
-        LOGGER.info("Color {} is already taken", color.getId());
-        throw new DuplicateDataException(ErrorCode.ERR_COLOR_ALREADY_EXISTED);
-      }
-
       boolean isUniqueName = colorRepository.existsByName(color.getName());
       if (isUniqueName) {
         LOGGER.info("Color name {} is already taken", color.getName());
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
+      }
+
+      boolean isUniqueSource = colorRepository.existsBySource(color.getSource());
+      if (isUniqueSource) {
+        LOGGER.info("Color source {} is already taken", color.getSource());
+        throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
       }
 
       colorRepository.save(color);
@@ -57,10 +57,10 @@ public class ColorServiceImpl implements ColorService {
       if (e.getMessage().equals(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN)) {
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
       } else {
-        throw new DuplicateDataException(ErrorCode.ERR_COLOR_ALREADY_EXISTED);
+        throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
       }
     } catch (Exception e) {
-      LOGGER.info("Fail to create color {}", color.getId());
+      LOGGER.info("Fail to create color {}", color.getName());
       throw new CreateDataFailException(ErrorCode.ERR_COLOR_CREATED_FAIL);
     }
 
@@ -68,7 +68,8 @@ public class ColorServiceImpl implements ColorService {
   }
 
   @Override
-  public Color updateColor(Color color, Long id) throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
+  public Color updateColor(Color color, Long id)
+      throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
     try {
       Optional<Color> oldColor = colorRepository.findById(id);
       if (!oldColor.isPresent()) {
@@ -76,10 +77,16 @@ public class ColorServiceImpl implements ColorService {
         throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
       }
 
-      boolean isUniqueName = colorRepository.existsByName(color.getName());
-      if (isUniqueName) {
+      Optional<Color> colorWithName = colorRepository.findByName(color.getName());
+      if (colorWithName.isPresent() && !id.equals(colorWithName.get().getId())) {
         LOGGER.info("Color name {} is already taken", color.getName());
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
+      }
+
+      Optional<Color> colorWithSource = colorRepository.findBySource(color.getSource());
+      if (colorWithSource.isPresent() && !id.equals(colorWithSource.get().getId())) {
+        LOGGER.info("Color source {} is already taken", color.getSource());
+        throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
       }
 
       var newCategory = oldColor.get();
@@ -90,7 +97,11 @@ public class ColorServiceImpl implements ColorService {
     } catch (DataNotFoundException e) {
       throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
     } catch (DuplicateDataException e) {
-      throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
+      if (e.getMessage().equals(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN)) {
+        throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
+      } else {
+        throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
+      }
     } catch (Exception e) {
       LOGGER.info("Fail to update color {}", id);
       throw new UpdateDataFailException(ErrorCode.ERR_COLOR_UPDATED_FAIL);
@@ -98,7 +109,8 @@ public class ColorServiceImpl implements ColorService {
   }
 
   @Override
-  public boolean deleteColor(Long id) throws DeleteDataFailException, RestrictDataException, DataNotFoundException {
+  public boolean deleteColor(Long id)
+      throws DeleteDataFailException, RestrictDataException, DataNotFoundException {
     try {
       boolean existedColorId = colorRepository.existsById(id);
       if (!existedColorId) {

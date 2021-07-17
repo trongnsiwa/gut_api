@@ -1,33 +1,61 @@
-// package com.ecommerce.gut.converters;
+package com.ecommerce.gut.converters;
 
-// import com.ecommerce.gut.dto.CategoryDTO;
-// import com.ecommerce.gut.dto.CategoryGroupDTO;
-// import com.ecommerce.gut.entity.Category;
-// import com.ecommerce.gut.entity.CategoryGroup;
-// import org.modelmapper.ModelMapper;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.stereotype.Component;
+import java.util.Set;
+import java.util.stream.Collectors;
+import com.ecommerce.gut.dto.CategoryDTO;
+import com.ecommerce.gut.dto.CategoryParentDTO;
+import com.ecommerce.gut.entity.Category;
+import com.ecommerce.gut.exception.ConvertEntityDTOException;
+import com.ecommerce.gut.payload.response.ErrorCode;
+import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-// @Component
-// public class CategoryConverter {
-  
-//   @Autowired
-//   private ModelMapper modelMapper;
+@Component
+public class CategoryConverter {
 
-//   public Category convertCategoryToEntity(CategoryDTO categoryDTO) {
-//     return modelMapper.map(categoryDTO, Category.class);
-//   }
+  private static final Logger LOGGER = LoggerFactory.getLogger(CategoryConverter.class);
 
-//   public CategoryDTO convertCategoryToDto(Category category) {
-//     return modelMapper.map(category, CategoryDTO.class);
-//   }
+  @Autowired
+  private ModelMapper modelMapper;
 
-//   public CategoryGroupDTO convertCategoryGroupToDto(CategoryGroup categoryGroup) {
-//     return modelMapper.map(categoryGroup, CategoryGroupDTO.class);
-//   }
+  public Category convertCategoryToEntity(CategoryDTO categoryDTO)
+      throws ConvertEntityDTOException {
+    try {
+      return modelMapper.map(categoryDTO, Category.class);
+    } catch (Exception ex) {
+      LOGGER.info("Fail to convert CategoryDTO to Category");
+      throw new ConvertEntityDTOException(ErrorCode.ERR_DATA_CONVERT_FAIL);
+    }
+  }
 
-//   public CategoryGroup convertCategoryGroupToEntity(CategoryGroupDTO categoryGroupDTO) {
-//     return modelMapper.map(categoryGroupDTO, CategoryGroup.class);
-//   }
+  public CategoryDTO convertCategoryToDto(Category category) throws ConvertEntityDTOException {
+    try {
+      CategoryDTO dto = modelMapper.map(category, CategoryDTO.class);
+      if (category.getParent() != null) {
+        dto.setParentId(category.getParent().getId());
+      }
+      return dto;
+    } catch (Exception ex) {
+      LOGGER.info("Fail to convert Category to CategoryDTO");
+      throw new ConvertEntityDTOException(ErrorCode.ERR_DATA_CONVERT_FAIL);
+    }
+  }
 
-// }
+  public CategoryParentDTO convertCategoryParentToDto(Category category) {
+    try {
+      CategoryParentDTO categoryParentDTO = modelMapper.map(category, CategoryParentDTO.class);
+      Set<CategoryDTO> subCategories = category.getSubCategories().stream()
+          .map(this::convertCategoryToDto)
+          .collect(Collectors.toSet());
+      categoryParentDTO.setSubCategories(subCategories);
+      return categoryParentDTO;
+    } catch (Exception ex) {
+      LOGGER.info("Fail to convert Category to CategoryParentDTO");
+      throw new ConvertEntityDTOException(ErrorCode.ERR_DATA_CONVERT_FAIL);
+    }
+  }
+
+}

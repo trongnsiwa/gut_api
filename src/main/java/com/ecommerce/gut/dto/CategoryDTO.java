@@ -21,4 +21,6 @@ public class CategoryDTO {
   @Size(max = 50, message = "{name.notHigherThan50Chars}")
   private String name;
 
+  private Long parentId;
+
 }

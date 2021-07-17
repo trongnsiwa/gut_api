@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 import java.util.Set;
 import com.ecommerce.gut.entity.ColorSize;
-import com.ecommerce.gut.entity.Product;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +17,6 @@ public class ColorSizeRepositoryTest {
   @Autowired
   private ColorSizeRepository colorSizeRepository;
 
-  @Autowired
-  private ProductRepository productRepository;
-
   @Test
   public void testFindColorsByProductIdSuccess() {
     Long productId = 164L;
@@ -32,9 +28,7 @@ public class ColorSizeRepositoryTest {
 
   @Test
   public void testFindColorSizesByProductIdSuccess() {
-    Long productId = 164L;
-    Product product = productRepository.findById(productId).get();
-    Set<ColorSize> colorSizes = colorSizeRepository.findColorSizesByProductId(product);
+    Set<ColorSize> colorSizes = colorSizeRepository.findColorSizesByProductId(164L);
     assertEquals(4, colorSizes.size());
   }
 

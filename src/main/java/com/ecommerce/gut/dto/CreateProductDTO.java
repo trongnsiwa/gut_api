@@ -39,9 +39,6 @@ public class CreateProductDTO {
   @Size(max = 255, message = "{product.handling.size}")
   private String handling;
 
-  @NotNull(message = "{product.brandNew.notNull}")
-  private boolean brandNew;
-
   @NotNull(message = "{product.sale.notNull}")
   private boolean sale;
 

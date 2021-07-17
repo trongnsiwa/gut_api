@@ -7,6 +7,7 @@ import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DeleteDataFailException;
 import com.ecommerce.gut.exception.DuplicateDataException;
+import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.exception.RestrictDataException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
 import com.ecommerce.gut.payload.response.ErrorCode;
@@ -29,16 +30,21 @@ public class CategoryServiceImpl implements CategoryService {
 
   @Override
   public List<Category> getParentCategoriesPerPage(Integer pageNum, Integer pageSize,
-      String sortBy) {
-    Sort sort = null;
-    if ("Z-A".equals(sortBy)) {
-      sort = Sort.by("name").descending();
-    } else {
-      sort = Sort.by("name").ascending();
-    }
+      String sortBy) throws LoadDataFailException {
+    try {
+      Sort sort = null;
+      if ("Z-A".equals(sortBy)) {
+        sort = Sort.by("name").descending();
+      } else {
+        sort = Sort.by("name").ascending();
+      }
 
-    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
-    return categoryRepository.getParentCategoryPerPage(pageRequest).getContent();
+      PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+      return categoryRepository.getParentCategoryPerPage(pageRequest).getContent();
+    } catch (Exception ex) {
+      LOGGER.info("Fail to load category parents list");
+      throw new LoadDataFailException(ErrorCode.ERR_CATEGORY_PARENT_LOADED_FAIL);
+    }
   }
 
   @Override
@@ -73,7 +79,7 @@ public class CategoryServiceImpl implements CategoryService {
     } catch (DuplicateDataException ex) {
       throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
     } catch (Exception ex) {
-      LOGGER.info("Fail to create category group {}", parentCategory.getId());
+      LOGGER.info("Fail to create category parent {}", parentCategory.getName());
       throw new CreateDataFailException(ErrorCode.ERR_CATEGORY_PARENT_CREATED_FAIL);
     }
 
@@ -82,7 +88,7 @@ public class CategoryServiceImpl implements CategoryService {
 
   @Override
   public boolean addCategoryToParent(Category category, Long parentId)
-      throws CreateDataFailException, DataNotFoundException,  DuplicateDataException {
+      throws CreateDataFailException, DataNotFoundException, DuplicateDataException {
     try {
       Optional<Category> parent = categoryRepository.findById(parentId);
       if (!parent.isPresent()) {
@@ -103,7 +109,7 @@ public class CategoryServiceImpl implements CategoryService {
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
     } catch (Exception ex) {
-      LOGGER.info("Fail to add category {} to parent {}", category.getId(), parentId);
+      LOGGER.info("Fail to add category {} to parent {}", category.getName(), parentId);
       throw new CreateDataFailException(ErrorCode.ERR_CATEGORY_CREATED_FAIL);
     }
 
@@ -112,10 +118,10 @@ public class CategoryServiceImpl implements CategoryService {
 
   @Override
   public Category updateParentCategory(Category parentCategory, Long id)
-      throws UpdateDataFailException, DataNotFoundException,  DuplicateDataException {
+      throws UpdateDataFailException, DataNotFoundException, DuplicateDataException {
     try {
-      Optional<Category> oldCategoryGroup = categoryRepository.findById(id);
-      if (!oldCategoryGroup.isPresent()) {
+      Optional<Category> oldCategoryparent = categoryRepository.findById(id);
+      if (!oldCategoryparent.isPresent()) {
         LOGGER.info("Category parent {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       }
@@ -126,7 +132,7 @@ public class CategoryServiceImpl implements CategoryService {
         throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
       }
 
-      var newCategory = oldCategoryGroup.get();
+      var newCategory = oldCategoryparent.get();
       newCategory.setName(parentCategory.getName());
 
       return categoryRepository.save(newCategory);
@@ -141,8 +147,8 @@ public class CategoryServiceImpl implements CategoryService {
   }
 
   @Override
-  public Category updateCategory(Category category, Long id, Long groupId)
-      throws UpdateDataFailException, DataNotFoundException,  DuplicateDataException {
+  public Category updateCategory(Category category, Long id, Long parentId)
+      throws UpdateDataFailException, DataNotFoundException, DuplicateDataException {
     try {
       Optional<Category> oldCategory = categoryRepository.findById(id);
       if (!oldCategory.isPresent()) {
@@ -150,28 +156,21 @@ public class CategoryServiceImpl implements CategoryService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
 
-      boolean existedGroupId = categoryRepository.existsById(groupId);
-      if (!existedGroupId) {
-        LOGGER.info("Category group {} is not found", groupId);
+      Optional<Category> existedParent = categoryRepository.findById(parentId);
+      if (!existedParent.isPresent()) {
+        LOGGER.info("Category parent {} is not found", parentId);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       }
 
-      Long categoryParentId = categoryRepository.getParentIdbyId(id);
-
-      if (!categoryParentId.equals(groupId)) {
-        LOGGER.info("Category {} is not in parent {}", id, groupId);
-        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_IN_PARENT);
-      }
-
-      boolean isUniqueName = categoryRepository.existsByName(category.getName());
-      if (isUniqueName) {
+      Optional<Category> categoryWithName = categoryRepository.findByName(category.getName());
+      if (categoryWithName.isPresent() && !id.equals(categoryWithName.get().getId())) {
         LOGGER.info("Category name {} is already existed", category.getName());
         throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
       }
 
       var newCategory = oldCategory.get();
       newCategory.setName(category.getName());
-      newCategory.setParent(category.getParent());
+      newCategory.setParent(existedParent.get());
 
       return categoryRepository.save(newCategory);
 
@@ -215,10 +214,11 @@ public class CategoryServiceImpl implements CategoryService {
   }
 
   @Override
-  public boolean deleteParentCategory(Long id) throws DeleteDataFailException, DataNotFoundException, RestrictDataException {
+  public boolean deleteParentCategory(Long id)
+      throws DeleteDataFailException, DataNotFoundException, RestrictDataException {
     try {
-      boolean existedGroupId = categoryRepository.existsById(id);
-      if (!existedGroupId) {
+      boolean existedparentId = categoryRepository.existsById(id);
+      if (!existedparentId) {
         LOGGER.info("Category parent {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       }
@@ -235,7 +235,7 @@ public class CategoryServiceImpl implements CategoryService {
     } catch (DataNotFoundException e) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
     } catch (Exception e) {
-      LOGGER.info("Fail to delete category group {}", id);
+      LOGGER.info("Fail to delete category parent {}", id);
       throw new DeleteDataFailException(ErrorCode.ERR_CATEGORY_PARENT_DELETED_FAIL);
     }
 

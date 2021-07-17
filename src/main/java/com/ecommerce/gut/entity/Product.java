@@ -92,14 +92,18 @@ public class Product {
   @Column(name = "in_stock")
   private boolean inStock;
 
-  @javax.persistence.Transient
-  private Set<Color> colors = new HashSet<>();
-
   public Product() {
     this.brandNew = true;
     this.sale = false;
     this.deleted = false;
     this.inStock = true;
+  }
+
+  public Product(Long id, String name, Double price, String shortDesc) {
+    this.id = id;
+    this.name = name;
+    this.price = price;
+    this.shortDesc = shortDesc;
   }
 
   public Product(String name, Double price, String shortDesc, String longDesc, String material,

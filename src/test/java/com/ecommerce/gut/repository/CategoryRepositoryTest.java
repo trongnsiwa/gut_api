@@ -64,7 +64,7 @@ public class CategoryRepositoryTest {
 
   @Test
   public void testGetParentByIdSuccess() throws Exception {
-    Long parentId = categoryRepository.getParentIdbyId(159L);
+    Long parentId = 159L;
     Category parent = categoryRepository.findById(parentId).get();
     assertNotNull(parent);
     assertEquals(2, parent.getSubCategories().size());
