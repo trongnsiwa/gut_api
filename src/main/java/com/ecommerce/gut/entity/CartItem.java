@@ -7,6 +7,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
@@ -21,7 +22,14 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @Entity
-@Table(name = "cart_items")
+@Table(
+  name = "cart_items",
+  indexes = {
+    @Index(name = "idx_cart_id", columnList = "cart_id"),
+    @Index(name = "idx_item_color_size_id", columnList = "color_size_id"),
+    @Index(name = "idx_item_product_id", columnList = "product_id")
+  }
+)
 public class CartItem {
   
   @Id

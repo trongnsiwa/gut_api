@@ -51,4 +51,8 @@ public class CreateProductDTO {
   @NotEmpty(message = "{product.colors.notEmpty}")
   private Set<ColorSizeDTO> colors = new HashSet<>();
 
+  @NotNull(message = "{product.category.notNull}")
+  @Min(value = 1, message = "{product.category.min}")
+  private Long categoryId;
+
 }

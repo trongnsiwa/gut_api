@@ -16,12 +16,15 @@ public class AddCartItemDTO {
   @NotNull(message = "{cart.userId.notNull}")
   private String userId;
   
+  @NotNull(message = "{product.id.notNull}")
   @Min(value = 1, message = "{cart.productId.min}")
   private Long productId;
 
+  @NotNull(message = "{cart.colorId.notNull}")
   @Min(value = 1, message = "{cart.colorId.min}")
   private Long colorId;
 
+  @NotNull(message = "{cart.colorId.notNull}")
   @Min(value = 1, message = "{cart.sizeId.min}")
   private Long sizeId;
 

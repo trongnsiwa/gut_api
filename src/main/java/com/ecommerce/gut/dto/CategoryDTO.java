@@ -14,11 +14,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class CategoryDTO {
-  
   private Long id;
 
-  @NotBlank(message = "{name.notBlank}")
-  @Size(max = 50, message = "{name.notHigherThan50Chars}")
+  @NotBlank(message = "{category.name.notBlank}")
+  @Size(max = 50, message = "{category.name.size}")
   private String name;
 
   private Long parentId;

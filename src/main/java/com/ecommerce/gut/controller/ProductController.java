@@ -128,15 +128,14 @@ public class ProductController {
       @ApiResponse(responseCode = "409", description = "Product Id is already taken",
           content = @Content),
   })
-  @PostMapping("/add/{categoryId}")
+  @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> addProductToCategory(
-      @Valid @RequestBody CreateProductDTO productDTO,
-      @PathVariable("categoryId") @Min(1) Long categoryId)
+      @Valid @RequestBody CreateProductDTO productDTO)
       throws CreateDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
     try {
-      boolean added = productService.addProductToCategory(productDTO, categoryId);
+      boolean added = productService.addProductToCategory(productDTO, productDTO.getCategoryId());
       if (added) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.PRODUCT_CREATED_SUCCESS);
@@ -172,15 +171,14 @@ public class ProductController {
       @ApiResponse(responseCode = "404", description = "Product Id is not found",
           content = @Content),
   })
-  @PutMapping("/update/{id}/{categoryId}")
+  @PutMapping
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> updateProduct(
-      @Valid @RequestBody UpdateProductDTO productDTO, @PathVariable("id") @Min(1) Long id,
-      @PathVariable("categoryId") @Min(1) Long categoryId)
+      @Valid @RequestBody UpdateProductDTO productDTO)
       throws UpdateDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
     try {
-      Product updatedProduct = productService.updateProduct(productDTO, id, categoryId);
+      Product updatedProduct = productService.updateProduct(productDTO, productDTO.getId(), productDTO.getCategoryId());
       ProductDetailDTO responseProduct = converter.convertProductDetailToDto(updatedProduct);
       response.setData(responseProduct);
       response.setSuccessCode(SuccessCode.PRODUCT_UPDATED_SUCCESS);
@@ -247,14 +245,14 @@ public class ProductController {
       @ApiResponse(responseCode = "404", description = "Product Id is not found",
           content = @Content),
   })
-  @PutMapping("/update/{id}/images")
+  @PutMapping("/images")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> replaceImagesOfProduct(
-      @Valid @RequestBody ImageListDTO imageListDTO, @PathVariable("id") @Min(1) Long id)
+      @Valid @RequestBody ImageListDTO imageListDTO)
       throws UpdateDataFailException, DuplicateDataException {
     ResponseDTO response = new ResponseDTO();
     try {
-      Optional<Product> updatedProduct = productService.replaceImagesOfProduct(imageListDTO, id);
+      Optional<Product> updatedProduct = productService.replaceImagesOfProduct(imageListDTO, imageListDTO.getProductId());
       if (updatedProduct.isPresent()) {
         ProductDetailDTO responseProduct =
             converter.convertProductDetailToDto(updatedProduct.get());

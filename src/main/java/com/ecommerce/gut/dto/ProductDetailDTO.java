@@ -33,5 +33,6 @@ public class ProductDetailDTO {
   private Date saleToDate;
   private List<ProductImageDTO> productImages = new ArrayList<>();
   private Set<ProductColorSizeDTO> colorSizes = new HashSet<>();
+  private Long categoryId;
 
 }

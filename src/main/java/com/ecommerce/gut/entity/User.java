@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -37,7 +38,13 @@ import lombok.Setter;
                 @UniqueConstraint(
                         name = "users_email_key",
                         columnNames = "email")
-        })
+        },
+        indexes = {
+                @Index(name = "mul_name", columnList = "first_name, last_name"),
+                @Index(name = "idx_status", columnList = "status"),
+                @Index(name = "idx_avatar", columnList = "image_id")
+        }
+)
 public class User {
 
         @Id

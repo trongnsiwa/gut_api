@@ -79,7 +79,7 @@ public class ColorController {
       @ApiResponse(responseCode = "409", description = "Color id or name is already taken",
           content = @Content),
   })
-  @PostMapping("/add")
+  @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> addColor(@Valid @RequestBody ColorDTO colorDTO)
       throws CreateDataFailException, DuplicateDataException {
@@ -119,15 +119,14 @@ public class ColorController {
       @ApiResponse(responseCode = "409", description = "Color name is already taken",
           content = @Content),
   })
-  @PutMapping("/update/{id}")
+  @PutMapping
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<ResponseDTO> updateColor(@Valid @RequestBody ColorDTO colorDTO,
-      @PathVariable(name = "id") @Min(1) Long id)
+  public ResponseEntity<ResponseDTO> updateColor(@Valid @RequestBody ColorDTO colorDTO)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
     try {
       Color color = converter.convertToEntity(colorDTO);
-      Color updatedColor = colorService.updateColor(color, id);
+      Color updatedColor = colorService.updateColor(color, colorDTO.getId());
       ColorDTO responseColor = converter.convertToDto(updatedColor);
       response.setData(responseColor);
       response.setSuccessCode(SuccessCode.COLOR_UPDATED_SUCCESS);

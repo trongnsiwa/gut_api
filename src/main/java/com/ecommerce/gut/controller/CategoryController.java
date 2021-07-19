@@ -145,7 +145,7 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "parent Id or name is already taken",
           content = @Content),
   })
-  @PostMapping("/parent/add")
+  @PostMapping("/parent")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> createCategoryparent(
       @Valid @RequestBody CategoryDTO parentDTO)
@@ -182,16 +182,15 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "Category Id or name is already taken",
           content = @Content),
   })
-  @PostMapping("/parent/{parentId}/add")
+  @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> addCategoryToparent(
-      @Valid @RequestBody CategoryDTO categoryDTO,
-      @PathVariable("parentId") @Min(1) Long parentId)
+      @Valid @RequestBody CategoryDTO categoryDTO)
       throws CreateDataFailException, DuplicateDataException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
     try {
       Category category = converter.convertCategoryToEntity(categoryDTO);
-      boolean added = categoryService.addCategoryToParent(category, parentId);
+      boolean added = categoryService.addCategoryToParent(category, categoryDTO.getParentId());
       if (added) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.CATEGORY_CREATED_SUCCESS);
@@ -224,17 +223,16 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "parent name is already taken",
           content = @Content),
   })
-  @PutMapping("/parent/update/{id}")
+  @PutMapping("/parent")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> updateCategoryParent(
-      @Valid @RequestBody CategoryDTO parentDTO,
-      @PathVariable("id") @Min(1) Long id)
+      @Valid @RequestBody CategoryDTO parentDTO)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
     try {
       Category categoryParent = converter.convertCategoryToEntity(parentDTO);
       Category updatedCategoryParent =
-          categoryService.updateParentCategory(categoryParent, id);
+          categoryService.updateParentCategory(categoryParent, parentDTO.getId());
       CategoryParentDTO responseParent =
           converter.convertCategoryParentToDto(updatedCategoryParent);
 
@@ -268,15 +266,14 @@ public class CategoryController {
       @ApiResponse(responseCode = "409", description = "Category name is already taken",
           content = @Content),
   })
-  @PutMapping("/parent/{parentId}/update/{id}")
+  @PutMapping
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<ResponseDTO> updateCategory(@Valid @RequestBody CategoryDTO categoryDTO,
-      @PathVariable("id") @Min(1) Long id, @PathVariable("parentId") @Min(1) Long parentId)
+  public ResponseEntity<ResponseDTO> updateCategory(@Valid @RequestBody CategoryDTO categoryDTO)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
     try {
       Category category = converter.convertCategoryToEntity(categoryDTO);
-      Category updatedCategory = categoryService.updateCategory(category, id, parentId);
+      Category updatedCategory = categoryService.updateCategory(category, categoryDTO.getId(), categoryDTO.getParentId());
       CategoryDTO responseCategory = converter.convertCategoryToDto(updatedCategory);
 
       response.setData(responseCategory);

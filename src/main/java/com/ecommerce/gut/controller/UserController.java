@@ -113,14 +113,13 @@ public class UserController {
       @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
-  @PutMapping("/edit/profile/{id}")
+  @PutMapping("/profile")
   @PreAuthorize("hasRole('ADMIN') || hasRole('USER')")
-  public ResponseEntity<ResponseDTO> editUserProfile(@Valid @RequestBody UserProfileDTO userDto,
-      @PathVariable("id") @NotNull UUID id) throws UpdateDataFailException {
+  public ResponseEntity<ResponseDTO> editUserProfile(@Valid @RequestBody UserProfileDTO userDto) throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
     try {
       User user = converter.convertUserProfileToEntity(userDto);
-      User updatedUser = userService.editUserProfile(user, id);
+      User updatedUser = userService.editUserProfile(user, userDto.getId());
       UserProfileDTO dto = converter.convertUserProfileToDto(updatedUser);
       response.setData(dto);
       response.setSuccessCode(SuccessCode.USER_PROFILE_EDITED_SUCCESS);
@@ -214,16 +213,15 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id or roles are not found",
           content = @Content),
   })
-  @PatchMapping("/changeRoles/{id}")
+  @PatchMapping("/roles")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<ResponseDTO> changeUserRoles(
-    @PathVariable("id") @NotNull UUID id,  @RequestBody RoleSetDTO roleDto) throws UpdateDataFailException {
+  public ResponseEntity<ResponseDTO> changeUserRoles(@RequestBody RoleSetDTO roleDto) throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
     try {
       Set<Role> roles = roleDto.getRoles().stream()
           .map(role -> converter.convertRoleToEntity(role))
           .collect(Collectors.toSet());
-      User updatedUser = userService.changeUserRoles(id, roles);
+      User updatedUser = userService.changeUserRoles(roleDto.getUserId(), roles);
       UserDTO responseUser = converter.convertUserToDto(updatedUser);
       response.setData(responseUser);
       response.setSuccessCode(SuccessCode.USER_ROLES_CHANGED_SUCCESS);

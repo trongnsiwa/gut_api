@@ -10,6 +10,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -32,7 +33,11 @@ import lombok.Setter;
         @UniqueConstraint(
             name = "categories_un",
             columnNames = "category_name")
-    })
+    },
+    indexes = {
+      @Index(name = "idx_parent_id", columnList = "parent_id")
+    }
+)
 public class Category {
 
   @Id

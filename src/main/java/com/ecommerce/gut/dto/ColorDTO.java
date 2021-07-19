@@ -18,7 +18,7 @@ public class ColorDTO {
   private Long id;
 
   @NotBlank(message = "{color.name.notBlank}")
-  @Size(max = 50, message = "{color.name.lowerThan50Chars}")
+  @Size(max = 50, message = "{color.name.size}")
   private String name;
 
   @NotBlank(message = "{color.source.notBlank}")

@@ -21,6 +21,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class UpdateProductDTO {
+  @NotNull(message = "{product.id.notNull}")
+  @Min(value = 1, message = "{product.id.min}")
   private Long id;
 
   @NotBlank(message = "{product.name.notBlank}")
@@ -55,5 +57,9 @@ public class UpdateProductDTO {
   
   @NotEmpty(message = "{product.colors.notEmpty}")
   private Set<ColorSizeDTO> colors = new HashSet<>();
+
+  @NotNull(message = "{product.category.notNull}")
+  @Min(value = 1, message = "{product.category.min}")
+  private Long categoryId;
 
 }

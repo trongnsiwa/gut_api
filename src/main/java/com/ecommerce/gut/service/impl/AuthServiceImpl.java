@@ -86,40 +86,15 @@ public class AuthServiceImpl implements AuthService {
       user.setLastName(signUpRequest.getLastName());
       user.setStatus("ACTIVE");
 
-      Set<String> strRoles = signUpRequest.getRoles();
       Set<Role> roles = new HashSet<>();
 
-      if (strRoles == null) {
-        Role userRole =
-            roleRepository.findByName(ERole.ROLE_USER)
-                .orElseThrow(() -> {
-                  LOGGER.info("Role {} is not found", ERole.ROLE_USER.name());
-                  return new DataNotFoundException(ErrorCode.ERR_ROLE_NOT_FOUND);
-                });
-        roles.add(userRole);
-      } else {
-        strRoles.forEach(role -> {
-          if ("Admin".equalsIgnoreCase(role)) {
-            Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                .orElseThrow(() -> {
-                  LOGGER.info("Role {} is not found", ERole.ROLE_ADMIN.name());
-                  return new DataNotFoundException(
-                    ErrorCode.ERR_ROLE_NOT_FOUND);
-                });
-            roles.add(adminRole);
-
-          } else {
-            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                .orElseThrow(() -> {
-                  LOGGER.info("Role {} is not found", ERole.ROLE_USER.name());
-                  return new DataNotFoundException(
-                    ErrorCode.ERR_ROLE_NOT_FOUND);
-                });
-            roles.add(userRole);
-          }
-
-        });
-      }
+      Role userRole =
+          roleRepository.findByName(ERole.ROLE_USER)
+              .orElseThrow(() -> {
+                LOGGER.info("Role {} is not found", ERole.ROLE_USER.name());
+                return new DataNotFoundException(ErrorCode.ERR_ROLE_NOT_FOUND);
+              });
+      roles.add(userRole);
 
       user.setRoles(roles);
 

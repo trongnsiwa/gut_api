@@ -40,6 +40,7 @@ public class ProductConverter {
           product.getColorSizes().stream()
               .map(this::convertProductColorSizeToDto)
               .collect(Collectors.toSet()));
+      productDetailDTO.setCategoryId(product.getCategory().getId());
 
       return productDetailDTO;
     } catch (Exception ex) {
@@ -60,6 +61,7 @@ public class ProductConverter {
           product.getColorSizes().stream()
               .map(colorSize -> convertColorToDto(colorSize.getColor()))
               .collect(Collectors.toSet()));
+      pagingProductDTO.setCategoryId(product.getCategory().getId());
 
       return pagingProductDTO;
     } catch (Exception ex) {

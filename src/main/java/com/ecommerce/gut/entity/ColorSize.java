@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -18,7 +19,14 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "color_sizes")
+@Table(
+  name = "color_sizes",
+  indexes = {
+    @Index(name = "idx_colorsize_product_id", columnList = "product_id"),
+    @Index(name = "idx_colorsize_color_id", columnList = "color_id"),
+    @Index(name = "idx_colorsize_size_id", columnList = "size_id")
+  }
+)
 public class ColorSize {
   
   @Id

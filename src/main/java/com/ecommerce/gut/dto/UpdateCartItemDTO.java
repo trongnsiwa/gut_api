@@ -16,6 +16,7 @@ public class UpdateCartItemDTO {
   @NotNull(message = "{cart.userId.notNull}")
   private String userId;
   
+  @NotNull(message = "{product.id.notNull}")
   @Min(value = 1, message = "{cart.productId.min}")
   private Long productId;
 

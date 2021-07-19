@@ -26,4 +26,5 @@ public class PagingProductDTO {
   private LocalDateTime saleToDate;
   private List<ProductImageDTO> images = new ArrayList<>();
   private Set<ColorDTO> colors = new HashSet<>();
+  private Long categoryId;
 }
