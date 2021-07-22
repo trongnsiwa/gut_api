@@ -36,19 +36,19 @@ public class AuthServiceImpl implements AuthService {
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthServiceImpl.class);
 
   @Autowired
-  private AuthenticationManager authenticationManager;
+  AuthenticationManager authenticationManager;
 
   @Autowired
-  private UserRepository userRepository;
+  UserRepository userRepository;
 
   @Autowired
-  private RoleRepository roleRepository;
+  RoleRepository roleRepository;
 
   @Autowired
-  private PasswordEncoder encoder;
+  PasswordEncoder encoder;
 
   @Autowired
-  private JwtUtils jwtUtils;
+  JwtUtils jwtUtils;
 
   @Override
   public JwtResponse authenticateUser(LoginRequest loginRequest) {
@@ -66,12 +66,11 @@ public class AuthServiceImpl implements AuthService {
         .map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
 
-    return new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(),
-        userDetails.getFirstName(), userDetails.getLastName(), roles);
+    return new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getFullName(), userDetails.getAvatar(),  userDetails.getAddress(), userDetails.getPhone(), roles);
   }
 
   @Override
-  public boolean registerUser(SignUpRequest signUpRequest) throws CreateDataFailException {
+  public boolean registerUser(SignUpRequest signUpRequest) throws CreateDataFailException, DuplicateDataException {
     try {
       boolean existedEmail = userRepository.existsByEmail(signUpRequest.getEmail());
       if (existedEmail) {
@@ -100,6 +99,8 @@ public class AuthServiceImpl implements AuthService {
 
       userRepository.save(user);
       return true;
+    } catch (DuplicateDataException ex) {
+      throw new DuplicateDataException(ErrorCode.ERR_EMAIL_ALREADY_TAKEN);
     } catch (Exception ex) {
       LOGGER.info("Fail to create new user {}", signUpRequest.getEmail());
       throw new CreateDataFailException(ErrorCode.ERR_USER_CREATED_FAIL);

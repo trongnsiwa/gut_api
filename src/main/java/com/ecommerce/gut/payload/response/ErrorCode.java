@@ -6,6 +6,7 @@ public class ErrorCode {
   public static final String ERR_ROLE_NOT_FOUND = "ERR_ROLE_NOT_FOUND";
   public static final String ERR_EMAIL_ALREADY_TAKEN = "ERR_EMAIL_ALREADY_TAKEN";
   public static final String ERR_USER_CREATED_FAIL = "ERR_USER_CREATED_FAIL";
+  public static final String ERR_LOGIN_FAIL = "ERR_LOGIN_FAIL";
 
   // CATEGORY
   public static final String ERR_CATEGORY_PARENT_NOT_FOUND = "ERR_CATEGORY_PARENT_NOT_FOUND";
@@ -68,7 +69,11 @@ public class ErrorCode {
   public static final String ERR_CART_NOT_FOUND = "ERR_CART_NOT_FOUND";
   public static final String ERR_ITEM_CART_NOT_FOUND = "ERR_ITEM_CART_NOT_FOUND";
 
+  // CONVERTER
   public static final String ERR_DATA_CONVERT_FAIL = "ERR_DATA_CONVERT_FAIL";
+
+  // BRAND
+  public static final String ERR_BRAND_NOT_FOUND = "ERR_BRAND_NOT_FOUND"; 
   
 
 }

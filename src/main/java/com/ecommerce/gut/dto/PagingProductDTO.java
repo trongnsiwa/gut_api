@@ -27,4 +27,5 @@ public class PagingProductDTO {
   private List<ProductImageDTO> images = new ArrayList<>();
   private Set<ColorDTO> colors = new HashSet<>();
   private Long categoryId;
+  private Long brandId;
 }

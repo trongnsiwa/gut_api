@@ -16,10 +16,16 @@ public class SaleProductDTO extends ProductDTO {
   private LocalDateTime saleFromDate;
   private LocalDateTime saleToDate;
 
+  public SaleProductDTO(Double salePrice, LocalDateTime saleFromDate, LocalDateTime saleToDate) {
+    this.salePrice = salePrice;
+    this.saleFromDate = saleFromDate;
+    this.saleToDate = saleToDate;
+  }
+
   public SaleProductDTO(Long id, String name, Double price, String shortDesc,
-      List<ProductImageDTO> images, List<ColorDTO> colors, Double salePrice, LocalDateTime saleFromDate,
-      LocalDateTime saleToDate) {
-    super(id, name, price, shortDesc, images, colors);
+      List<ProductImageDTO> images, List<ColorDTO> colors, Long categoryId, Long brandId,
+      Double salePrice, LocalDateTime saleFromDate, LocalDateTime saleToDate) {
+    super(id, name, price, shortDesc, images, colors, categoryId, brandId);
     this.salePrice = salePrice;
     this.saleFromDate = saleFromDate;
     this.saleToDate = saleToDate;

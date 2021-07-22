@@ -11,6 +11,7 @@ import com.ecommerce.gut.dto.CreateProductDTO;
 import com.ecommerce.gut.dto.ImageListDTO;
 import com.ecommerce.gut.dto.ProductImageDTO;
 import com.ecommerce.gut.dto.UpdateProductDTO;
+import com.ecommerce.gut.entity.Brand;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.entity.PSize;
@@ -32,13 +33,14 @@ import com.ecommerce.gut.repository.ColorSizeRepository;
 import com.ecommerce.gut.repository.ImageRepository;
 import com.ecommerce.gut.repository.ProductImageRepository;
 import com.ecommerce.gut.repository.ProductRepository;
+import com.ecommerce.gut.repository.BrandRepository;
 import com.ecommerce.gut.service.ProductService;
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,28 +53,28 @@ public class ProductServiceImpl implements ProductService {
   private static final Logger LOGGER = LoggerFactory.getLogger(ProductServiceImpl.class);
 
   @Autowired
-  private ProductRepository productRepository;
+  ProductRepository productRepository;
 
   @Autowired
-  private ColorRepository colorRepository;
+  ColorRepository colorRepository;
 
   @Autowired
-  private PSizeRepository pSizeRepository;
+  PSizeRepository pSizeRepository;
 
   @Autowired
-  private ProductImageRepository productImageRepository;
+  ProductImageRepository productImageRepository;
 
   @Autowired
-  private ImageRepository imageRepository;
+  ImageRepository imageRepository;
 
   @Autowired
-  private CategoryRepository categoryRepository;
+  CategoryRepository categoryRepository;
+  
+  @Autowired
+  BrandRepository brandRepository;
 
   @Autowired
-  private ColorSizeRepository colorSizeRepository;
-
-  @Autowired
-  private ModelMapper modelMapper;
+  ColorSizeRepository colorSizeRepository;
 
   @Override
   public List<Product> getProductsByCategoryIdPerPage(Long categoryId, Integer pageNumber,
@@ -156,6 +158,7 @@ public class ProductServiceImpl implements ProductService {
         });
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public boolean addProductToCategory(CreateProductDTO productDTO, Long categoryId)
       throws CreateDataFailException {
@@ -166,9 +169,16 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
 
-      Product product = modelMapper.map(productDTO, Product.class);
+      Optional<Brand> existedBrand = brandRepository.findById(productDTO.getBrandId());
+      if (!existedBrand.isPresent()) {
+        LOGGER.info("Brand {} is not found", productDTO.getBrandId());
+        throw new DataNotFoundException(ErrorCode.ERR_BRAND_NOT_FOUND);
+      }
+
+      Product product = new Product(productDTO.getName(), productDTO.getPrice(), productDTO.getShortDesc(), productDTO.getLongDesc(), productDTO.getMaterial(), productDTO.getHandling(), productDTO.isSale(), productDTO.getPriceSale(), productDTO.getSaleFromDate(), productDTO.getSaleToDate());
       product.setBrandNew(true);
       product.setCategory(existedCategory.get());
+      product.setBrand(existedBrand.get());
       product.setDeleted(false);
       product.setInStock(false);
 
@@ -203,8 +213,10 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       } else if (message.equals(ErrorCode.ERR_COLOR_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
-      } else {
+      } else if (message.equals(ErrorCode.ERR_SIZE_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_SIZE_NOT_FOUND);
+      } else {
+        throw new DataNotFoundException(ErrorCode.ERR_BRAND_NOT_FOUND);
       }
     } catch (Exception e) {
       LOGGER.info("Fail to create product {}", productDTO.getName());
@@ -214,6 +226,7 @@ public class ProductServiceImpl implements ProductService {
     return true;
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public Product updateProduct(UpdateProductDTO productDTO, Long id, Long categoryId)
       throws UpdateDataFailException, DataNotFoundException {
@@ -225,6 +238,12 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
 
+      Optional<Brand> existedBrand = brandRepository.findById(productDTO.getBrandId());
+      if (!existedBrand.isPresent()) {
+        LOGGER.info("Brand {} is not found", productDTO.getBrandId());
+        throw new DataNotFoundException(ErrorCode.ERR_BRAND_NOT_FOUND);
+      }
+
       Optional<Product> existedProduct = productRepository.findById(id);
       if (!existedProduct.isPresent()) {
         LOGGER.info("Product {} is not found", id);
@@ -234,6 +253,7 @@ public class ProductServiceImpl implements ProductService {
       Product product = existedProduct.get();
       transferDataToExistProduct(product, productDTO);
       product.setCategory(existedCategory.get());
+      product.setBrand(existedBrand.get());
       product.setInStock(false);
 
       Set<ColorSize> colorSizes = colorSizeRepository.findColorSizesByProductId(id);
@@ -251,8 +271,10 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
       } else if (message.equals(ErrorCode.ERR_PRODUCT_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
-      } else {
+      } else if (message.equals(ErrorCode.ERR_CATEGORY_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      } else {
+        throw new DataNotFoundException(ErrorCode.ERR_BRAND_NOT_FOUND);
       }
 
     } catch (Exception e) {
@@ -261,6 +283,7 @@ public class ProductServiceImpl implements ProductService {
     }
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public boolean deleteProduct(Long id) throws DeleteDataFailException, DataNotFoundException {
     try {
@@ -284,6 +307,7 @@ public class ProductServiceImpl implements ProductService {
     return true;
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public Optional<Product> replaceImagesOfProduct(ImageListDTO imageListRequest, Long id)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {

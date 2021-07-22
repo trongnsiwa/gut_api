@@ -33,6 +33,8 @@ public class UserDetailsImpl implements UserDetails {
   
   private String address;
 
+  private String avatar;
+
   private boolean enabled;
 
   private Collection<? extends GrantedAuthority> authorities;
@@ -62,7 +64,7 @@ public class UserDetailsImpl implements UserDetails {
             .map(role -> new SimpleGrantedAuthority(role.getName().name()))
             .collect(Collectors.toList());
 
-    return new UserDetailsImpl(
+    UserDetailsImpl userDetails = new UserDetailsImpl(
         user.getId(), 
         user.getEmail(), 
         user.getPassword(),
@@ -73,6 +75,12 @@ public class UserDetailsImpl implements UserDetails {
         user.getStatus(), 
         authorities
     );
+
+    if (!Objects.isNull(user.getImage())) {
+      userDetails.setAvatar(user.getImage().getImageUrl());
+    }
+
+    return userDetails;
   }
 
   @Override
@@ -102,6 +110,10 @@ public class UserDetailsImpl implements UserDetails {
     return lastName;
   }
 
+  public String getAvatar() {
+    return avatar;
+  }
+
   public void setFirstName(String firstName) {
     this.firstName = firstName;
   }
@@ -128,6 +140,10 @@ public class UserDetailsImpl implements UserDetails {
 
   public void setAddress(String address) {
     this.address = address;
+  }
+
+  public void setAvatar(String avatar) {
+    this.avatar = avatar;
   }
 
   public void setAuthorities(Set<Role> roles) {

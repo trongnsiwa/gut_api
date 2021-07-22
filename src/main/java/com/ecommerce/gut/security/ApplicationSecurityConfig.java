@@ -26,14 +26,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
-  private UserDetailsServiceImpl userDetailsService;
+  UserDetailsServiceImpl userDetailsService;
 
   @Autowired
-  private JwtAuthEntryPoint jwtAuthEntryPoint;
+  JwtAuthEntryPoint jwtAuthEntryPoint;
 
-  @Autowired
-  private LogoutSuccessHandler logoutSuccessHandler;
-  
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
@@ -47,29 +44,25 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http
-        .cors()
-        .and()
-        .csrf().disable()
         .exceptionHandling()
-            .authenticationEntryPoint(jwtAuthEntryPoint)
+        .authenticationEntryPoint(jwtAuthEntryPoint)
         .and()
         .sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
+        .cors().and()
+        .csrf().disable()
         .authorizeRequests()
-            .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
-            .antMatchers("/auth/**").permitAll()
-            .antMatchers("/home/**").permitAll()
-            .antMatchers("/category/**").permitAll()
-            .antMatchers("/color/**").permitAll()
-            .antMatchers("/product/**").permitAll()
-            .antMatchers("/cart/**").permitAll()
-            .anyRequest().authenticated()
-        .and()
-        .logout()
-            .logoutSuccessHandler(logoutSuccessHandler).permitAll();
+        .antMatchers("/auth/**").permitAll()
+        .antMatchers("/home/**").permitAll()
+        .antMatchers("/category/**").permitAll()
+        .antMatchers("/color/**").permitAll()
+        .antMatchers("/product/**").permitAll()
+        .antMatchers("/cart/**").permitAll()
+        .anyRequest().authenticated();
 
-    http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+    http.addFilterBefore(authenticationJwtTokenFilter(),
+        UsernamePasswordAuthenticationFilter.class);
   }
 
   @Bean
@@ -86,7 +79,8 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
   }
 
   @Override
-	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**",  "/swagger-resources");
-	}
+  public void configure(WebSecurity web) throws Exception {
+    web.ignoring().antMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+        "/swagger-resources/**", "/swagger-resources");
+  }
 }

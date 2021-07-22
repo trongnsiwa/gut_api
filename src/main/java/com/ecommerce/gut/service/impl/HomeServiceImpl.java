@@ -27,7 +27,7 @@ public class HomeServiceImpl implements HomeService {
   private static final Logger LOGGER = LoggerFactory.getLogger(HomeServiceImpl.class);
 
   @Autowired
-  private ProductRepository productRepository;
+  ProductRepository productRepository;
 
   @Override
   public List<ProductDTO> getNewProducts(Integer size) throws LoadDataFailException {
@@ -38,7 +38,7 @@ public class HomeServiceImpl implements HomeService {
         return products.stream()
             .map(product -> new ProductDTO(product.getId(), product.getName(), product.getPrice(),
                 product.getShortDesc(), this.getImageListFromProduct(product),
-                this.getColorListFromProduct(product)))
+                this.getColorListFromProduct(product), product.getCategory().getId(), product.getBrand().getId()))
             .collect(Collectors.toList());
       }
     } catch (Exception ex) {
@@ -59,7 +59,9 @@ public class HomeServiceImpl implements HomeService {
             .map(product -> new SaleProductDTO(product.getId(), product.getName(),
                 product.getPrice(),
                 product.getShortDesc(), this.getImageListFromProduct(product),
-                this.getColorListFromProduct(product), product.getPriceSale(),
+                this.getColorListFromProduct(product), 
+                product.getCategory().getId(), product.getBrand().getId(),
+                product.getPriceSale(),
                 product.getSaleFromDate(), product.getSaleToDate()))
             .collect(Collectors.toList());
       }

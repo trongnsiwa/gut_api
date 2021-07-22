@@ -30,7 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class HomeController {
   
   @Autowired
-  private HomeService homeService;
+  HomeService homeService;
 
   @Operation(summary = "Get all new products")
   @ApiResponses(value = {

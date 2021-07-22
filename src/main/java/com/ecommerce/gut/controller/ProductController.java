@@ -26,7 +26,6 @@ import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -53,10 +52,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public class ProductController {
 
   @Autowired
-  private ProductService productService;
+  ProductService productService;
 
   @Autowired
-  private ProductConverter converter;
+  ProductConverter converter;
 
   @Operation(summary = "Get products by category Id per page")
   @ApiResponses(value = {
@@ -129,7 +128,6 @@ public class ProductController {
           content = @Content),
   })
   @PostMapping
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> addProductToCategory(
       @Valid @RequestBody CreateProductDTO productDTO)
       throws CreateDataFailException, DataNotFoundException {
@@ -172,7 +170,6 @@ public class ProductController {
           content = @Content),
   })
   @PutMapping
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> updateProduct(
       @Valid @RequestBody UpdateProductDTO productDTO)
       throws UpdateDataFailException, DataNotFoundException {
@@ -214,7 +211,6 @@ public class ProductController {
           content = @Content),
   })
   @DeleteMapping("/delete/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> deleteProduct(@PathVariable("id") @Min(1) Long id)
       throws DeleteDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
@@ -246,7 +242,6 @@ public class ProductController {
           content = @Content),
   })
   @PutMapping("/images")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> replaceImagesOfProduct(
       @Valid @RequestBody ImageListDTO imageListDTO)
       throws UpdateDataFailException, DuplicateDataException {

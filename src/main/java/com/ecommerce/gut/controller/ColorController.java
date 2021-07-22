@@ -17,7 +17,6 @@ import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.ColorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,10 +41,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class ColorController {
 
   @Autowired
-  private ColorService colorService;
+  ColorService colorService;
 
   @Autowired
-  private ColorConverter converter;
+  ColorConverter converter;
 
   @Operation(summary = "Get the color by its id")
   @ApiResponses(value = {
@@ -80,7 +79,6 @@ public class ColorController {
           content = @Content),
   })
   @PostMapping
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> addColor(@Valid @RequestBody ColorDTO colorDTO)
       throws CreateDataFailException, DuplicateDataException {
     ResponseDTO response = new ResponseDTO();
@@ -120,7 +118,6 @@ public class ColorController {
           content = @Content),
   })
   @PutMapping
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> updateColor(@Valid @RequestBody ColorDTO colorDTO)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
@@ -161,7 +158,6 @@ public class ColorController {
           description = "There are some products still have this color", content = @Content),
   })
   @DeleteMapping("/delete/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> deleteColor(@PathVariable(name = "id") @Min(1) Long id)
       throws DeleteDataFailException, RestrictDataException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();

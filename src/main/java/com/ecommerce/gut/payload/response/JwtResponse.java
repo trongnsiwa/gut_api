@@ -16,17 +16,21 @@ public class JwtResponse {
   private String type = "Bearer";
   private UUID id;
   private String email;
-  private String firstName;
-  private String lastName;
+  private String fullname;
+  private String avatar;
+  private String address;
+  private String phone;
   private List<String> roles;
 
-  public JwtResponse(String accessToken, UUID id, String email, String firstName, String lastName,
+  public JwtResponse(String accessToken, UUID id, String email, String fullname, String avatar, String address, String phone,
       List<String> roles) {
     this.token = accessToken;
     this.id = id;
     this.email = email;
-    this.firstName = firstName;
-    this.lastName = lastName;
+    this.fullname = fullname;
+    this.avatar = avatar;
+    this.address = address;
+    this.phone = phone;
     this.roles = roles;
   }
 

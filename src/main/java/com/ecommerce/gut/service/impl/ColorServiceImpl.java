@@ -15,6 +15,7 @@ import com.ecommerce.gut.service.ColorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,10 +24,10 @@ public class ColorServiceImpl implements ColorService {
   private static final Logger LOGGER = LoggerFactory.getLogger(ColorServiceImpl.class);
 
   @Autowired
-  private ColorRepository colorRepository;
+  ColorRepository colorRepository;
 
   @Autowired
-  private ColorSizeRepository colorSizeRepository;
+  ColorSizeRepository colorSizeRepository;
 
   @Override
   public Color getColorById(Long id) {
@@ -37,6 +38,7 @@ public class ColorServiceImpl implements ColorService {
         });
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public boolean createColor(Color color) throws CreateDataFailException, DuplicateDataException {
     try {
@@ -67,6 +69,7 @@ public class ColorServiceImpl implements ColorService {
     return true;
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public Color updateColor(Color color, Long id)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
@@ -108,6 +111,7 @@ public class ColorServiceImpl implements ColorService {
     }
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public boolean deleteColor(Long id)
       throws DeleteDataFailException, RestrictDataException, DataNotFoundException {

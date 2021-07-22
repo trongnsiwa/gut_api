@@ -25,7 +25,6 @@ import com.ecommerce.gut.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -52,10 +51,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 public class UserController {
 
   @Autowired
-  private UserService userService;
+  UserService userService;
 
   @Autowired
-  private UserConverter converter;
+  UserConverter converter;
 
   @Operation(summary = "Get users per page")
   @ApiResponses(value = {
@@ -63,7 +62,6 @@ public class UserController {
       @ApiResponse(responseCode = "400", description = "Invalid data", content = @Content),
   })
   @GetMapping("/page")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> getUsersPerPage(@RequestParam("num") @Min(1) Integer pageNum,
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sort") @NotNull String sortBy) throws LoadDataFailException {
@@ -88,7 +86,6 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @GetMapping("/profile/{id}")
-  @PreAuthorize("hasRole('ADMIN') || hasRole('USER')")
   public ResponseEntity<ResponseDTO> getUserProfileById(@PathVariable("id") @NotNull UUID id) {
     ResponseDTO response = new ResponseDTO();
     try {
@@ -114,7 +111,6 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @PutMapping("/profile")
-  @PreAuthorize("hasRole('ADMIN') || hasRole('USER')")
   public ResponseEntity<ResponseDTO> editUserProfile(@Valid @RequestBody UserProfileDTO userDto) throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
     try {
@@ -138,7 +134,6 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @DeleteMapping("/delete/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> deleteUser(@PathVariable("id") @NotNull UUID id)
       throws DeleteDataFailException {
     ResponseDTO response = new ResponseDTO();
@@ -163,7 +158,6 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @PatchMapping("/deactivate/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> deactivateUser(@PathVariable("id") @NotNull UUID id)
       throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
@@ -188,7 +182,6 @@ public class UserController {
       @ApiResponse(responseCode = "404", description = "User Id is not found", content = @Content),
   })
   @PatchMapping("/activate/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> activateUser(@PathVariable("id") @NotNull UUID id)
       throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
@@ -214,7 +207,6 @@ public class UserController {
           content = @Content),
   })
   @PatchMapping("/roles")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> changeUserRoles(@RequestBody RoleSetDTO roleDto) throws UpdateDataFailException {
     ResponseDTO response = new ResponseDTO();
     try {

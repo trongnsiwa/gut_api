@@ -19,7 +19,6 @@ import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,10 +43,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class CartController {
 
   @Autowired
-  private CartService cartService;
+  CartService cartService;
 
   @Autowired
-  private CartConverter converter;
+  CartConverter converter;
 
   @Operation(summary = "Add item to cart of user",
       requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -61,7 +60,6 @@ public class CartController {
           content = @Content),
   })
   @PostMapping("/addToCart")
-  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<ResponseDTO> addItemToCart(@Valid @RequestBody AddCartItemDTO dto)
       throws CreateDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
@@ -101,7 +99,6 @@ public class CartController {
           content = @Content),
   })
   @PostMapping("/updateItem")
-  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<ResponseDTO> updateItemQuantity(@Valid @RequestBody UpdateCartItemDTO dto)
       throws UpdateDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
@@ -144,7 +141,6 @@ public class CartController {
           content = @Content),
   })
   @PostMapping("/removeItem")
-  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<ResponseDTO> removeItem(@Valid @RequestBody RemoveCartItemDTO dto)
       throws DeleteDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
@@ -185,7 +181,6 @@ public class CartController {
           content = @Content),
   })
   @PutMapping("/clear/{userId}")
-  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<ResponseDTO> clearCart(@PathVariable("userId") @NotNull UUID userId)
       throws UpdateDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
@@ -220,7 +215,6 @@ public class CartController {
           content = @Content),
   })
   @GetMapping("/{userId}")
-  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<ResponseDTO> getCartByUserId(@PathVariable("userId") @NotNull UUID userId)
       throws DataNotFoundException {
     ResponseDTO response = new ResponseDTO();

@@ -14,7 +14,6 @@ import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DeleteDataFailException;
 import com.ecommerce.gut.exception.DuplicateDataException;
-import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.exception.RestrictDataException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
 import com.ecommerce.gut.payload.response.ErrorCode;
@@ -24,7 +23,6 @@ import com.ecommerce.gut.service.CategoryService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -43,7 +41,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
 @RestController
 @RequestMapping("/category")
 @Tag(name = "category")
@@ -51,35 +49,152 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class CategoryController {
 
   @Autowired
-  private CategoryService categoryService;
+  CategoryService categoryService;
 
   @Autowired
-  private CategoryConverter converter;
+  CategoryConverter converter;
 
-  @Operation(summary = "Get category parents with their categories per page")
+  @Operation(summary = "Get category parents")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200",
-          description = "Found all category book even if empty", content = @Content),
+          description = "Found all categories even if empty", content = @Content),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
-  @GetMapping("/all")
-  public ResponseEntity<ResponseDTO> getAllCategoryParents(
+  @GetMapping("/parent/page")
+  public ResponseEntity<ResponseDTO> getParentCategoriesPerPage(
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
-      @RequestParam("sort") @NotNull @NotBlank String sortBy) throws LoadDataFailException {
+      @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
     ResponseDTO response = new ResponseDTO();
-    try {
-      List<CategoryParentDTO> categoryParents =
-          categoryService.getParentCategoriesPerPage(pageNumber, pageSize, sortBy).stream()
-              .map(categoryParent -> converter.convertCategoryParentToDto(categoryParent))
-              .collect(Collectors.toList());
+    List<CategoryDTO> categoryParents =
+        categoryService.getParentCategoriesPerPage(pageNumber, pageSize, sortBy).stream()
+            .map(categoryParent -> converter.convertCategoryToDto(categoryParent))
+            .collect(Collectors.toList());
 
-      response.setData(categoryParents);
-      response.setSuccessCode(SuccessCode.CATEGORY_PARENT_LOADED_SUCCESS);
-    } catch (Exception ex) {
-      response.setErrorCode(ErrorCode.ERR_CATEGORY_PARENT_LOADED_FAIL);
-      throw new LoadDataFailException(ErrorCode.ERR_CATEGORY_PARENT_LOADED_FAIL);
-    }
+    response.setData(categoryParents);
+    response.setSuccessCode(SuccessCode.CATEGORY_PARENT_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Get category childs")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200",
+          description = "Found all categories even if empty", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+  })
+  @GetMapping("/page")
+  public ResponseEntity<ResponseDTO> getChildCategoriesPerPage(
+      @RequestParam("num") @Min(1) Integer pageNumber,
+      @RequestParam("size") @Min(1) Integer pageSize,
+      @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
+    ResponseDTO response = new ResponseDTO();
+    List<CategoryDTO> categoryChilds =
+        categoryService.getChildCategoriesPerPage(pageNumber, pageSize, sortBy).stream()
+            .map(category -> converter.convertCategoryToDto(category))
+            .collect(Collectors.toList());
+
+    response.setData(categoryChilds);
+    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Search categories by name")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200",
+          description = "Found categories even if empty", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+  })
+  @GetMapping("/search")
+  public ResponseEntity<ResponseDTO> searchByName(
+      @RequestParam("num") @Min(1) Integer pageNumber,
+      @RequestParam("size") @Min(1) Integer pageSize,
+      @RequestParam("sortBy") @NotNull @NotBlank String sortBy,
+      @RequestParam("name") @NotNull @NotBlank String name,
+      @RequestParam("parent") @NotNull boolean parent) {
+    ResponseDTO response = new ResponseDTO();
+    List<CategoryDTO> categories = null;
+    if (parent) {
+      categories = categoryService.searchByParentName(pageNumber, pageSize, sortBy, name).stream()
+      .map(category -> converter.convertCategoryToDto(category))
+      .collect(Collectors.toList());
+    } else {
+      categories = categoryService.searchByChildName(pageNumber, pageSize, sortBy, name).stream()
+      .map(category -> converter.convertCategoryToDto(category))
+      .collect(Collectors.toList());
+    }  
+
+    response.setData(categories);
+    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count parent categories")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200",
+          description = "Countable even if empty", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+  })
+  @GetMapping("/parent/count")
+  public ResponseEntity<ResponseDTO> countParentCategories() {
+    ResponseDTO response = new ResponseDTO();
+    Long numOfParentCategories = categoryService.countParentCategories();
+
+    response.setData(numOfParentCategories);
+    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count child categories")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200",
+          description = "Countable even if empty", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+  })
+  @GetMapping("/count")
+  public ResponseEntity<ResponseDTO> countChildCategories() {
+    ResponseDTO response = new ResponseDTO();
+    Long numOfChildCategories = categoryService.countChildCategories();
+
+    response.setData(numOfChildCategories);
+    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count child categories with conditions")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200",
+          description = "Countable even if empty", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+  })
+  @GetMapping("/count-condition")
+  public ResponseEntity<ResponseDTO> countChildCategoriesWithCondtions(@RequestParam("name") @NotNull @NotBlank String name) {
+    ResponseDTO response = new ResponseDTO();
+    Long numOfChildCategories = categoryService.countChildCategoriesWithConditions(name);
+
+    response.setData(numOfChildCategories);
+    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count parent categories with conditions")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200",
+          description = "Countable even if empty", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+  })
+  @GetMapping("/parent/count-condition")
+  public ResponseEntity<ResponseDTO> countParentCategoriesWithCondtions(@RequestParam("name") @NotNull @NotBlank String name) {
+    ResponseDTO response = new ResponseDTO();
+    Long numOfParentCategories = categoryService.countParentCategoriesWithConditions(name);
+
+    response.setData(numOfParentCategories);
+    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
 
     return ResponseEntity.ok().body(response);
   }
@@ -118,7 +233,8 @@ public class CategoryController {
           content = @Content),
   })
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseDTO> getCategoryById(@PathVariable("id") @Min(1) Long id) throws DataNotFoundException {
+  public ResponseEntity<ResponseDTO> getCategoryById(@PathVariable("id") @Min(1) Long id)
+      throws DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
     try {
       Category foundCategory = categoryService.getCategoryById(id);
@@ -146,7 +262,6 @@ public class CategoryController {
           content = @Content),
   })
   @PostMapping("/parent")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> createCategoryparent(
       @Valid @RequestBody CategoryDTO parentDTO)
       throws CreateDataFailException, DuplicateDataException {
@@ -183,7 +298,6 @@ public class CategoryController {
           content = @Content),
   })
   @PostMapping
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> addCategoryToparent(
       @Valid @RequestBody CategoryDTO categoryDTO)
       throws CreateDataFailException, DuplicateDataException, DataNotFoundException {
@@ -224,7 +338,6 @@ public class CategoryController {
           content = @Content),
   })
   @PutMapping("/parent")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> updateCategoryParent(
       @Valid @RequestBody CategoryDTO parentDTO)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
@@ -267,13 +380,13 @@ public class CategoryController {
           content = @Content),
   })
   @PutMapping
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> updateCategory(@Valid @RequestBody CategoryDTO categoryDTO)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
     try {
       Category category = converter.convertCategoryToEntity(categoryDTO);
-      Category updatedCategory = categoryService.updateCategory(category, categoryDTO.getId(), categoryDTO.getParentId());
+      Category updatedCategory =
+          categoryService.updateCategory(category, categoryDTO.getId(), categoryDTO.getParentId());
       CategoryDTO responseCategory = converter.convertCategoryToDto(updatedCategory);
 
       response.setData(responseCategory);
@@ -313,7 +426,6 @@ public class CategoryController {
           content = @Content),
   })
   @DeleteMapping("/delete/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<ResponseDTO> deleteCategory(@PathVariable("id") @Min(1) Long id)
       throws DeleteDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
@@ -321,7 +433,7 @@ public class CategoryController {
       boolean deleted = categoryService.deleteCategory(id);
       if (deleted) {
         response.setData(null);
-        response.setSuccessCode(SuccessCode.CATEGORY_PARENT_DELETED_SUCCESS);
+        response.setSuccessCode(SuccessCode.CATEGORY_DELETED_SUCCESS);
       }
     } catch (DataNotFoundException ex) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -347,7 +459,6 @@ public class CategoryController {
           content = @Content),
   })
   @DeleteMapping("/parent/delete/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> deleteCategoryParent(@PathVariable("id") @Min(1) Long id)
       throws DeleteDataFailException, RestrictDataException {
     ResponseDTO response = new ResponseDTO();

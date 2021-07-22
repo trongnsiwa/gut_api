@@ -3,7 +3,6 @@ package com.ecommerce.gut.dto;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -22,7 +21,6 @@ import lombok.Setter;
 public class UserProfileDTO {
 
   @NotNull(message = "{profile.id.notNull}")
-  @Min(value = 1, message = "{profile.id.min}")
   private UUID id;
 
   @Pattern(

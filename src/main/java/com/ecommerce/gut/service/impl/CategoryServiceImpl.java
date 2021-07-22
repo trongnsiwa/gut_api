@@ -7,7 +7,6 @@ import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DeleteDataFailException;
 import com.ecommerce.gut.exception.DuplicateDataException;
-import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.exception.RestrictDataException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
 import com.ecommerce.gut.payload.response.ErrorCode;
@@ -26,25 +25,82 @@ public class CategoryServiceImpl implements CategoryService {
   private static final Logger LOGGER = LoggerFactory.getLogger(CategoryServiceImpl.class);
 
   @Autowired
-  private CategoryRepository categoryRepository;
+  CategoryRepository categoryRepository;
 
   @Override
   public List<Category> getParentCategoriesPerPage(Integer pageNum, Integer pageSize,
-      String sortBy) throws LoadDataFailException {
-    try {
-      Sort sort = null;
-      if ("Z-A".equals(sortBy)) {
-        sort = Sort.by("name").descending();
-      } else {
-        sort = Sort.by("name").ascending();
-      }
-
-      PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
-      return categoryRepository.getParentCategoryPerPage(pageRequest).getContent();
-    } catch (Exception ex) {
-      LOGGER.info("Fail to load category parents list");
-      throw new LoadDataFailException(ErrorCode.ERR_CATEGORY_PARENT_LOADED_FAIL);
+      String sortBy) {
+    Sort sort = null;
+    if ("Z-A".equals(sortBy)) {
+      sort = Sort.by("name").descending();
+    } else {
+      sort = Sort.by("name").ascending();
     }
+
+    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+    return categoryRepository.getParentCategoryPerPage(pageRequest).getContent();
+  }
+
+  @Override
+  public List<Category> getChildCategoriesPerPage(Integer pageNum, Integer pageSize,
+      String sortBy) {
+    Sort sort = null;
+    if ("Z-A".equals(sortBy)) {
+      sort = Sort.by("name").descending();
+    } else {
+      sort = Sort.by("name").ascending();
+    }
+
+    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+    return categoryRepository.getChildCategoryPerPage(pageRequest).getContent();
+  }
+
+  @Override
+  public List<Category> searchByParentName(Integer pageNum, Integer pageSize, String sortBy,
+      String name) {
+    Sort sort = null;
+    if ("Z-A".equals(sortBy)) {
+      sort = Sort.by("name").descending();
+    } else {
+      sort = Sort.by("name").ascending();
+    }
+
+    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+    return categoryRepository.findByParentName(name, pageRequest).getContent();
+  }
+
+  @Override
+  public List<Category> searchByChildName(Integer pageNum, Integer pageSize, String sortBy,
+      String name) {
+    Sort sort = null;
+    if ("Z-A".equals(sortBy)) {
+      sort = Sort.by("name").descending();
+    } else {
+      sort = Sort.by("name").ascending();
+    }
+
+    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+    return categoryRepository.findByChildName(name, pageRequest).getContent();
+  }
+
+  @Override
+  public Long countParentCategories() {
+    return categoryRepository.countParentCategory();
+  }
+
+  @Override
+  public Long countChildCategories() {
+    return categoryRepository.countChildCategory();
+  }
+
+  @Override
+  public Long countParentCategoriesWithConditions(String name) {
+    return categoryRepository.countParentCategoryByName(name);
+  }
+
+  @Override
+  public Long countChildCategoriesWithConditions(String name) {
+    return categoryRepository.countChildCategoryByName(name);
   }
 
   @Override
@@ -64,6 +120,7 @@ public class CategoryServiceImpl implements CategoryService {
           return new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
         });
   }
+
 
   @Override
   public boolean createParentCategory(Category parentCategory)
@@ -85,6 +142,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     return true;
   }
+
 
   @Override
   public boolean addCategoryToParent(Category category, Long parentId)
@@ -116,6 +174,7 @@ public class CategoryServiceImpl implements CategoryService {
     return true;
   }
 
+
   @Override
   public Category updateParentCategory(Category parentCategory, Long id)
       throws UpdateDataFailException, DataNotFoundException, DuplicateDataException {
@@ -145,6 +204,7 @@ public class CategoryServiceImpl implements CategoryService {
       throw new UpdateDataFailException(ErrorCode.ERR_CATEGORY_PARENT_UPDATED_FAIL);
     }
   }
+
 
   @Override
   public Category updateCategory(Category category, Long id, Long parentId)
@@ -192,6 +252,7 @@ public class CategoryServiceImpl implements CategoryService {
       throw new UpdateDataFailException(ErrorCode.ERR_CATEGORY_UPDATED_FAIL);
     }
   }
+
 
   @Override
   public boolean deleteCategory(Long id) throws DeleteDataFailException, DataNotFoundException {

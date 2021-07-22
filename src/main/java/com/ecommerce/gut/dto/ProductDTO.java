@@ -19,5 +19,7 @@ public class ProductDTO {
   private String shortDesc;
   private List<ProductImageDTO> images = new ArrayList<>();
   private List<ColorDTO> colors = new ArrayList<>();
+  private Long categoryId;
+  private Long brandId;
 
 }

@@ -46,6 +46,13 @@ public class GlobalExceptionHandler {
     return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler(AuthException.class)
+  public ResponseEntity<?> handleAuthException(
+    AuthException ex, WebRequest request) {
+    ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(), ex.getMessage(), request.getDescription(false));
+    return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+  }
+
   @ExceptionHandler(DataNotFoundException.class)
   public ResponseEntity<?> handleDataNotFoundExceptionException(
       DataNotFoundException ex, WebRequest request) {

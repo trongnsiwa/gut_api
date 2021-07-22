@@ -26,7 +26,8 @@ public class SignUpRequest {
 
         @NotBlank(message = "{signup.password.notBlank}")
         @Size(
-                        min = 5,
+                        min = 6,
+                        max = 20,
                         message = "{signup.password.size}")
         private String password;
 

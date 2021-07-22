@@ -87,6 +87,10 @@ public class Product {
   @JoinColumn(name = "category_id")
   private Category category;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "brand_id")
+  private Brand brand;
+
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "product", cascade = CascadeType.ALL,
       orphanRemoval = true)
   private Set<ProductImage> productImages = new HashSet<>();
@@ -116,17 +120,17 @@ public class Product {
   }
 
   public Product(String name, Double price, String shortDesc, String longDesc, String material,
-      String handling, boolean brandNew, boolean sale, Double priceSale, LocalDateTime saleFromDate) {
+      String handling, boolean sale, Double priceSale, LocalDateTime saleFromDate, LocalDateTime saleToDate) {
     this.name = name;
     this.price = price;
     this.shortDesc = shortDesc;
     this.longDesc = longDesc;
     this.material = material;
     this.handling = handling;
-    this.brandNew = brandNew;
     this.sale = sale;
     this.priceSale = priceSale;
     this.saleFromDate = saleFromDate;
+    this.saleToDate = saleToDate;
   }
 
   public Product(Long id, String name, Double price, String shortDesc, Double priceSale,

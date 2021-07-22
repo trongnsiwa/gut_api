@@ -21,6 +21,7 @@ import com.ecommerce.gut.service.CartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,14 +30,15 @@ public class CartServiceImpl implements CartService {
   private static final Logger LOGGER = LoggerFactory.getLogger(CartServiceImpl.class);
 
   @Autowired
-  private CartRepository cartRepository;
+  CartRepository cartRepository;
 
   @Autowired
-  private UserRepository userRepository;
+  UserRepository userRepository;
 
   @Autowired
-  private ProductRepository productRepository;
+  ProductRepository productRepository;
 
+  @PreAuthorize("hasRole('USER')")
   @Override
   public boolean addItemToCart(UUID userId, Long productId, Long colorId, Long sizeId)
       throws CreateDataFailException {
@@ -92,6 +94,7 @@ public class CartServiceImpl implements CartService {
     return true;
   }
 
+  @PreAuthorize("hasRole('USER')")
   @Override
   public boolean updateItemQuantity(UUID userId, Long productId, Integer amount)
       throws UpdateDataFailException {
@@ -145,6 +148,7 @@ public class CartServiceImpl implements CartService {
     return true;
   }
 
+  @PreAuthorize("hasRole('USER')")
   @Override
   public boolean removeItem(UUID userId, Long productId) throws DeleteDataFailException {
     try {
@@ -193,6 +197,7 @@ public class CartServiceImpl implements CartService {
     return true;
   }
 
+  @PreAuthorize("hasRole('USER')")
   @Override
   public boolean clearCart(UUID userId) throws UpdateDataFailException {
     try {
@@ -227,6 +232,7 @@ public class CartServiceImpl implements CartService {
     return true;
   }
 
+  @PreAuthorize("hasRole('USER')")
   @Override
   public Cart getCartByUserId(UUID userId) {
     try {
@@ -252,7 +258,7 @@ public class CartServiceImpl implements CartService {
 
   }
 
-  private boolean checkExistedItemInCart(Cart cart, Long productId) {
+  boolean checkExistedItemInCart(Cart cart, Long productId) {
     List<CartItem> cartItems = cart.getCartItems().stream()
         .filter(item -> item.getProduct().getId().equals(productId))
         .collect(Collectors.toList());

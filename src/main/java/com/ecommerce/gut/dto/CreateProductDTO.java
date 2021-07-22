@@ -55,4 +55,8 @@ public class CreateProductDTO {
   @Min(value = 1, message = "{product.category.min}")
   private Long categoryId;
 
+  @NotNull(message = "{brand.id.notNull}")
+  @Min(value = 1, message = "{brand.id.min}")
+  private Long brandId;
+
 }

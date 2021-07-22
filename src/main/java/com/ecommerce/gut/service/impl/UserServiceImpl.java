@@ -21,6 +21,7 @@ import com.ecommerce.gut.service.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,14 +34,15 @@ public class UserServiceImpl implements UserService {
   private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
   @Autowired
-  private UserRepository userRepository;
+  UserRepository userRepository;
 
   @Autowired
-  private RoleRepository roleRepository;
+  RoleRepository roleRepository;
 
   @Autowired
-  private ImageRepository imageRepository;
+  ImageRepository imageRepository;
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public List<User> getUsersPerPage(Integer pageNum, Integer pageSize, String sortBy) throws LoadDataFailException {
     try {
@@ -85,6 +87,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  @PreAuthorize("hasRole('ADMIN') || hasRole('USER')")
   @Override
   public User getUserProfileById(UUID id) {
     return userRepository.findById(id)
@@ -94,6 +97,7 @@ public class UserServiceImpl implements UserService {
         });
   }
 
+  @PreAuthorize("hasRole('ADMIN') || hasRole('USER')")
   @Override
   public User editUserProfile(User user, UUID id) throws UpdateDataFailException, DataNotFoundException {
     try {
@@ -128,6 +132,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public boolean deleteUser(UUID id) throws DeleteDataFailException, DataNotFoundException {
     try {
@@ -150,6 +155,7 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public User deactivateUser(UUID id) throws UpdateDataFailException, DataNotFoundException {
     try {
@@ -169,6 +175,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public User activateUser(UUID id) throws UpdateDataFailException, DataNotFoundException {
     try {
@@ -188,6 +195,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public User changeUserRoles(UUID id, Set<Role> roles) throws UpdateDataFailException, DataNotFoundException {
     try {
