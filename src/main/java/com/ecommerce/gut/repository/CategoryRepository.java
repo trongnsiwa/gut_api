@@ -1,5 +1,6 @@
 package com.ecommerce.gut.repository;
 
+import java.util.List;
 import java.util.Optional;
 import com.ecommerce.gut.entity.Category;
 import org.springframework.data.domain.Page;
@@ -27,27 +28,21 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
           + "FROM Category c "
           + "WHERE c.parent IS NULL"
   )
-  long countParentCategory();
-  @Query(
-    value = "SELECT COUNT(c) "
-          + "FROM Category c "
-          + "WHERE c.parent IS NOT NULL"
-  )
-  long countChildCategory();
+  long countParents();
 
   @Query(
-    value = "SELECT COUNT(c) "
+    value = "SELECT c "
           + "FROM Category c "
-          + "WHERE c.parent IS NOT NULL AND UPPER(c.name) LIKE CONCAT('%',UPPER(:name),'%')"
+          + "WHERE c.parent IS NULL"
   )
-  long countChildCategoryByName(@Param("name") String name);
+  List<Category> findAllParentCategories();
 
   @Query(
     value = "SELECT COUNT(c) "
           + "FROM Category c "
           + "WHERE c.parent IS NULL AND UPPER(c.name) LIKE CONCAT('%',UPPER(:name),'%')"
   )
-  long countParentCategoryByName(@Param("name") String name);
+  long countParentsByName(@Param("name") String name);
 
   @Query(
     value = "SELECT c "
@@ -59,22 +54,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
   @Query(
     value = "SELECT c "
           + "FROM Category c "
-          + "WHERE c.parent IS NOT NULL"
+          + "WHERE UPPER(c.name) LIKE CONCAT('%',UPPER(:name),'%')"
   )
-  Page<Category> getChildCategoryPerPage(Pageable pageable);
-
-  @Query(
-    value = "SELECT c "
-          + "FROM Category c "
-          + "WHERE c.parent IS NULL AND UPPER(c.name) LIKE CONCAT('%',UPPER(:name),'%')"
-  )
-  Page<Category> findByParentName(@Param("name") String name, Pageable pageable);
-
-  @Query(
-    value = "SELECT c "
-          + "FROM Category c "
-          + "WHERE c.parent IS NOT NULL AND UPPER(c.name) LIKE CONCAT('%',UPPER(:name),'%')"
-  )
-  Page<Category> findByChildName(@Param("name") String name, Pageable pageable);
+  Page<Category> searchByName(@Param("name") String name, Pageable pageable);
 
 }

@@ -39,4 +39,56 @@ public interface ProductRepository extends PagingAndSortingRepository<Product, L
                 + "WHERE c.parent = :parent")
         Page<Product> getProductsByParent(@Param("parent") Category parent, Pageable pageable);
 
+        @Query(
+                "SELECT p "
+                + "FROM Product p "
+                + "WHERE UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')"
+        )
+        Page<Product> searchProductsByName(@Param("name") String name, Pageable pageable);
+
+        @Query(
+                "SELECT p "
+                + "FROM Product p "
+                + "INNER JOIN p.category c "
+                + "WHERE c = :category AND UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')")
+        Page<Product> searchProductsByCategoryAndName(@Param("category") Category category, @Param("name") String name, Pageable pageable);
+
+        @Query(
+                "SELECT p "
+                + "FROM Product p "
+                + "INNER JOIN p.category c "
+                + "WHERE c.parent = :parent AND UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')")
+        Page<Product> searchProductsByParentAndName(@Param("parent") Category parent, @Param("name") String name, Pageable pageable);
+
+        
+        @Query(
+                "SELECT COUNT(p) "
+                + "FROM Product p "
+                + "WHERE UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')"
+        )
+        long countProductsByName(@Param("name") String name);
+
+        @Query(
+                "SELECT COUNT(p) "
+                + "FROM Product p "
+                + "INNER JOIN p.category c "
+                + "WHERE c = :category")
+        long countProductsByCategory(@Param("category") Category category);
+
+        @Query(
+                "SELECT COUNT(p) "
+                + "FROM Product p "
+                + "INNER JOIN p.category c "
+                + "WHERE c = :category AND UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')"
+        )
+        long countProductsByCategoryAndName(@Param("category") Category category, @Param("name") String name);
+
+        @Query(
+                "SELECT COUNT(p) "
+                + "FROM Product p "
+                + "INNER JOIN p.category c "
+                + "WHERE c.parent = :parent AND UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')")
+        long countProductsByParentAndName(@Param("parent") Category parent, @Param("name") String name);
+
+
 }

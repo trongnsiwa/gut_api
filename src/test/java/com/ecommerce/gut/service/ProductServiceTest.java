@@ -135,13 +135,13 @@ public class ProductServiceTest {
     sizes.put(1L, 9);
     sizes.put(2L, 10);
     colorSizeDTO.setColorId(1L);
-    colorSizeDTO.setSizes(sizes);
+    // colorSizeDTO.setSizes(sizes);
     
     ColorSizeDTO colorSizeDTO2 = new ColorSizeDTO();
     Map<Long, Integer> sizes2 = new HashMap<>();
     sizes2.put(1L, 9);
     colorSizeDTO2.setColorId(2L);
-    colorSizeDTO2.setSizes(sizes2);
+    // colorSizeDTO2.setSizes(sizes2);
 
     Set<ColorSizeDTO> colorSizeDTOs = new HashSet<>();
     colorSizeDTOs.add(colorSizeDTO);
@@ -189,13 +189,13 @@ public class ProductServiceTest {
     Map<Long, Integer> sizes = new HashMap<>();
     sizes.put(1L, 9);
     colorSizeDTO.setColorId(1L);
-    colorSizeDTO.setSizes(sizes);
+    // colorSizeDTO.setSizes(sizes);
     
     ColorSizeDTO colorSizeDTO2 = new ColorSizeDTO();
     Map<Long, Integer> sizes2 = new HashMap<>();
     sizes2.put(1L, 9);
     colorSizeDTO2.setColorId(2L);
-    colorSizeDTO2.setSizes(sizes2);
+    // colorSizeDTO2.setSizes(sizes2);
 
     Set<ColorSizeDTO> colorSizeDTOs = new HashSet<>();
     colorSizeDTOs.add(colorSizeDTO);

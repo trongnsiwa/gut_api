@@ -11,25 +11,19 @@ import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface CategoryService {
 
+  List<Category> getAllParentCategories();
+
   List<Category> getParentCategoriesPerPage(Integer pageNum, Integer pageSize, String sortBy);
 
-  List<Category> getChildCategoriesPerPage(Integer pageNum, Integer pageSize, String sortBy);
-
-  List<Category> searchByParentName(Integer pageNum, Integer pageSize, String sortBy, String name);
-
-  List<Category> searchByChildName(Integer pageNum, Integer pageSize, String sortBy, String name);
-
-  Long countParentCategories();
-
-  Long countChildCategories();
-
-  Long countParentCategoriesWithConditions(String name);
-
-  Long countChildCategoriesWithConditions(String name);
+  List<Category> searchByName(Integer pageNum, Integer pageSize, String sortBy, String name);
 
   Category getParentCategoryById(Long parentId);
 
   Category getCategoryById(Long id);
+
+  Long countParents();
+
+  Long countParentsByName(String name);
 
   boolean createParentCategory(Category parentCategory) throws CreateDataFailException, DuplicateDataException;
 

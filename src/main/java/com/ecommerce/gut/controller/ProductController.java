@@ -57,15 +57,100 @@ public class ProductController {
   @Autowired
   ProductConverter converter;
 
-  @Operation(summary = "Get products by category Id per page")
+  @Operation(summary = "Get products per page")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Found the page's products", content = @Content),
+      @ApiResponse(responseCode = "200", description = "Found the page's products",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
+  })
+  @GetMapping("/page")
+  public ResponseEntity<ResponseDTO> getProductsPerPage(
+      @RequestParam("num") @Min(1) Integer pageNumber,
+      @RequestParam("size") @Min(1) Integer pageSize,
+      @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
+    ResponseDTO response = new ResponseDTO();
+
+    List<PagingProductDTO> pagingProducts = productService
+        .getProductsPerPage(pageNumber, pageSize, sortBy).stream()
+        .map(product -> converter.convertPagingProductToDto(product))
+        .collect(Collectors.toList());
+    response.setData(pagingProducts);
+    response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count products")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Countable products",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
+  })
+  @GetMapping("/count")
+  public ResponseEntity<ResponseDTO> countProducts() {
+    ResponseDTO response = new ResponseDTO();
+
+    Long countProducts = productService.countProducts();
+    response.setData(countProducts);
+    response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count products by name")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Countable products",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
+  })
+  @GetMapping("/count-name")
+  public ResponseEntity<ResponseDTO> countProductsByName(
+      @RequestParam("name") @NotNull @NotBlank String name) {
+    ResponseDTO response = new ResponseDTO();
+
+    Long countProducts = productService.countProductsByName(name);
+    response.setData(countProducts);
+    response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Search products by name")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Found the page's products",
+          content = @Content),
       @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
       @ApiResponse(responseCode = "404", description = "Category Id is not found",
           content = @Content),
   })
-  @GetMapping("/page")
-  public ResponseEntity<ResponseDTO> getProductsByCategoryIdPerPage(
+  @GetMapping("/search")
+  public ResponseEntity<ResponseDTO> searchProductsByName(
+      @RequestParam("num") @Min(1) Integer pageNumber,
+      @RequestParam("size") @Min(1) Integer pageSize,
+      @RequestParam("sortBy") @NotNull @NotBlank String sortBy,
+      @RequestParam("name") @NotNull @NotBlank String name) {
+    ResponseDTO response = new ResponseDTO();
+
+    List<PagingProductDTO> pagingProducts = productService
+        .searchProductsByName(pageNumber, pageSize, sortBy, name).stream()
+        .map(product -> converter.convertPagingProductToDto(product))
+        .collect(Collectors.toList());
+    response.setData(pagingProducts);
+    response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Get products by category Id per page")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Found the page's products",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Category Id is not found",
+          content = @Content),
+  })
+  @GetMapping("/category/page")
+  public ResponseEntity<ResponseDTO> getProductsByCategoryPerPage(
       @RequestParam("category") @NotNull @Min(1) Long categoryId,
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
@@ -74,7 +159,7 @@ public class ProductController {
     try {
 
       List<PagingProductDTO> pagingProducts = productService
-          .getProductsByCategoryIdPerPage(categoryId, pageNumber, pageSize, sortBy).stream()
+          .getProductsByCategoryPerPage(categoryId, pageNumber, pageSize, sortBy).stream()
           .map(product -> converter.convertPagingProductToDto(product))
           .collect(Collectors.toList());
       response.setData(pagingProducts);
@@ -91,9 +176,83 @@ public class ProductController {
     return ResponseEntity.ok().body(response);
   }
 
+  @Operation(summary = "Search products by category Id per page")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Found the page's products",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Category Id is not found",
+          content = @Content),
+  })
+  @GetMapping("/category/search")
+  public ResponseEntity<ResponseDTO> searchProductsByCategoryAndName(
+      @RequestParam("category") @NotNull @Min(1) Long categoryId,
+      @RequestParam("num") @Min(1) Integer pageNumber,
+      @RequestParam("size") @Min(1) Integer pageSize,
+      @RequestParam("sort") @NotNull @NotBlank String sortBy,
+      @RequestParam("name") @NotNull @NotBlank String name) throws LoadDataFailException {
+    ResponseDTO response = new ResponseDTO();
+    try {
+
+      List<PagingProductDTO> pagingProducts = productService
+          .searchProductsByCategoryAndName(categoryId, pageNumber, pageSize, sortBy, name).stream()
+          .map(product -> converter.convertPagingProductToDto(product))
+          .collect(Collectors.toList());
+      response.setData(pagingProducts);
+      response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
+
+    } catch (DataNotFoundException e) {
+      response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+    } catch (Exception e) {
+      response.setErrorCode(ErrorCode.ERR_PRODUCT_LOADED_FAIL);
+      throw new LoadDataFailException(ErrorCode.ERR_PRODUCT_LOADED_FAIL);
+    }
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count products by category")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Countable products",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
+  })
+  @GetMapping("/category/count")
+  public ResponseEntity<ResponseDTO> countProductsByCategory(
+      @RequestParam("category") @NotNull @Min(1) Long categoryId) {
+    ResponseDTO response = new ResponseDTO();
+
+    Long countProducts = productService.countProductsByCategory(categoryId);
+    response.setData(countProducts);
+    response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count products by category and name")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Countable products",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
+  })
+  @GetMapping("/category/count-name")
+  public ResponseEntity<ResponseDTO> countProductsByCategoryAndName(
+      @RequestParam("category") @NotNull @Min(1) Long categoryId,
+      @RequestParam("name") @NotNull @NotBlank String name) {
+    ResponseDTO response = new ResponseDTO();
+
+    Long countProducts = productService.countProductsByCategoryAndName(categoryId, name);
+    response.setData(countProducts);
+    response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
   @Operation(summary = "Get the detail of product")
   @ApiResponses(value = {
-      @ApiResponse(responseCode = "200", description = "Found the detail of product", content = @Content),
+      @ApiResponse(responseCode = "200", description = "Found the detail of product",
+          content = @Content),
       @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
       @ApiResponse(responseCode = "404", description = "Product Id is not found",
           content = @Content),
@@ -175,7 +334,8 @@ public class ProductController {
       throws UpdateDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
     try {
-      Product updatedProduct = productService.updateProduct(productDTO, productDTO.getId(), productDTO.getCategoryId());
+      Product updatedProduct =
+          productService.updateProduct(productDTO, productDTO.getId(), productDTO.getCategoryId());
       ProductDetailDTO responseProduct = converter.convertProductDetailToDto(updatedProduct);
       response.setData(responseProduct);
       response.setSuccessCode(SuccessCode.PRODUCT_UPDATED_SUCCESS);
@@ -247,7 +407,8 @@ public class ProductController {
       throws UpdateDataFailException, DuplicateDataException {
     ResponseDTO response = new ResponseDTO();
     try {
-      Optional<Product> updatedProduct = productService.replaceImagesOfProduct(imageListDTO, imageListDTO.getProductId());
+      Optional<Product> updatedProduct =
+          productService.replaceImagesOfProduct(imageListDTO, imageListDTO.getProductId());
       if (updatedProduct.isPresent()) {
         ProductDetailDTO responseProduct =
             converter.convertProductDetailToDto(updatedProduct.get());

@@ -1,7 +1,7 @@
 package com.ecommerce.gut.dto;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,11 +29,13 @@ public class ProductDetailDTO {
   private boolean brandNew;
   private boolean sale;
   private Double priceSale;
-  private Date saleFromDate;
-  private Date saleToDate;
+  private LocalDateTime saleFromDate;
+  private LocalDateTime saleToDate;
   private List<ProductImageDTO> productImages = new ArrayList<>();
   private Set<ProductColorSizeDTO> colorSizes = new HashSet<>();
   private Long categoryId;
+  private String categoryName;
   private Long brandId;
+  private String brandName;
 
 }

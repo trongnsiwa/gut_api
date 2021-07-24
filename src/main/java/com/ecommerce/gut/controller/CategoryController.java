@@ -54,21 +54,18 @@ public class CategoryController {
   @Autowired
   CategoryConverter converter;
 
-  @Operation(summary = "Get category parents")
+  @Operation(summary = "Get all category parents")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200",
           description = "Found all categories even if empty", content = @Content),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
-  @GetMapping("/parent/page")
-  public ResponseEntity<ResponseDTO> getParentCategoriesPerPage(
-      @RequestParam("num") @Min(1) Integer pageNumber,
-      @RequestParam("size") @Min(1) Integer pageSize,
-      @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
+  @GetMapping("/parent")
+  public ResponseEntity<ResponseDTO> getAllParentCategories() {
     ResponseDTO response = new ResponseDTO();
-    List<CategoryDTO> categoryParents =
-        categoryService.getParentCategoriesPerPage(pageNumber, pageSize, sortBy).stream()
-            .map(categoryParent -> converter.convertCategoryToDto(categoryParent))
+    List<CategoryParentDTO> categoryParents =
+        categoryService.getAllParentCategories().stream()
+            .map(categoryParent -> converter.convertCategoryParentToDto(categoryParent))
             .collect(Collectors.toList());
 
     response.setData(categoryParents);
@@ -77,25 +74,25 @@ public class CategoryController {
     return ResponseEntity.ok().body(response);
   }
 
-  @Operation(summary = "Get category childs")
+  @Operation(summary = "Get category parents")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200",
           description = "Found all categories even if empty", content = @Content),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
   @GetMapping("/page")
-  public ResponseEntity<ResponseDTO> getChildCategoriesPerPage(
+  public ResponseEntity<ResponseDTO> getParentCategoriesPerPage(
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
     ResponseDTO response = new ResponseDTO();
-    List<CategoryDTO> categoryChilds =
-        categoryService.getChildCategoriesPerPage(pageNumber, pageSize, sortBy).stream()
-            .map(category -> converter.convertCategoryToDto(category))
+    List<CategoryParentDTO> categoryParents =
+        categoryService.getParentCategoriesPerPage(pageNumber, pageSize, sortBy).stream()
+            .map(categoryParent -> converter.convertCategoryParentToDto(categoryParent))
             .collect(Collectors.toList());
 
-    response.setData(categoryChilds);
-    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
+    response.setData(categoryParents);
+    response.setSuccessCode(SuccessCode.CATEGORY_PARENT_LOADED_SUCCESS);
 
     return ResponseEntity.ok().body(response);
   }
@@ -111,19 +108,12 @@ public class CategoryController {
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sortBy") @NotNull @NotBlank String sortBy,
-      @RequestParam("name") @NotNull @NotBlank String name,
-      @RequestParam("parent") @NotNull boolean parent) {
+      @RequestParam("name") @NotNull @NotBlank String name) {
     ResponseDTO response = new ResponseDTO();
     List<CategoryDTO> categories = null;
-    if (parent) {
-      categories = categoryService.searchByParentName(pageNumber, pageSize, sortBy, name).stream()
-      .map(category -> converter.convertCategoryToDto(category))
-      .collect(Collectors.toList());
-    } else {
-      categories = categoryService.searchByChildName(pageNumber, pageSize, sortBy, name).stream()
-      .map(category -> converter.convertCategoryToDto(category))
-      .collect(Collectors.toList());
-    }  
+    categories = categoryService.searchByName(pageNumber, pageSize, sortBy, name).stream()
+        .map(category -> converter.convertCategoryToDto(category))
+        .collect(Collectors.toList());
 
     response.setData(categories);
     response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
@@ -131,69 +121,35 @@ public class CategoryController {
     return ResponseEntity.ok().body(response);
   }
 
-  @Operation(summary = "Count parent categories")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200",
-          description = "Countable even if empty", content = @Content),
-      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
-  })
-  @GetMapping("/parent/count")
-  public ResponseEntity<ResponseDTO> countParentCategories() {
-    ResponseDTO response = new ResponseDTO();
-    Long numOfParentCategories = categoryService.countParentCategories();
-
-    response.setData(numOfParentCategories);
-    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
-
-    return ResponseEntity.ok().body(response);
-  }
-
-  @Operation(summary = "Count child categories")
+  @Operation(summary = "Count categories")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200",
           description = "Countable even if empty", content = @Content),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
   @GetMapping("/count")
-  public ResponseEntity<ResponseDTO> countChildCategories() {
+  public ResponseEntity<ResponseDTO> countParents() {
     ResponseDTO response = new ResponseDTO();
-    Long numOfChildCategories = categoryService.countChildCategories();
+    Long countCategory = categoryService.countParents();
 
-    response.setData(numOfChildCategories);
+    response.setData(countCategory);
     response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
 
     return ResponseEntity.ok().body(response);
   }
 
-  @Operation(summary = "Count child categories with conditions")
+  @Operation(summary = "Count categories by name")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200",
           description = "Countable even if empty", content = @Content),
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
-  @GetMapping("/count-condition")
-  public ResponseEntity<ResponseDTO> countChildCategoriesWithCondtions(@RequestParam("name") @NotNull @NotBlank String name) {
+  @GetMapping("/count-name")
+  public ResponseEntity<ResponseDTO> countParentsByName(@RequestParam("name") @NotNull @NotBlank String name) {
     ResponseDTO response = new ResponseDTO();
-    Long numOfChildCategories = categoryService.countChildCategoriesWithConditions(name);
+    Long countCategory = categoryService.countParentsByName(name);
 
-    response.setData(numOfChildCategories);
-    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
-
-    return ResponseEntity.ok().body(response);
-  }
-
-  @Operation(summary = "Count parent categories with conditions")
-  @ApiResponses(value = {
-      @ApiResponse(responseCode = "200",
-          description = "Countable even if empty", content = @Content),
-      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
-  })
-  @GetMapping("/parent/count-condition")
-  public ResponseEntity<ResponseDTO> countParentCategoriesWithCondtions(@RequestParam("name") @NotNull @NotBlank String name) {
-    ResponseDTO response = new ResponseDTO();
-    Long numOfParentCategories = categoryService.countParentCategoriesWithConditions(name);
-
-    response.setData(numOfParentCategories);
+    response.setData(countCategory);
     response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
 
     return ResponseEntity.ok().body(response);
@@ -403,9 +359,6 @@ public class CategoryController {
       } else if (message.equals(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND)) {
         response.setErrorCode(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
-      } else {
-        response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_IN_PARENT);
-        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_IN_PARENT);
       }
 
     } catch (Exception e) {

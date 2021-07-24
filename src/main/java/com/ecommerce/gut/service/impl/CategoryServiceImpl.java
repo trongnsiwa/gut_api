@@ -1,6 +1,7 @@
 package com.ecommerce.gut.service.impl;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.exception.CreateDataFailException;
@@ -28,6 +29,11 @@ public class CategoryServiceImpl implements CategoryService {
   CategoryRepository categoryRepository;
 
   @Override
+  public List<Category> getAllParentCategories() {
+    return categoryRepository.findAllParentCategories();
+  }
+
+  @Override
   public List<Category> getParentCategoriesPerPage(Integer pageNum, Integer pageSize,
       String sortBy) {
     Sort sort = null;
@@ -42,21 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
   }
 
   @Override
-  public List<Category> getChildCategoriesPerPage(Integer pageNum, Integer pageSize,
-      String sortBy) {
-    Sort sort = null;
-    if ("Z-A".equals(sortBy)) {
-      sort = Sort.by("name").descending();
-    } else {
-      sort = Sort.by("name").ascending();
-    }
-
-    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
-    return categoryRepository.getChildCategoryPerPage(pageRequest).getContent();
-  }
-
-  @Override
-  public List<Category> searchByParentName(Integer pageNum, Integer pageSize, String sortBy,
+  public List<Category> searchByName(Integer pageNum, Integer pageSize, String sortBy,
       String name) {
     Sort sort = null;
     if ("Z-A".equals(sortBy)) {
@@ -66,41 +58,17 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
-    return categoryRepository.findByParentName(name, pageRequest).getContent();
+    return categoryRepository.searchByName(name, pageRequest).getContent();
   }
 
   @Override
-  public List<Category> searchByChildName(Integer pageNum, Integer pageSize, String sortBy,
-      String name) {
-    Sort sort = null;
-    if ("Z-A".equals(sortBy)) {
-      sort = Sort.by("name").descending();
-    } else {
-      sort = Sort.by("name").ascending();
-    }
-
-    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
-    return categoryRepository.findByChildName(name, pageRequest).getContent();
+  public Long countParents() {
+    return categoryRepository.countParents();
   }
 
   @Override
-  public Long countParentCategories() {
-    return categoryRepository.countParentCategory();
-  }
-
-  @Override
-  public Long countChildCategories() {
-    return categoryRepository.countChildCategory();
-  }
-
-  @Override
-  public Long countParentCategoriesWithConditions(String name) {
-    return categoryRepository.countParentCategoryByName(name);
-  }
-
-  @Override
-  public Long countChildCategoriesWithConditions(String name) {
-    return categoryRepository.countChildCategoryByName(name);
+  public Long countParentsByName(String name) {
+    return categoryRepository.countParentsByName(name);
   }
 
   @Override
@@ -185,14 +153,15 @@ public class CategoryServiceImpl implements CategoryService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       }
 
-      boolean isUniqueName = categoryRepository.existsByName(parentCategory.getName());
-      if (isUniqueName) {
-        LOGGER.info("Category parent name {} is already existed", parentCategory.getName());
-        throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
+      Optional<Category> categoryWithName = categoryRepository.findByName(parentCategory.getName());
+      if (categoryWithName.isPresent() && !categoryWithName.get().getId().equals(id)) {
+          LOGGER.info("Category parent name {} is already existed", parentCategory.getName());
+          throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
       }
 
       var newCategory = oldCategoryparent.get();
       newCategory.setName(parentCategory.getName());
+      newCategory.setParent(null);
 
       return categoryRepository.save(newCategory);
     } catch (DuplicateDataException ex) {
@@ -215,11 +184,13 @@ public class CategoryServiceImpl implements CategoryService {
         LOGGER.info("Category {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
-
-      Optional<Category> existedParent = categoryRepository.findById(parentId);
-      if (!existedParent.isPresent()) {
-        LOGGER.info("Category parent {} is not found", parentId);
-        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
+      Optional<Category> existedParent = Optional.empty();
+      if (!Objects.isNull(parentId)) {
+        existedParent = categoryRepository.findById(parentId);
+        if (!existedParent.isPresent()) {
+          LOGGER.info("Category parent {} is not found", parentId);
+          throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
+        }
       }
 
       Optional<Category> categoryWithName = categoryRepository.findByName(category.getName());
@@ -230,8 +201,11 @@ public class CategoryServiceImpl implements CategoryService {
 
       var newCategory = oldCategory.get();
       newCategory.setName(category.getName());
-      newCategory.setParent(existedParent.get());
-
+      if (!Objects.isNull(parentId)) {
+        newCategory.setParent(existedParent.get());
+      } else {
+        newCategory.setParent(null);
+      }
       return categoryRepository.save(newCategory);
 
     } catch (DuplicateDataException ex) {
@@ -241,10 +215,8 @@ public class CategoryServiceImpl implements CategoryService {
 
       if (message.equals(ErrorCode.ERR_CATEGORY_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
-      } else if (message.equals(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND)) {
-        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       } else {
-        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_IN_PARENT);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       }
 
     } catch (Exception ex) {

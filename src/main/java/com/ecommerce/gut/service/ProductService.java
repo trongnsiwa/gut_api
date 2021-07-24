@@ -14,8 +14,21 @@ import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface ProductService {
+  List<Product> getProductsPerPage(Integer pageNumber, Integer pageSize, String sortBy);
+
+  List<Product> searchProductsByName(Integer pageNumber, Integer pageSize, String sortBy, String name);
+
+  Long countProducts();
+
+  Long countProductsByName(String name);
   
-  List<Product> getProductsByCategoryIdPerPage(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy) throws LoadDataFailException, DataNotFoundException;
+  List<Product> getProductsByCategoryPerPage(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy) throws LoadDataFailException, DataNotFoundException;
+
+  List<Product> searchProductsByCategoryAndName(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String name) throws LoadDataFailException, DataNotFoundException;
+
+  Long countProductsByCategory(Long categoryId);
+
+  Long countProductsByCategoryAndName(Long categoryId, String name);
 
   Product getProductDetail(Long id) throws DataNotFoundException;
 

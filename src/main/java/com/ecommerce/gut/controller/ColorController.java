@@ -1,7 +1,11 @@
 package com.ecommerce.gut.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import com.ecommerce.gut.converters.ColorConverter;
 import com.ecommerce.gut.dto.ColorDTO;
 import com.ecommerce.gut.entity.Color;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,6 +51,74 @@ public class ColorController {
   @Autowired
   ColorConverter converter;
 
+  @Operation(summary = "Get all colors")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Found the colors even if empty",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Not found color", content = @Content),
+  })
+
+  @GetMapping("/all")
+  public ResponseEntity<ResponseDTO> getAllColors() {
+    ResponseDTO response = new ResponseDTO();
+    List<ColorDTO> colors = colorService.getAllColors().stream()
+        .map(color -> converter.convertToDto(color))
+        .collect(Collectors.toList());
+    response.setData(colors);
+    response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Get the color per page")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Found the colors even if empty",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Not found color", content = @Content),
+  })
+
+  @GetMapping("/page")
+  public ResponseEntity<ResponseDTO> getColorsPerPage(
+      @RequestParam("num") @Min(1) Integer pageNumber,
+      @RequestParam("size") @Min(1) Integer pageSize,
+      @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
+    ResponseDTO response = new ResponseDTO();
+    List<ColorDTO> colors = null;
+    colors = colorService.getColorsPerPage(pageNumber, pageSize, sortBy).stream()
+        .map(color -> converter.convertToDto(color))
+        .collect(Collectors.toList());
+    response.setData(colors);
+    response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Search colors by name")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Found the colors even if empty",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Not found color", content = @Content),
+  })
+  @GetMapping("/search")
+  public ResponseEntity<ResponseDTO> searchByName(@RequestParam("num") @Min(1) Integer pageNumber,
+      @RequestParam("size") @Min(1) Integer pageSize,
+      @RequestParam("sortBy") @NotNull @NotBlank String sortBy,
+      @RequestParam("name") @NotNull @NotBlank String name)
+      throws DataNotFoundException {
+    ResponseDTO response = new ResponseDTO();
+    List<ColorDTO> colors = null;
+    colors = colorService.searchByName(pageNumber, pageSize, sortBy, name).stream()
+        .map(color -> converter.convertToDto(color))
+        .collect(Collectors.toList());
+    response.setData(colors);
+    response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
   @Operation(summary = "Get the color by its id")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Found the color", content = @Content),
@@ -65,6 +138,38 @@ public class ColorController {
       response.setErrorCode(ErrorCode.ERR_COLOR_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
     }
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count colors")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Countable", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Not found color", content = @Content),
+  })
+  @GetMapping("/count")
+  public ResponseEntity<ResponseDTO> countColors() {
+    ResponseDTO response = new ResponseDTO();
+    Long countColors = colorService.countColors();
+    response.setData(countColors);
+    response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count colors by name")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Countable", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Not found color", content = @Content),
+  })
+  @GetMapping("/count-name")
+  public ResponseEntity<ResponseDTO> countColorsByName(@RequestParam("name") @NotNull @NotBlank String name) {
+    ResponseDTO response = new ResponseDTO();
+    Long countColors = colorService.countColorsByName(name);
+    response.setData(countColors);
+    response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
 
     return ResponseEntity.ok().body(response);
   }
@@ -127,7 +232,7 @@ public class ColorController {
       ColorDTO responseColor = converter.convertToDto(updatedColor);
       response.setData(responseColor);
       response.setSuccessCode(SuccessCode.COLOR_UPDATED_SUCCESS);
-      
+
     } catch (DataNotFoundException e) {
       response.setErrorCode(ErrorCode.ERR_COLOR_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
@@ -157,7 +262,7 @@ public class ColorController {
       @ApiResponse(responseCode = "409",
           description = "There are some products still have this color", content = @Content),
   })
-  @DeleteMapping("/delete/{id}")
+  @DeleteMapping("/{id}")
   public ResponseEntity<ResponseDTO> deleteColor(@PathVariable(name = "id") @Min(1) Long id)
       throws DeleteDataFailException, RestrictDataException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();

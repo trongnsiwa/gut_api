@@ -41,7 +41,9 @@ public class ProductConverter {
               .map(this::convertProductColorSizeToDto)
               .collect(Collectors.toSet()));
       productDetailDTO.setCategoryId(product.getCategory().getId());
+      productDetailDTO.setCategoryName(product.getCategory().getName());
       productDetailDTO.setBrandId(product.getBrand().getId());
+      productDetailDTO.setBrandName(product.getBrand().getName());
 
       return productDetailDTO;
     } catch (Exception ex) {
@@ -63,7 +65,9 @@ public class ProductConverter {
               .map(colorSize -> convertColorToDto(colorSize.getColor()))
               .collect(Collectors.toSet()));
       pagingProductDTO.setCategoryId(product.getCategory().getId());
+      pagingProductDTO.setCategoryName(product.getCategory().getName());
       pagingProductDTO.setBrandId(product.getBrand().getId());
+      pagingProductDTO.setBrandName(product.getBrand().getName());
 
       return pagingProductDTO;
     } catch (Exception ex) {

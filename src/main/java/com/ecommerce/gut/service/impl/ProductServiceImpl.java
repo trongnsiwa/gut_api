@@ -37,7 +37,6 @@ import com.ecommerce.gut.repository.BrandRepository;
 import com.ecommerce.gut.service.ProductService;
 
 import org.springframework.stereotype.Service;
-import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -69,7 +68,7 @@ public class ProductServiceImpl implements ProductService {
 
   @Autowired
   CategoryRepository categoryRepository;
-  
+
   @Autowired
   BrandRepository brandRepository;
 
@@ -77,7 +76,97 @@ public class ProductServiceImpl implements ProductService {
   ColorSizeRepository colorSizeRepository;
 
   @Override
-  public List<Product> getProductsByCategoryIdPerPage(Long categoryId, Integer pageNumber,
+  public List<Product> getProductsPerPage(Integer pageNumber, Integer pageSize, String sortBy) {
+    PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
+
+    return productRepository.findAll(pageRequest).getContent();
+  }
+
+  @Override
+  public List<Product> searchProductsByName(Integer pageNumber, Integer pageSize, String sortBy,
+      String name) {
+    PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
+
+    return productRepository.searchProductsByName(name, pageRequest).getContent();
+  }
+
+  @Override
+  public Long countProducts() {
+    return productRepository.count();
+  }
+
+  @Override
+  public Long countProductsByName(String name) {
+    return productRepository.countProductsByName(name);
+  }
+
+  @Override
+  public List<Product> searchProductsByCategoryAndName(Long categoryId, Integer pageNumber,
+      Integer pageSize, String sortBy, String name)
+      throws LoadDataFailException, DataNotFoundException {
+    try {
+      Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+      if (!existedCategory.isPresent()) {
+        LOGGER.info("Category {} is not found", categoryId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      }
+
+      Category category = existedCategory.get();
+
+      PageRequest pageRequest =
+          PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
+
+      if (category.getParent() == null) {
+        return productRepository.searchProductsByParentAndName(category, name, pageRequest)
+            .getContent();
+      }
+
+      return productRepository
+          .searchProductsByCategoryAndName(existedCategory.get(), name, pageRequest)
+          .getContent();
+    } catch (DataNotFoundException ex) {
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+    } catch (Exception ex) {
+      throw new LoadDataFailException(ErrorCode.ERR_PRODUCT_LOADED_FAIL);
+    }
+  }
+
+  @Override
+  public Long countProductsByCategory(Long categoryId) {
+    try {
+      Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+      if (!existedCategory.isPresent()) {
+        LOGGER.info("Category {} is not found", categoryId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      }
+
+      Category category = existedCategory.get();
+
+      return productRepository.countProductsByCategory(category);
+    } catch (DataNotFoundException ex) {
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+    }
+  }
+
+  @Override
+  public Long countProductsByCategoryAndName(Long categoryId, String name) {
+    try {
+      Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+      if (!existedCategory.isPresent()) {
+        LOGGER.info("Category {} is not found", categoryId);
+        throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      }
+
+      Category category = existedCategory.get();
+
+      return productRepository.countProductsByCategoryAndName(category, name);
+    } catch (DataNotFoundException ex) {
+      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+    }
+  }
+
+  @Override
+  public List<Product> getProductsByCategoryPerPage(Long categoryId, Integer pageNumber,
       Integer pageSize, String sortBy) throws LoadDataFailException, DataNotFoundException {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
@@ -88,7 +177,8 @@ public class ProductServiceImpl implements ProductService {
 
       Category category = existedCategory.get();
 
-      PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
+      PageRequest pageRequest =
+          PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
       if (category.getParent() == null) {
         return productRepository.getProductsByParent(category, pageRequest).getContent();
@@ -105,48 +195,54 @@ public class ProductServiceImpl implements ProductService {
 
   private Sort generateSortProduct(String sortBy) {
     Sort sort = null;
-      switch (sortBy) {
-        case "CHEAPEST":
-          sort = Sort.by("price").ascending()
-              .and(Sort.by("sale").descending())
-              .and(Sort
-                  .by(new Sort.Order(Sort.Direction.ASC, "priceSale",
-                      Sort.NullHandling.NULLS_LAST))
-                  .and(
-                      Sort.by(new Sort.Order(Sort.Direction.ASC, "saleFromDate",
-                          Sort.NullHandling.NULLS_LAST))
-                          .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "saleToDate",
-                              Sort.NullHandling.NULLS_LAST)))))
-              .and(Sort.by("brandNew").descending())
-              .and(Sort.by("updatedDate").descending());
-          break;
-        case "HIGHEST":
-          sort = Sort.by("price").descending()
-              .and(Sort.by("brandNew").descending())
-              .and(Sort.by("sale").descending()
-                  .and(Sort
-                      .by(new Sort.Order(Sort.Direction.DESC, "priceSale",
-                          Sort.NullHandling.NULLS_LAST))
-                      .and(
-                          Sort.by(new Sort.Order(Sort.Direction.ASC, "saleFromDate",
-                              Sort.NullHandling.NULLS_LAST))
-                              .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "saleToDate",
-                                  Sort.NullHandling.NULLS_LAST))))))
-              .and(Sort.by("updatedDate").descending());
-          break;
-        default:
-          sort = Sort.by("brandNew").descending()
-              .and(Sort.by("sale").descending())
-              .and(
-                  Sort.by(new Sort.Order(Sort.Direction.ASC, "saleFromDate",
-                      Sort.NullHandling.NULLS_LAST))
-                      .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "saleToDate",
-                          Sort.NullHandling.NULLS_LAST))))
-              .and(Sort.by("updatedDate").descending());
-          break;
-      }
+    switch (sortBy) {
+      case "CHEAPEST":
+        sort = Sort.by("price").ascending()
+            .and(Sort.by("sale").descending())
+            .and(Sort
+                .by(new Sort.Order(Sort.Direction.ASC, "priceSale",
+                    Sort.NullHandling.NULLS_LAST))
+                .and(
+                    Sort.by(new Sort.Order(Sort.Direction.ASC, "saleFromDate",
+                        Sort.NullHandling.NULLS_LAST))
+                        .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "saleToDate",
+                            Sort.NullHandling.NULLS_LAST)))))
+            .and(Sort.by("brandNew").descending())
+            .and(Sort.by("updatedDate").descending());
+        break;
+      case "HIGHEST":
+        sort = Sort.by("price").descending()
+            .and(Sort.by("brandNew").descending())
+            .and(Sort.by("sale").descending()
+                .and(Sort
+                    .by(new Sort.Order(Sort.Direction.DESC, "priceSale",
+                        Sort.NullHandling.NULLS_LAST))
+                    .and(
+                        Sort.by(new Sort.Order(Sort.Direction.ASC, "saleFromDate",
+                            Sort.NullHandling.NULLS_LAST))
+                            .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "saleToDate",
+                                Sort.NullHandling.NULLS_LAST))))))
+            .and(Sort.by("updatedDate").descending());
+        break;
+      case "A-Z":
+        sort = Sort.by("name").ascending();
+        break;
+      case "Z-A":
+        sort = Sort.by("name").descending();
+        break;
+      default:
+        sort = Sort.by("brandNew").descending()
+            .and(Sort.by("sale").descending())
+            .and(
+                Sort.by(new Sort.Order(Sort.Direction.ASC, "saleFromDate",
+                    Sort.NullHandling.NULLS_LAST))
+                    .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "saleToDate",
+                        Sort.NullHandling.NULLS_LAST))))
+            .and(Sort.by("updatedDate").descending());
+        break;
+    }
 
-      return sort;
+    return sort;
   }
 
   @Override
@@ -158,7 +254,6 @@ public class ProductServiceImpl implements ProductService {
         });
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public boolean addProductToCategory(CreateProductDTO productDTO, Long categoryId)
       throws CreateDataFailException {
@@ -175,7 +270,10 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_BRAND_NOT_FOUND);
       }
 
-      Product product = new Product(productDTO.getName(), productDTO.getPrice(), productDTO.getShortDesc(), productDTO.getLongDesc(), productDTO.getMaterial(), productDTO.getHandling(), productDTO.isSale(), productDTO.getPriceSale(), productDTO.getSaleFromDate(), productDTO.getSaleToDate());
+      Product product = new Product(productDTO.getName(), productDTO.getPrice(),
+          productDTO.getShortDesc(), productDTO.getLongDesc(), productDTO.getMaterial(),
+          productDTO.getHandling(), productDTO.isSale(), productDTO.getPriceSale(),
+          productDTO.getSaleFromDate(), productDTO.getSaleToDate());
       product.setBrandNew(true);
       product.setCategory(existedCategory.get());
       product.setBrand(existedBrand.get());
@@ -190,17 +288,17 @@ public class ProductServiceImpl implements ProductService {
                   return new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
                 });
 
-        colorSize.getSizes().entrySet().stream()
-            .forEach(entry -> {
-              PSize size = pSizeRepository.findById(entry.getKey())
+        colorSize.getSizes().stream()
+            .forEach(size -> {
+              PSize psize = pSizeRepository.findById(size.getSizeId())
                   .orElseThrow(
                       () -> {
-                        LOGGER.info("Size {} is not found", entry.getKey());
+                        LOGGER.info("Size {} is not found", size.getSizeId());
                         return new DataNotFoundException(ErrorCode.ERR_SIZE_NOT_FOUND);
                       });
 
-              product.addColorSize(color, size, entry.getValue());
-              if (entry.getValue() > 0) {
+              product.addColorSize(color, psize, size.getQuantity());
+              if (size.getQuantity() > 0) {
                 product.setInStock(true);
               }
             });
@@ -226,7 +324,6 @@ public class ProductServiceImpl implements ProductService {
     return true;
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public Product updateProduct(UpdateProductDTO productDTO, Long id, Long categoryId)
       throws UpdateDataFailException, DataNotFoundException {
@@ -283,7 +380,6 @@ public class ProductServiceImpl implements ProductService {
     }
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public boolean deleteProduct(Long id) throws DeleteDataFailException, DataNotFoundException {
     try {
@@ -307,7 +403,6 @@ public class ProductServiceImpl implements ProductService {
     return true;
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public Optional<Product> replaceImagesOfProduct(ImageListDTO imageListRequest, Long id)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
@@ -409,25 +504,25 @@ public class ProductServiceImpl implements ProductService {
                 return new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
               });
 
-      colorSize.getSizes().entrySet().stream()
-          .forEach(entry -> {
-            PSize size = pSizeRepository.findById(entry.getKey())
+      colorSize.getSizes().stream()
+          .forEach(size -> {
+            PSize psize = pSizeRepository.findById(size.getSizeId())
                 .orElseThrow(
                     () -> {
-                      LOGGER.info("Size {} is not found", entry.getKey());
+                      LOGGER.info("Size {} is not found", size.getSizeId());
                       return new DataNotFoundException(ErrorCode.ERR_SIZE_NOT_FOUND);
                     });
 
             if (colorSizes.stream()
-                .noneMatch(cs -> cs.getColor().equals(color) && cs.getSize().equals(size))) {
-              product.addColorSize(color, size, entry.getValue());
+                .noneMatch(cs -> cs.getColor().equals(color) && cs.getSize().equals(psize))) {
+              product.addColorSize(color, psize, size.getQuantity());
             } else {
               product.getColorSizes().add(
                   colorSizes.stream()
-                      .filter(cs -> cs.getColor().equals(color) && cs.getSize().equals(size))
+                      .filter(cs -> cs.getColor().equals(color) && cs.getSize().equals(psize))
                       .collect(Collectors.toList()).get(0));
             }
-            if (entry.getValue() > 0) {
+            if (size.getQuantity() > 0) {
               product.setInStock(true);
             }
           });
@@ -490,6 +585,5 @@ public class ProductServiceImpl implements ProductService {
       });
     }
   }
-
 
 }

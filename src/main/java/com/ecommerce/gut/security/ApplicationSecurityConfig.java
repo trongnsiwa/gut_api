@@ -57,6 +57,7 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         .antMatchers("/home/**").permitAll()
         .antMatchers("/category/**").permitAll()
         .antMatchers("/color/**").permitAll()
+        .antMatchers("/size/**").permitAll()
         .antMatchers("/product/**").permitAll()
         .antMatchers("/cart/**").permitAll()
         .anyRequest().authenticated();

@@ -1,5 +1,6 @@
 package com.ecommerce.gut.service.impl;
 
+import java.util.List;
 import java.util.Optional;
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.exception.CreateDataFailException;
@@ -15,8 +16,9 @@ import com.ecommerce.gut.service.ColorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class ColorServiceImpl implements ColorService {
@@ -38,7 +40,47 @@ public class ColorServiceImpl implements ColorService {
         });
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
+  @Override
+  public List<Color> getAllColors() {
+    return colorRepository.findAll();
+  }
+
+  @Override
+  public List<Color> getColorsPerPage(Integer pageNum, Integer pageSize, String sortBy) {
+    Sort sort = null;
+    if ("Z-A".equals(sortBy)) {
+      sort = Sort.by("name").descending();
+    } else {
+      sort = Sort.by("name").ascending();
+    }
+
+    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+    return colorRepository.findAll(pageRequest).getContent();
+  }
+
+  @Override
+  public List<Color> searchByName(Integer pageNum, Integer pageSize, String sortBy, String name) {
+    Sort sort = null;
+    if ("Z-A".equals(sortBy)) {
+      sort = Sort.by("name").descending();
+    } else {
+      sort = Sort.by("name").ascending();
+    }
+
+    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+    return colorRepository.searchByName(name,pageRequest).getContent();
+  }
+
+  @Override
+  public Long countColors() {
+    return colorRepository.count();
+  }
+  
+  @Override
+  public Long countColorsByName(String name) {
+    return colorRepository.countByName(name);
+  }
+
   @Override
   public boolean createColor(Color color) throws CreateDataFailException, DuplicateDataException {
     try {
@@ -69,7 +111,6 @@ public class ColorServiceImpl implements ColorService {
     return true;
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public Color updateColor(Color color, Long id)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
@@ -111,7 +152,6 @@ public class ColorServiceImpl implements ColorService {
     }
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public boolean deleteColor(Long id)
       throws DeleteDataFailException, RestrictDataException, DataNotFoundException {
