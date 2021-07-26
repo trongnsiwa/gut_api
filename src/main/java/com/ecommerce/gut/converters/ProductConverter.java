@@ -59,6 +59,7 @@ public class ProductConverter {
       pagingProductDTO.setImages(
           product.getProductImages().stream()
               .map(this::convertProductImageToDto)
+              .filter(img -> img.getColorCode() >= 0)
               .collect(Collectors.toList()));
       pagingProductDTO.setColors(
           product.getColorSizes().stream()

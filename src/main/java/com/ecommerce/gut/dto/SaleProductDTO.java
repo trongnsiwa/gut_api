@@ -2,7 +2,7 @@ package com.ecommerce.gut.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,7 +23,7 @@ public class SaleProductDTO extends ProductDTO {
   }
 
   public SaleProductDTO(Long id, String name, Double price, String shortDesc,
-      List<ProductImageDTO> images, List<ColorDTO> colors, Long categoryId, Long brandId,
+      List<ProductImageDTO> images, Set<ColorDTO> colors, Long categoryId, Long brandId,
       Double salePrice, LocalDateTime saleFromDate, LocalDateTime saleToDate) {
     super(id, name, price, shortDesc, images, colors, categoryId, brandId);
     this.salePrice = salePrice;

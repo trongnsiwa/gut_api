@@ -1,9 +1,13 @@
 package com.ecommerce.gut.service.impl;
 
+import static com.ecommerce.gut.specification.ProductSpecification.categoryEquals;
+import static com.ecommerce.gut.specification.ProductSpecification.nameContainsIgnoreCase;
+import static com.ecommerce.gut.specification.ProductSpecification.parentEquals;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,11 +39,14 @@ import com.ecommerce.gut.repository.ProductImageRepository;
 import com.ecommerce.gut.repository.ProductRepository;
 import com.ecommerce.gut.repository.BrandRepository;
 import com.ecommerce.gut.service.ProductService;
-
+import com.ecommerce.gut.specification.ProductSpecification;
 import org.springframework.stereotype.Service;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.jpa.domain.Specification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +94,9 @@ public class ProductServiceImpl implements ProductService {
       String name) {
     PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
-    return productRepository.searchProductsByName(name, pageRequest).getContent();
+    Specification<Product> searchSpec = nameContainsIgnoreCase(name);
+
+    return productRepository.findAll(searchSpec, pageRequest).getContent();
   }
 
   @Override
@@ -97,7 +106,9 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Long countProductsByName(String name) {
-    return productRepository.countProductsByName(name);
+    Specification<Product> countSpec = ProductSpecification.nameContainsIgnoreCase(name);
+
+    return productRepository.count(countSpec);
   }
 
   @Override
@@ -116,13 +127,18 @@ public class ProductServiceImpl implements ProductService {
       PageRequest pageRequest =
           PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
-      if (category.getParent() == null) {
-        return productRepository.searchProductsByParentAndName(category, name, pageRequest)
+      Specification<Product> parenSpec = parentEquals(category);
+      Specification<Product> nameSpec = nameContainsIgnoreCase(name);
+
+      if (Objects.isNull(category.getParent())) {
+        return productRepository.findAll(Specification.where(parenSpec).and(nameSpec), pageRequest)
             .getContent();
       }
 
+      Specification<Product> categorySpec = categoryEquals(category);
+
       return productRepository
-          .searchProductsByCategoryAndName(existedCategory.get(), name, pageRequest)
+          .findAll(Specification.where(categorySpec).and(nameSpec), pageRequest)
           .getContent();
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -142,7 +158,15 @@ public class ProductServiceImpl implements ProductService {
 
       Category category = existedCategory.get();
 
-      return productRepository.countProductsByCategory(category);
+      Specification<Product> countParentSpec = parentEquals(category);
+
+      if (Objects.isNull(category.getParent())) {
+        return productRepository.count(countParentSpec);
+      }
+
+      Specification<Product> countSpec = categoryEquals(category);
+
+      return productRepository.count(countSpec);
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     }
@@ -159,7 +183,16 @@ public class ProductServiceImpl implements ProductService {
 
       Category category = existedCategory.get();
 
-      return productRepository.countProductsByCategoryAndName(category, name);
+      Specification<Product> parenSpec = parentEquals(category);
+      Specification<Product> nameSpec = nameContainsIgnoreCase(name);
+
+      if (Objects.isNull(category.getParent())) {
+        return productRepository.count(Specification.where(parenSpec).and(nameSpec));
+      }
+
+      Specification<Product> categorySpec = categoryEquals(category);
+
+      return productRepository.count(Specification.where(categorySpec).and(categorySpec));
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     }
@@ -180,11 +213,15 @@ public class ProductServiceImpl implements ProductService {
       PageRequest pageRequest =
           PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
-      if (category.getParent() == null) {
-        return productRepository.getProductsByParent(category, pageRequest).getContent();
+      Specification<Product> findParentSpec = parentEquals(category);
+
+      if (Objects.isNull(category.getParent())) {
+        return productRepository.findAll(findParentSpec, pageRequest).getContent();
       }
 
-      return productRepository.getProductsByCategory(existedCategory.get(), pageRequest)
+      Specification<Product> findSpec = categoryEquals(category);
+
+      return productRepository.findAll(findSpec, pageRequest)
           .getContent();
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -197,32 +234,26 @@ public class ProductServiceImpl implements ProductService {
     Sort sort = null;
     switch (sortBy) {
       case "CHEAPEST":
-        sort = Sort.by("price").ascending()
-            .and(Sort.by("sale").descending())
-            .and(Sort
-                .by(new Sort.Order(Sort.Direction.ASC, "priceSale",
-                    Sort.NullHandling.NULLS_LAST))
-                .and(
-                    Sort.by(new Sort.Order(Sort.Direction.ASC, "saleFromDate",
-                        Sort.NullHandling.NULLS_LAST))
-                        .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "saleToDate",
-                            Sort.NullHandling.NULLS_LAST)))))
-            .and(Sort.by("brandNew").descending())
-            .and(Sort.by("updatedDate").descending());
+        List<Order> cheapOrders = new ArrayList<>();
+        cheapOrders.add(new Order(Direction.ASC, "price"));
+        cheapOrders.add(new Order(Direction.ASC, "priceSale", Sort.NullHandling.NULLS_LAST));
+        cheapOrders.add(new Order(Direction.ASC, "saleFromDate", Sort.NullHandling.NULLS_LAST));
+        cheapOrders.add(new Order(Direction.ASC, "saleToDate", Sort.NullHandling.NULLS_LAST));
+        cheapOrders.add(new Order(Direction.DESC, "brandNew"));
+        cheapOrders.add(new Order(Direction.DESC, "updatedDate"));
+
+        sort = Sort.by(cheapOrders);
         break;
       case "HIGHEST":
-        sort = Sort.by("price").descending()
-            .and(Sort.by("brandNew").descending())
-            .and(Sort.by("sale").descending()
-                .and(Sort
-                    .by(new Sort.Order(Sort.Direction.DESC, "priceSale",
-                        Sort.NullHandling.NULLS_LAST))
-                    .and(
-                        Sort.by(new Sort.Order(Sort.Direction.ASC, "saleFromDate",
-                            Sort.NullHandling.NULLS_LAST))
-                            .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "saleToDate",
-                                Sort.NullHandling.NULLS_LAST))))))
-            .and(Sort.by("updatedDate").descending());
+        List<Order> highOrders = new ArrayList<>();
+        highOrders.add(new Order(Direction.DESC, "price"));
+        highOrders.add(new Order(Direction.DESC, "brandNew"));
+        highOrders.add(new Order(Direction.DESC, "priceSale", Sort.NullHandling.NULLS_LAST));
+        highOrders.add(new Order(Direction.ASC, "saleFromDate", Sort.NullHandling.NULLS_LAST));
+        highOrders.add(new Order(Direction.ASC, "saleToDate", Sort.NullHandling.NULLS_LAST));
+        highOrders.add(new Order(Direction.DESC, "updatedDate"));
+
+        sort = Sort.by(highOrders);
         break;
       case "A-Z":
         sort = Sort.by("name").ascending();
@@ -231,14 +262,13 @@ public class ProductServiceImpl implements ProductService {
         sort = Sort.by("name").descending();
         break;
       default:
-        sort = Sort.by("brandNew").descending()
-            .and(Sort.by("sale").descending())
-            .and(
-                Sort.by(new Sort.Order(Sort.Direction.ASC, "saleFromDate",
-                    Sort.NullHandling.NULLS_LAST))
-                    .and(Sort.by(new Sort.Order(Sort.Direction.ASC, "saleToDate",
-                        Sort.NullHandling.NULLS_LAST))))
-            .and(Sort.by("updatedDate").descending());
+        List<Order> defaultOrders = new ArrayList<>();
+        defaultOrders.add(new Order(Direction.ASC, "price"));
+        defaultOrders.add(new Order(Direction.DESC, "brandNew"));
+        defaultOrders.add(new Order(Direction.ASC, "priceSale", Sort.NullHandling.NULLS_LAST));
+        defaultOrders.add(new Order(Direction.ASC, "saleFromDate", Sort.NullHandling.NULLS_LAST));
+        defaultOrders.add(new Order(Direction.ASC, "saleToDate", Sort.NullHandling.NULLS_LAST));
+        defaultOrders.add(new Order(Direction.DESC, "updatedDate"));
         break;
     }
 
@@ -270,15 +300,23 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_BRAND_NOT_FOUND);
       }
 
-      Product product = new Product(productDTO.getName(), productDTO.getPrice(),
-          productDTO.getShortDesc(), productDTO.getLongDesc(), productDTO.getMaterial(),
-          productDTO.getHandling(), productDTO.isSale(), productDTO.getPriceSale(),
-          productDTO.getSaleFromDate(), productDTO.getSaleToDate());
-      product.setBrandNew(true);
-      product.setCategory(existedCategory.get());
-      product.setBrand(existedBrand.get());
-      product.setDeleted(false);
-      product.setInStock(false);
+      Product product = Product.builder()
+          .name(productDTO.getName())
+          .price(productDTO.getPrice())
+          .shortDesc(productDTO.getShortDesc())
+          .longDesc(productDTO.getLongDesc())
+          .material(productDTO.getMaterial())
+          .handling(productDTO.getHandling())
+          .sale(productDTO.isSale())
+          .priceSale(productDTO.getPriceSale())
+          .saleFromDate(productDTO.getSaleFromDate())
+          .saleToDate(productDTO.getSaleToDate())
+          .brandNew(true)
+          .category(existedCategory.get())
+          .brand(existedBrand.get())
+          .deleted(false)
+          .inStock(false)
+          .build();
 
       productDTO.getColors().stream().forEach(colorSize -> {
         Color color = colorRepository.findById(colorSize.getColorId())
@@ -353,7 +391,10 @@ public class ProductServiceImpl implements ProductService {
       product.setBrand(existedBrand.get());
       product.setInStock(false);
 
-      Set<ColorSize> colorSizes = colorSizeRepository.findColorSizesByProductId(id);
+      Set<ColorSize> colorSizes = null;
+      if (!productDTO.getColors().isEmpty()) {
+        colorSizes = colorSizeRepository.findColorSizesByProductId(id);
+      }
 
       setColorAndSizeToProduct(product, productDTO, colorSizes);
 

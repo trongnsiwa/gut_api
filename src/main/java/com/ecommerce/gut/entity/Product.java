@@ -19,12 +19,14 @@ import javax.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@Builder
 @Entity
 @Table(
   name = "products",
@@ -91,10 +93,12 @@ public class Product {
   @JoinColumn(name = "brand_id")
   private Brand brand;
 
+  @Builder.Default
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "product", cascade = CascadeType.ALL,
       orphanRemoval = true)
   private Set<ProductImage> productImages = new HashSet<>();
 
+  @Builder.Default
   @OneToMany(fetch = FetchType.EAGER, mappedBy = "product", cascade = CascadeType.ALL,
       orphanRemoval = true)
   private Set<ColorSize> colorSizes = new HashSet<>();

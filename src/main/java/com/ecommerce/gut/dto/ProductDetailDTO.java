@@ -33,6 +33,7 @@ public class ProductDetailDTO {
   private LocalDateTime saleToDate;
   private List<ProductImageDTO> productImages = new ArrayList<>();
   private Set<ProductColorSizeDTO> colorSizes = new HashSet<>();
+  private boolean deleted;
   private Long categoryId;
   private String categoryName;
   private Long brandId;

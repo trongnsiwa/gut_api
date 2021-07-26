@@ -48,8 +48,8 @@ public class CategoryServiceTest {
     child2.setParent(parent1);
     parent1.getSubCategories().add(child2);
 
-    Page<Category> pages = new PageImpl<>(categories);
-    Mockito.when(this.categoryRepository.getParentCategoryPerPage(any(Pageable.class))).thenReturn(pages);
+    // Page<Category> pages = new PageImpl<>(categories);
+    // Mockito.when(this.categoryRepository.getParentCategoryPerPage(any(Pageable.class))).thenReturn(pages);
 
     Mockito.when(categoryRepository.save(any(Category.class))).thenReturn(any(Category.class));
 

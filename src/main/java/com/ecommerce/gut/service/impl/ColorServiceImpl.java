@@ -1,5 +1,6 @@
 package com.ecommerce.gut.service.impl;
 
+import static com.ecommerce.gut.specification.ColorSpecification.nameEquals;
 import java.util.List;
 import java.util.Optional;
 import com.ecommerce.gut.entity.Color;
@@ -13,12 +14,14 @@ import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.repository.ColorRepository;
 import com.ecommerce.gut.repository.ColorSizeRepository;
 import com.ecommerce.gut.service.ColorService;
+import com.ecommerce.gut.specification.ColorSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
 public class ColorServiceImpl implements ColorService {
@@ -68,7 +71,10 @@ public class ColorServiceImpl implements ColorService {
     }
 
     PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
-    return colorRepository.searchByName(name,pageRequest).getContent();
+
+    Specification<Color> nameSpec = ColorSpecification.nameContainsIgnoreCase(name);
+
+    return colorRepository.findAll(nameSpec, pageRequest).getContent();
   }
 
   @Override
@@ -78,7 +84,7 @@ public class ColorServiceImpl implements ColorService {
   
   @Override
   public Long countColorsByName(String name) {
-    return colorRepository.countByName(name);
+    return colorRepository.count(nameEquals(name));
   }
 
   @Override
@@ -121,13 +127,13 @@ public class ColorServiceImpl implements ColorService {
         throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
       }
 
-      Optional<Color> colorWithName = colorRepository.findByName(color.getName());
+      Optional<Color> colorWithName = colorRepository.findOne(nameEquals(color.getName()));
       if (colorWithName.isPresent() && !id.equals(colorWithName.get().getId())) {
         LOGGER.info("Color name {} is already taken", color.getName());
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
       }
 
-      Optional<Color> colorWithSource = colorRepository.findBySource(color.getSource());
+      Optional<Color> colorWithSource = colorRepository.findOne(ColorSpecification.sourceEquals(color.getSource()));
       if (colorWithSource.isPresent() && !id.equals(colorWithSource.get().getId())) {
         LOGGER.info("Color source {} is already taken", color.getSource());
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);

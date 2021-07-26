@@ -370,7 +370,7 @@ public class ProductController {
       @ApiResponse(responseCode = "404", description = "Product Id is not found",
           content = @Content),
   })
-  @DeleteMapping("/delete/{id}")
+  @DeleteMapping("/{id}")
   public ResponseEntity<ResponseDTO> deleteProduct(@PathVariable("id") @Min(1) Long id)
       throws DeleteDataFailException, DataNotFoundException {
     ResponseDTO response = new ResponseDTO();

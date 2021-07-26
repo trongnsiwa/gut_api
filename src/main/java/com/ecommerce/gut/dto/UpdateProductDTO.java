@@ -6,7 +6,6 @@ import java.util.Set;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -55,7 +54,6 @@ public class UpdateProductDTO {
 
   private boolean deleted;
   
-  @NotEmpty(message = "{product.colors.notEmpty}")
   private Set<ColorSizeDTO> colors = new HashSet<>();
 
   @NotNull(message = "{product.category.notNull}")

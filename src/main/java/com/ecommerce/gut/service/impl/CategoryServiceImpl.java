@@ -1,5 +1,8 @@
 package com.ecommerce.gut.service.impl;
 
+import static com.ecommerce.gut.specification.CategorySpecification.nameContainsIgnoreCase;
+import static com.ecommerce.gut.specification.CategorySpecification.nameEquals;
+import static com.ecommerce.gut.specification.CategorySpecification.parentIsNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,7 +34,7 @@ public class CategoryServiceImpl implements CategoryService {
 
   @Override
   public List<Category> getAllParentCategories() {
-    return categoryRepository.findAllParentCategories();
+    return categoryRepository.findAll(parentIsNull());
   }
 
   @Override
@@ -44,7 +48,10 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
-    return categoryRepository.getParentCategoryPerPage(pageRequest).getContent();
+
+    Specification<Category> parentSpec = parentIsNull();
+
+    return categoryRepository.findAll(parentSpec, pageRequest).getContent();
   }
 
   @Override
@@ -58,17 +65,20 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
-    return categoryRepository.searchByName(name, pageRequest).getContent();
+
+    Specification<Category> searchSpec = nameContainsIgnoreCase(name);
+
+    return categoryRepository.findAll(searchSpec, pageRequest).getContent();
   }
 
   @Override
   public Long countParents() {
-    return categoryRepository.countParents();
+    return categoryRepository.count(parentIsNull());
   }
 
   @Override
   public Long countParentsByName(String name) {
-    return categoryRepository.countParentsByName(name);
+    return categoryRepository.count(Specification.where(parentIsNull()).and(nameContainsIgnoreCase(name)));
   }
 
   @Override
@@ -153,7 +163,7 @@ public class CategoryServiceImpl implements CategoryService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       }
 
-      Optional<Category> categoryWithName = categoryRepository.findByName(parentCategory.getName());
+      Optional<Category> categoryWithName = categoryRepository.findOne(nameEquals(parentCategory.getName()));
       if (categoryWithName.isPresent() && !categoryWithName.get().getId().equals(id)) {
           LOGGER.info("Category parent name {} is already existed", parentCategory.getName());
           throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
@@ -193,7 +203,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
       }
 
-      Optional<Category> categoryWithName = categoryRepository.findByName(category.getName());
+      Optional<Category> categoryWithName = categoryRepository.findOne(nameEquals(category.getName()));
       if (categoryWithName.isPresent() && !id.equals(categoryWithName.get().getId())) {
         LOGGER.info("Category name {} is already existed", category.getName());
         throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);

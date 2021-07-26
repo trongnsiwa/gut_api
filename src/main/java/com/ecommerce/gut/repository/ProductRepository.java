@@ -1,94 +1,11 @@
 package com.ecommerce.gut.repository;
 
-import java.util.List;
-import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.Product;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ProductRepository extends PagingAndSortingRepository<Product, Long> {
-
-        @Query("SELECT p "
-                + "FROM Product p "
-                + "WHERE p.brandNew = TRUE "
-                + "ORDER BY p.updatedDate DESC")
-        List<Product> getNewProducts(Pageable pageable);
-
-        @Query("SELECT p "                        
-                + "FROM Product p "
-                + "WHERE p.sale = TRUE "
-                + "ORDER BY p.updatedDate DESC")
-        List<Product> getSaleProducts(Pageable pageable);
-
-        @Query(
-                "SELECT p "
-                + "FROM Product p "
-                + "INNER JOIN p.category c "
-                + "WHERE c = :category")
-        Page<Product> getProductsByCategory(@Param("category") Category category, Pageable pageable);
-
-        @Query(
-                "SELECT p "
-                + "FROM Product p "
-                + "INNER JOIN p.category c "
-                + "WHERE c.parent = :parent")
-        Page<Product> getProductsByParent(@Param("parent") Category parent, Pageable pageable);
-
-        @Query(
-                "SELECT p "
-                + "FROM Product p "
-                + "WHERE UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')"
-        )
-        Page<Product> searchProductsByName(@Param("name") String name, Pageable pageable);
-
-        @Query(
-                "SELECT p "
-                + "FROM Product p "
-                + "INNER JOIN p.category c "
-                + "WHERE c = :category AND UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')")
-        Page<Product> searchProductsByCategoryAndName(@Param("category") Category category, @Param("name") String name, Pageable pageable);
-
-        @Query(
-                "SELECT p "
-                + "FROM Product p "
-                + "INNER JOIN p.category c "
-                + "WHERE c.parent = :parent AND UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')")
-        Page<Product> searchProductsByParentAndName(@Param("parent") Category parent, @Param("name") String name, Pageable pageable);
-
-        
-        @Query(
-                "SELECT COUNT(p) "
-                + "FROM Product p "
-                + "WHERE UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')"
-        )
-        long countProductsByName(@Param("name") String name);
-
-        @Query(
-                "SELECT COUNT(p) "
-                + "FROM Product p "
-                + "INNER JOIN p.category c "
-                + "WHERE c = :category")
-        long countProductsByCategory(@Param("category") Category category);
-
-        @Query(
-                "SELECT COUNT(p) "
-                + "FROM Product p "
-                + "INNER JOIN p.category c "
-                + "WHERE c = :category AND UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')"
-        )
-        long countProductsByCategoryAndName(@Param("category") Category category, @Param("name") String name);
-
-        @Query(
-                "SELECT COUNT(p) "
-                + "FROM Product p "
-                + "INNER JOIN p.category c "
-                + "WHERE c.parent = :parent AND UPPER(p.name) LIKE CONCAT('%',UPPER(:name),'%')")
-        long countProductsByParentAndName(@Param("parent") Category parent, @Param("name") String name);
-
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
 }

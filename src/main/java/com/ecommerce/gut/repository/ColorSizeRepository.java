@@ -34,6 +34,13 @@ public interface ColorSizeRepository extends JpaRepository<ColorSize, Long> {
   Set<ColorSize> findColorSizesByProductId(@Param("id") Long productId); 
 
   @Query(
+    value = "SELECT SUM(c.quantity) " 
+          + "FROM ColorSize c "
+          + "WHERE c.product.id = :id"
+  )
+  int sumQuantityOfProduct(@Param("id") Long productId); 
+
+  @Query(
     value = "SELECT c " 
           + "FROM ColorSize c "
           + "WHERE c.product = :product AND c.color = :color AND c.size = :size"

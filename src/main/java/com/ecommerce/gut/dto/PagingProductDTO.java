@@ -21,11 +21,14 @@ public class PagingProductDTO {
   private String name;
   private Double price;
   private String shortDesc;
+  private boolean brandNew;
+  private boolean sale;
   private Double salePrice;
   private LocalDateTime saleFromDate;
   private LocalDateTime saleToDate;
   private List<ProductImageDTO> images = new ArrayList<>();
   private Set<ColorDTO> colors = new HashSet<>();
+  private boolean deleted;
   private Long categoryId;
   private String categoryName;
   private Long brandId;

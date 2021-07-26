@@ -1,7 +1,11 @@
 package com.ecommerce.gut.service.impl;
 
+import static com.ecommerce.gut.specification.ProductSpecification.isBrandNew;
+import static com.ecommerce.gut.specification.ProductSpecification.isNotSale;
+import static com.ecommerce.gut.specification.ProductSpecification.isSale;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.ecommerce.gut.dto.ColorDTO;
@@ -19,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,13 +38,22 @@ public class HomeServiceImpl implements HomeService {
   @Override
   public List<ProductDTO> getNewProducts(Integer size) throws LoadDataFailException {
     try {
-      List<Product> products = productRepository.getNewProducts(PageRequest.of(0, size));
+      Sort sort =  Sort.by("updatedDate").descending();
+
+      PageRequest pageRequest =
+          PageRequest.of(0, size, sort);
+
+      Specification<Product> newSpec = isBrandNew();
+      Specification<Product> notSaleSpec = isNotSale();
+
+      List<Product> products = productRepository.findAll(Specification.where(newSpec).and(notSaleSpec), pageRequest).getContent();
 
       if (!products.isEmpty()) {
         return products.stream()
             .map(product -> new ProductDTO(product.getId(), product.getName(), product.getPrice(),
                 product.getShortDesc(), this.getImageListFromProduct(product),
-                this.getColorListFromProduct(product), product.getCategory().getId(), product.getBrand().getId()))
+                this.getColorListFromProduct(product), product.getCategory().getId(),
+                product.getBrand().getId()))
             .collect(Collectors.toList());
       }
     } catch (Exception ex) {
@@ -52,14 +67,21 @@ public class HomeServiceImpl implements HomeService {
   @Override
   public List<SaleProductDTO> getSaleProducts(Integer size) throws LoadDataFailException {
     try {
-      List<Product> products = productRepository.getSaleProducts(PageRequest.of(0, size));
+      Sort sort =  Sort.by("updatedDate").descending();
+
+      PageRequest pageRequest =
+          PageRequest.of(0, size, sort);
+
+      Specification<Product> findSpec = isSale();
+
+      List<Product> products = productRepository.findAll(findSpec, pageRequest).getContent();
 
       if (!products.isEmpty()) {
         return products.stream()
             .map(product -> new SaleProductDTO(product.getId(), product.getName(),
                 product.getPrice(),
                 product.getShortDesc(), this.getImageListFromProduct(product),
-                this.getColorListFromProduct(product), 
+                this.getColorListFromProduct(product),
                 product.getCategory().getId(), product.getBrand().getId(),
                 product.getPriceSale(),
                 product.getSaleFromDate(), product.getSaleToDate()))
@@ -79,17 +101,17 @@ public class HomeServiceImpl implements HomeService {
           Image image = productImage.getImage();
           return new ProductImageDTO(image.getId(), image.getImageUrl(),
               image.getTitle(), productImage.getColorCode());
-        })
+        }).filter(img -> img.getColorCode() >= 0)
         .collect(Collectors.toList());
   }
 
-  private List<ColorDTO> getColorListFromProduct(Product product) {
+  private Set<ColorDTO> getColorListFromProduct(Product product) {
     return product.getColorSizes().stream()
         .map(colorSize -> {
           Color color = colorSize.getColor();
           return new ColorDTO(color.getId(), color.getName(), color.getSource());
         })
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
   }
 
 }
