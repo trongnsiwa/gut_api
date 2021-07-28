@@ -34,9 +34,11 @@ public class CategoryConverter {
   public CategoryDTO convertCategoryToDto(Category category) throws ConvertEntityDTOException {
     try {
       CategoryDTO dto = modelMapper.map(category, CategoryDTO.class);
+
       if (category.getParent() != null) {
         dto.setParentId(category.getParent().getId());
       }
+
       return dto;
     } catch (Exception ex) {
       LOGGER.info("Fail to convert Category to CategoryDTO");
@@ -47,11 +49,16 @@ public class CategoryConverter {
   public CategoryParentDTO convertCategoryParentToDto(Category category) {
     try {
       CategoryParentDTO categoryParentDTO = modelMapper.map(category, CategoryParentDTO.class);
-      Set<CategoryDTO> subCategories = category.getSubCategories().stream()
+      
+      Set<CategoryDTO> subCategories = category.getSubCategories()
+          .stream()
           .map(this::convertCategoryToDto)
           .collect(Collectors.toSet());
+
       categoryParentDTO.setSubCategories(subCategories);
+
       return categoryParentDTO;
+      
     } catch (Exception ex) {
       LOGGER.info("Fail to convert Category to CategoryParentDTO");
       throw new ConvertEntityDTOException(ErrorCode.ERR_DATA_CONVERT_FAIL);

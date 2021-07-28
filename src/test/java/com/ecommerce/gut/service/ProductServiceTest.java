@@ -2,7 +2,9 @@ package com.ecommerce.gut.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import static org.mockito.ArgumentMatchers.any;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
 import com.ecommerce.gut.dto.ColorSizeDTO;
 import com.ecommerce.gut.dto.CreateProductDTO;
 import com.ecommerce.gut.dto.ImageListDTO;
@@ -28,43 +31,47 @@ import com.ecommerce.gut.repository.PSizeRepository;
 import com.ecommerce.gut.repository.ProductImageRepository;
 import com.ecommerce.gut.repository.ProductRepository;
 import com.ecommerce.gut.service.impl.ProductServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+
 import org.modelmapper.ModelMapper;
+
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 public class ProductServiceTest {
   
   @Mock
-  private ProductRepository productRepository;
+  ProductRepository productRepository;
 
   @Mock
-  private ColorRepository colorRepository;
+  ColorRepository colorRepository;
 
   @Mock
-  private PSizeRepository sizeRepository;
+  PSizeRepository sizeRepository;
 
   @Mock
-  private ProductImageRepository productImageRepository;
+  ProductImageRepository productImageRepository;
 
   @Mock
-  private ImageRepository imageRepository;
+  ImageRepository imageRepository;
 
   @Mock
-  private CategoryRepository categoryRepository;
+  CategoryRepository categoryRepository;
 
   @Mock
-  private ColorSizeRepository colorSizeRepository;
+  ColorSizeRepository colorSizeRepository;
 
   @Mock
-  private ModelMapper modelMapper;
+  ModelMapper modelMapper;
 
   @InjectMocks
-  private ProductServiceImpl productService;
+  ProductServiceImpl productService;
 
   @BeforeEach
   public void setUp() throws Exception {
@@ -135,13 +142,11 @@ public class ProductServiceTest {
     sizes.put(1L, 9);
     sizes.put(2L, 10);
     colorSizeDTO.setColorId(1L);
-    // colorSizeDTO.setSizes(sizes);
     
     ColorSizeDTO colorSizeDTO2 = new ColorSizeDTO();
     Map<Long, Integer> sizes2 = new HashMap<>();
     sizes2.put(1L, 9);
     colorSizeDTO2.setColorId(2L);
-    // colorSizeDTO2.setSizes(sizes2);
 
     Set<ColorSizeDTO> colorSizeDTOs = new HashSet<>();
     colorSizeDTOs.add(colorSizeDTO);
@@ -189,13 +194,11 @@ public class ProductServiceTest {
     Map<Long, Integer> sizes = new HashMap<>();
     sizes.put(1L, 9);
     colorSizeDTO.setColorId(1L);
-    // colorSizeDTO.setSizes(sizes);
     
     ColorSizeDTO colorSizeDTO2 = new ColorSizeDTO();
     Map<Long, Integer> sizes2 = new HashMap<>();
     sizes2.put(1L, 9);
     colorSizeDTO2.setColorId(2L);
-    // colorSizeDTO2.setSizes(sizes2);
 
     Set<ColorSizeDTO> colorSizeDTOs = new HashSet<>();
     colorSizeDTOs.add(colorSizeDTO);
@@ -256,8 +259,6 @@ public class ProductServiceTest {
 
     Optional<Product> products = productService.replaceImagesOfProduct(dto, 1L);
     assertEquals(1, products.get().getProductImages().size());
-
-    // assertThrows(DuplicateDataException.class, () -> productService.replaceImagesOfProduct(dto, 1L));
     
   }
 

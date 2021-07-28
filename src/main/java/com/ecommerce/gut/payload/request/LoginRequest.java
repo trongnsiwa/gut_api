@@ -2,6 +2,7 @@ package com.ecommerce.gut.payload.request;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

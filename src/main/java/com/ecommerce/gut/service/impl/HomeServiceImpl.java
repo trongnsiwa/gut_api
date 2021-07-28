@@ -3,6 +3,7 @@ package com.ecommerce.gut.service.impl;
 import static com.ecommerce.gut.specification.ProductSpecification.isBrandNew;
 import static com.ecommerce.gut.specification.ProductSpecification.isNotSale;
 import static com.ecommerce.gut.specification.ProductSpecification.isSale;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -19,8 +20,10 @@ import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.repository.ProductRepository;
 import com.ecommerce.gut.service.HomeService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -38,10 +41,9 @@ public class HomeServiceImpl implements HomeService {
   @Override
   public List<ProductDTO> getNewProducts(Integer size) throws LoadDataFailException {
     try {
-      Sort sort =  Sort.by("updatedDate").descending();
+      Sort sort = Sort.by("updatedDate").descending();
 
-      PageRequest pageRequest =
-          PageRequest.of(0, size, sort);
+      PageRequest pageRequest = PageRequest.of(0, size, sort);
 
       Specification<Product> newSpec = isBrandNew();
       Specification<Product> notSaleSpec = isNotSale();
@@ -49,7 +51,8 @@ public class HomeServiceImpl implements HomeService {
       List<Product> products = productRepository.findAll(Specification.where(newSpec).and(notSaleSpec), pageRequest).getContent();
 
       if (!products.isEmpty()) {
-        return products.stream()
+        return products
+            .stream()
             .map(product -> new ProductDTO(product.getId(), product.getName(), product.getPrice(),
                 product.getShortDesc(), this.getImageListFromProduct(product),
                 this.getColorListFromProduct(product), product.getCategory().getId(),
@@ -69,15 +72,15 @@ public class HomeServiceImpl implements HomeService {
     try {
       Sort sort =  Sort.by("updatedDate").descending();
 
-      PageRequest pageRequest =
-          PageRequest.of(0, size, sort);
+      PageRequest pageRequest = PageRequest.of(0, size, sort);
 
       Specification<Product> findSpec = isSale();
 
       List<Product> products = productRepository.findAll(findSpec, pageRequest).getContent();
 
       if (!products.isEmpty()) {
-        return products.stream()
+        return products
+            .stream()
             .map(product -> new SaleProductDTO(product.getId(), product.getName(),
                 product.getPrice(),
                 product.getShortDesc(), this.getImageListFromProduct(product),
@@ -96,9 +99,11 @@ public class HomeServiceImpl implements HomeService {
   }
 
   private List<ProductImageDTO> getImageListFromProduct(Product product) {
-    return product.getProductImages().stream()
+    return product.getProductImages()
+        .stream()
         .map(productImage -> {
           Image image = productImage.getImage();
+
           return new ProductImageDTO(image.getId(), image.getImageUrl(),
               image.getTitle(), productImage.getColorCode());
         }).filter(img -> img.getColorCode() >= 0)
@@ -106,7 +111,8 @@ public class HomeServiceImpl implements HomeService {
   }
 
   private Set<ColorDTO> getColorListFromProduct(Product product) {
-    return product.getColorSizes().stream()
+    return product.getColorSizes()
+        .stream()
         .map(colorSize -> {
           Color color = colorSize.getColor();
           return new ColorDTO(color.getId(), color.getName(), color.getSource());

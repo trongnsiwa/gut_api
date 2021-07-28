@@ -2,6 +2,7 @@ package com.ecommerce.gut.payload.response;
 
 import java.util.List;
 import java.util.UUID;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @EqualsAndHashCode
 public class JwtResponse {
+
   private String token;
   private String type = "Bearer";
   private UUID id;

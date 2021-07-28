@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+
 import com.ecommerce.gut.converters.UserConverter;
 import com.ecommerce.gut.dto.RoleSetDTO;
 import com.ecommerce.gut.dto.UserDTO;
@@ -65,13 +66,19 @@ public class UserController {
   public ResponseEntity<ResponseDTO> getUsersPerPage(@RequestParam("num") @Min(1) Integer pageNum,
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sort") @NotNull String sortBy) throws LoadDataFailException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
-      List<UserDTO> users = userService.getUsersPerPage(pageNum, pageSize, sortBy).stream()
+
+      List<UserDTO> users = userService.getUsersPerPage(pageNum, pageSize, sortBy)
+          .stream()
           .map(user -> converter.convertUserToDto(user))
           .collect(Collectors.toList());
+
       response.setSuccessCode(SuccessCode.USER_LOADED_SUCCESS);
       response.setData(users);
+
     } catch (Exception ex) {
       throw new LoadDataFailException(ErrorCode.ERR_LOAD_USERS_FAIL);
     }
@@ -87,12 +94,18 @@ public class UserController {
   })
   @GetMapping("/profile/{id}")
   public ResponseEntity<ResponseDTO> getUserProfileById(@PathVariable("id") @NotNull UUID id) {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       User foundUser = userService.getUserProfileById(id);
+
       UserProfileDTO responseUser = converter.convertUserProfileToDto(foundUser);
+
       response.setData(responseUser);
       response.setSuccessCode(SuccessCode.USER_LOADED_SUCCESS);
+
     } catch (Exception ex) {
       response.setErrorCode(ErrorCode.ERR_USER_PROFILE_LOADED_FAIL);
       throw new DataNotFoundException(ErrorCode.ERR_USER_PROFILE_LOADED_FAIL);
@@ -112,13 +125,20 @@ public class UserController {
   })
   @PutMapping("/profile")
   public ResponseEntity<ResponseDTO> editUserProfile(@Valid @RequestBody UserProfileDTO userDto) throws UpdateDataFailException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       User user = converter.convertUserProfileToEntity(userDto);
+
       User updatedUser = userService.editUserProfile(user, userDto.getId());
+
       UserProfileDTO dto = converter.convertUserProfileToDto(updatedUser);
+
       response.setData(dto);
       response.setSuccessCode(SuccessCode.USER_PROFILE_EDITED_SUCCESS);
+
     } catch (Exception ex) {
       response.setErrorCode(ErrorCode.ERR_USER_PROFILE_EDITED_FAIL);
       throw new UpdateDataFailException(ErrorCode.ERR_USER_PROFILE_EDITED_FAIL);
@@ -136,13 +156,17 @@ public class UserController {
   @DeleteMapping("/delete/{id}")
   public ResponseEntity<ResponseDTO> deleteUser(@PathVariable("id") @NotNull UUID id)
       throws DeleteDataFailException {
+        
     ResponseDTO response = new ResponseDTO();
+    
     try {
       boolean deleted = userService.deleteUser(id);
+
       if (deleted) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.USER_DELETED_SUCCESS);
       }
+
     } catch (Exception ex) {
       response.setErrorCode(ErrorCode.ERR_USER_DELETED_FAIL);
       throw new DeleteDataFailException(ErrorCode.ERR_USER_DELETED_FAIL);
@@ -160,10 +184,15 @@ public class UserController {
   @PatchMapping("/deactivate/{id}")
   public ResponseEntity<ResponseDTO> deactivateUser(@PathVariable("id") @NotNull UUID id)
       throws UpdateDataFailException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       User deactivateUser = userService.deactivateUser(id);
+
       UserDTO responseUser = converter.convertUserToDto(deactivateUser);
+
       response.setData(responseUser);
       response.setSuccessCode(SuccessCode.USER_DEACTIVATED_SUCCESS);
 
@@ -184,10 +213,15 @@ public class UserController {
   @PatchMapping("/activate/{id}")
   public ResponseEntity<?> activateUser(@PathVariable("id") @NotNull UUID id)
       throws UpdateDataFailException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       User activateUser = userService.activateUser(id);
+
       UserDTO responseUser = converter.convertUserToDto(activateUser);
+
       response.setData(responseUser);
       response.setSuccessCode(SuccessCode.USER_ACTIVATED_SUCCESS);
 
@@ -208,13 +242,20 @@ public class UserController {
   })
   @PatchMapping("/roles")
   public ResponseEntity<ResponseDTO> changeUserRoles(@RequestBody RoleSetDTO roleDto) throws UpdateDataFailException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
-      Set<Role> roles = roleDto.getRoles().stream()
+
+      Set<Role> roles = roleDto.getRoles()
+          .stream()
           .map(role -> converter.convertRoleToEntity(role))
           .collect(Collectors.toSet());
+
       User updatedUser = userService.changeUserRoles(roleDto.getUserId(), roles);
+
       UserDTO responseUser = converter.convertUserToDto(updatedUser);
+      
       response.setData(responseUser);
       response.setSuccessCode(SuccessCode.USER_ROLES_CHANGED_SUCCESS);
 

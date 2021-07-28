@@ -36,7 +36,8 @@ public class CartConverter {
       cartDTO.setId(cart.getId());
       cartDTO.setUserId(cart.getUser().getId());
       
-      List<CartItemDTO> cartItems = cart.getCartItems().stream()
+      List<CartItemDTO> cartItems = cart.getCartItems()
+          .stream()
           .map(this::convertCartItemToDto)
           .collect(Collectors.toList());
       cartDTO.setCartItems(cartItems);

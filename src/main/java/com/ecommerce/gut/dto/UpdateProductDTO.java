@@ -8,6 +8,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -20,6 +21,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class UpdateProductDTO {
+  
   @NotNull(message = "{product.id.notNull}")
   @Min(value = 1, message = "{product.id.min}")
   private Long id;

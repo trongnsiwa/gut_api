@@ -1,8 +1,10 @@
 package com.ecommerce.gut.service.impl;
 
 import static com.ecommerce.gut.specification.ColorSpecification.nameEquals;
+
 import java.util.List;
 import java.util.Optional;
+
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.exception.DataNotFoundException;
@@ -15,8 +17,10 @@ import com.ecommerce.gut.repository.ColorRepository;
 import com.ecommerce.gut.repository.ColorSizeRepository;
 import com.ecommerce.gut.service.ColorService;
 import com.ecommerce.gut.specification.ColorSpecification;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
@@ -51,6 +55,7 @@ public class ColorServiceImpl implements ColorService {
   @Override
   public List<Color> getColorsPerPage(Integer pageNum, Integer pageSize, String sortBy) {
     Sort sort = null;
+
     if ("Z-A".equals(sortBy)) {
       sort = Sort.by("name").descending();
     } else {
@@ -58,12 +63,14 @@ public class ColorServiceImpl implements ColorService {
     }
 
     PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+
     return colorRepository.findAll(pageRequest).getContent();
   }
 
   @Override
   public List<Color> searchByName(Integer pageNum, Integer pageSize, String sortBy, String name) {
     Sort sort = null;
+
     if ("Z-A".equals(sortBy)) {
       sort = Sort.by("name").descending();
     } else {
@@ -91,12 +98,14 @@ public class ColorServiceImpl implements ColorService {
   public boolean createColor(Color color) throws CreateDataFailException, DuplicateDataException {
     try {
       boolean isUniqueName = colorRepository.existsByName(color.getName());
+
       if (isUniqueName) {
         LOGGER.info("Color name {} is already taken", color.getName());
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
       }
 
       boolean isUniqueSource = colorRepository.existsBySource(color.getSource());
+
       if (isUniqueSource) {
         LOGGER.info("Color source {} is already taken", color.getSource());
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
@@ -104,11 +113,13 @@ public class ColorServiceImpl implements ColorService {
 
       colorRepository.save(color);
     } catch (DuplicateDataException e) {
+
       if (e.getMessage().equals(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN)) {
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
       } else {
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
       }
+
     } catch (Exception e) {
       LOGGER.info("Fail to create color {}", color.getName());
       throw new CreateDataFailException(ErrorCode.ERR_COLOR_CREATED_FAIL);
@@ -122,18 +133,21 @@ public class ColorServiceImpl implements ColorService {
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
     try {
       Optional<Color> oldColor = colorRepository.findById(id);
+
       if (!oldColor.isPresent()) {
         LOGGER.info("Color {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
       }
 
       Optional<Color> colorWithName = colorRepository.findOne(nameEquals(color.getName()));
+
       if (colorWithName.isPresent() && !id.equals(colorWithName.get().getId())) {
         LOGGER.info("Color name {} is already taken", color.getName());
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
       }
 
       Optional<Color> colorWithSource = colorRepository.findOne(ColorSpecification.sourceEquals(color.getSource()));
+
       if (colorWithSource.isPresent() && !id.equals(colorWithSource.get().getId())) {
         LOGGER.info("Color source {} is already taken", color.getSource());
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
@@ -147,11 +161,13 @@ public class ColorServiceImpl implements ColorService {
     } catch (DataNotFoundException e) {
       throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
     } catch (DuplicateDataException e) {
+
       if (e.getMessage().equals(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN)) {
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
       } else {
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
       }
+
     } catch (Exception e) {
       LOGGER.info("Fail to update color {}", id);
       throw new UpdateDataFailException(ErrorCode.ERR_COLOR_UPDATED_FAIL);
@@ -163,12 +179,14 @@ public class ColorServiceImpl implements ColorService {
       throws DeleteDataFailException, RestrictDataException, DataNotFoundException {
     try {
       boolean existedColorId = colorRepository.existsById(id);
+
       if (!existedColorId) {
         LOGGER.info("Color {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
       }
 
       boolean stillJoining = colorSizeRepository.existsJoiningColor(id);
+      
       if (stillJoining) {
         throw new RestrictDataException(ErrorCode.ERR_PRODUCT_STILL_HAVE_COLOR);
       }

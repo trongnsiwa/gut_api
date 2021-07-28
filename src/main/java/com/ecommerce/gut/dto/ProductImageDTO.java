@@ -2,6 +2,7 @@ package com.ecommerce.gut.dto;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,6 +15,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class ProductImageDTO {
+  
   private Long id;
 
   @NotBlank(message = "{image.url.notBlank}")

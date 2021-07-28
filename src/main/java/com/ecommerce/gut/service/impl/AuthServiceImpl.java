@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import com.ecommerce.gut.entity.ERole;
 import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
@@ -19,8 +20,10 @@ import com.ecommerce.gut.repository.UserRepository;
 import com.ecommerce.gut.security.jwt.JwtUtils;
 import com.ecommerce.gut.security.service.UserDetailsImpl;
 import com.ecommerce.gut.service.AuthService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -62,7 +65,8 @@ public class AuthServiceImpl implements AuthService {
 
     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-    List<String> roles = userDetails.getAuthorities().stream()
+    List<String> roles = userDetails.getAuthorities()
+        .stream()
         .map(GrantedAuthority::getAuthority)
         .collect(Collectors.toList());
 
@@ -73,6 +77,7 @@ public class AuthServiceImpl implements AuthService {
   public boolean registerUser(SignUpRequest signUpRequest) throws CreateDataFailException, DuplicateDataException {
     try {
       boolean existedEmail = userRepository.existsByEmail(signUpRequest.getEmail());
+
       if (existedEmail) {
         LOGGER.info("Email {} is already taken", signUpRequest.getEmail());
         throw new DuplicateDataException(ErrorCode.ERR_EMAIL_ALREADY_TAKEN);
@@ -93,11 +98,13 @@ public class AuthServiceImpl implements AuthService {
                 LOGGER.info("Role {} is not found", ERole.ROLE_USER.name());
                 return new DataNotFoundException(ErrorCode.ERR_ROLE_NOT_FOUND);
               });
+
       roles.add(userRole);
 
       user.setRoles(roles);
 
       userRepository.save(user);
+      
       return true;
     } catch (DuplicateDataException ex) {
       throw new DuplicateDataException(ErrorCode.ERR_EMAIL_ALREADY_TAKEN);

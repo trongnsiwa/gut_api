@@ -3,8 +3,10 @@ package com.ecommerce.gut.dto;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

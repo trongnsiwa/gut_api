@@ -1,12 +1,15 @@
 package com.ecommerce.gut;
 
 import com.google.common.collect.Lists;
+
 import org.modelmapper.ModelMapper;
+
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -48,6 +51,7 @@ public class AppConfig {
     
     messageSource.setBasename("classpath:messages");
     messageSource.setDefaultEncoding("UTF-8");
+    
     return messageSource;
   }
 

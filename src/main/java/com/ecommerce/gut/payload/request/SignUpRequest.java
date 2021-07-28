@@ -3,7 +3,9 @@ package com.ecommerce.gut.payload.request;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+
 import com.ecommerce.gut.validation.PasswordMatches;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -17,6 +19,7 @@ import lombok.Setter;
 @EqualsAndHashCode
 @PasswordMatches(message = "{passwordMatches.message}")
 public class SignUpRequest {
+        
         @NotBlank(message = "{login.email.notBlank}")
         @Pattern(
                         regexp = "^[_A-Za-z0-9-+]+(.[_A-Za-z0-9-]+)*@"

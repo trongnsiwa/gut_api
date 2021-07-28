@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
 import com.ecommerce.gut.entity.ERole;
 import com.ecommerce.gut.entity.Image;
 import com.ecommerce.gut.entity.Role;
@@ -21,8 +22,6 @@ import com.ecommerce.gut.service.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.security.access.prepost.PreAuthorize;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.slf4j.Logger;
@@ -42,11 +41,11 @@ public class UserServiceImpl implements UserService {
   @Autowired
   ImageRepository imageRepository;
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public List<User> getUsersPerPage(Integer pageNum, Integer pageSize, String sortBy) throws LoadDataFailException {
     try {
       Sort sort = null;
+
       switch (sortBy) {
         case "EMAIL_A-Z":
           sort = Sort.by("email").ascending()
@@ -80,6 +79,7 @@ public class UserServiceImpl implements UserService {
       }
   
       PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+
       return userRepository.findAll(pageRequest).getContent();
     } catch (Exception ex) {
       LOGGER.info("Fail to load users");
@@ -87,7 +87,6 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  @PreAuthorize("hasRole('ADMIN') || hasRole('USER')")
   @Override
   public User getUserProfileById(UUID id) {
     return userRepository.findById(id)
@@ -97,7 +96,6 @@ public class UserServiceImpl implements UserService {
         });
   }
 
-  @PreAuthorize("hasRole('ADMIN') || hasRole('USER')")
   @Override
   public User editUserProfile(User user, UUID id) throws UpdateDataFailException, DataNotFoundException {
     try {
@@ -113,6 +111,7 @@ public class UserServiceImpl implements UserService {
       oldUser.setPhone(user.getPhone());
 
       Image image = user.getImage();
+
       if (image != null && oldUser.getImage() == null) {
         oldUser.setImage(image);
       } else if (image == null && oldUser.getImage() != null) {
@@ -132,18 +131,20 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public boolean deleteUser(UUID id) throws DeleteDataFailException, DataNotFoundException {
     try {
       Optional<User> existedUser = userRepository.findById(id);
+
       if (!existedUser.isPresent()) {
         LOGGER.info("User {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
       }
 
       User user = existedUser.get();
+
       user.setDeleted(true);
+
       userRepository.save(user);
     } catch (DataNotFoundException e) {
       throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
@@ -155,7 +156,6 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public User deactivateUser(UUID id) throws UpdateDataFailException, DataNotFoundException {
     try {
@@ -166,6 +166,7 @@ public class UserServiceImpl implements UserService {
           });
 
       oldUser.setStatus("INACTIVE");
+
       return userRepository.save(oldUser);
     } catch (DataNotFoundException e) {
       throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
@@ -175,7 +176,6 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public User activateUser(UUID id) throws UpdateDataFailException, DataNotFoundException {
     try {
@@ -186,6 +186,7 @@ public class UserServiceImpl implements UserService {
           });
 
       oldUser.setStatus("ACTIVE");
+
       return userRepository.save(oldUser);
     } catch (DataNotFoundException e) {
       throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
@@ -195,7 +196,6 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  @PreAuthorize("hasRole('ADMIN')")
   @Override
   public User changeUserRoles(UUID id, Set<Role> roles) throws UpdateDataFailException, DataNotFoundException {
     try {
@@ -222,13 +222,16 @@ public class UserServiceImpl implements UserService {
       });
 
       oldUser.setRoles(roles);
+
       return userRepository.save(oldUser);
     } catch (DataNotFoundException e) {
+
       if (e.getMessage().equals(ErrorCode.ERR_ROLE_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_ROLE_NOT_FOUND);
       } else {
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
       }
+      
     } catch (Exception e) {
       LOGGER.info("Fail to change roles of user {}", id);
       throw new UpdateDataFailException(ErrorCode.ERR_USER_ROLES_CHANGED_FAIL);

@@ -2,7 +2,9 @@ package com.ecommerce.gut.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.util.Set;
+
 import com.ecommerce.gut.entity.Category;
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.entity.ColorSize;
@@ -10,8 +12,10 @@ import com.ecommerce.gut.entity.Image;
 import com.ecommerce.gut.entity.PSize;
 import com.ecommerce.gut.entity.Product;
 import com.ecommerce.gut.entity.ProductImage;
+
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;

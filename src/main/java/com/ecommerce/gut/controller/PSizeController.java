@@ -2,10 +2,12 @@ package com.ecommerce.gut.controller;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
 import com.ecommerce.gut.dto.SizeDTO;
 import com.ecommerce.gut.payload.response.ResponseDTO;
 import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.PSizeService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -13,8 +15,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.*;
@@ -40,9 +42,12 @@ public class PSizeController {
   @GetMapping("/all")
   public ResponseEntity<ResponseDTO> getAllSizes() {
     ResponseDTO response = new ResponseDTO();
-    List<SizeDTO> sizes = pSizeService.getAllSizes().stream()
+
+    List<SizeDTO> sizes = pSizeService.getAllSizes()
+        .stream()
         .map(size -> new SizeDTO(size.getId(), size.getName()))
         .collect(Collectors.toList());
+        
     response.setData(sizes);
     response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
 

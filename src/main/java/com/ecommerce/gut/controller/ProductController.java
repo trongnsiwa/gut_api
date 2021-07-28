@@ -3,10 +3,12 @@ package com.ecommerce.gut.controller;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
 import com.ecommerce.gut.converters.ProductConverter;
 import com.ecommerce.gut.dto.CreateProductDTO;
 import com.ecommerce.gut.dto.ImageListDTO;
@@ -24,6 +26,7 @@ import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.payload.response.ResponseDTO;
 import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.ProductService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -70,10 +73,11 @@ public class ProductController {
       @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
     ResponseDTO response = new ResponseDTO();
 
-    List<PagingProductDTO> pagingProducts = productService
-        .getProductsPerPage(pageNumber, pageSize, sortBy).stream()
+    List<PagingProductDTO> pagingProducts = productService.getProductsPerPage(pageNumber, pageSize, sortBy)
+        .stream()
         .map(product -> converter.convertPagingProductToDto(product))
         .collect(Collectors.toList());
+
     response.setData(pagingProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
 
@@ -91,6 +95,7 @@ public class ProductController {
     ResponseDTO response = new ResponseDTO();
 
     Long countProducts = productService.countProducts();
+
     response.setData(countProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
 
@@ -109,6 +114,7 @@ public class ProductController {
     ResponseDTO response = new ResponseDTO();
 
     Long countProducts = productService.countProductsByName(name);
+
     response.setData(countProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
 
@@ -131,10 +137,11 @@ public class ProductController {
       @RequestParam("name") @NotNull @NotBlank String name) {
     ResponseDTO response = new ResponseDTO();
 
-    List<PagingProductDTO> pagingProducts = productService
-        .searchProductsByName(pageNumber, pageSize, sortBy, name).stream()
+    List<PagingProductDTO> pagingProducts = productService.searchProductsByName(pageNumber, pageSize, sortBy, name)
+        .stream()
         .map(product -> converter.convertPagingProductToDto(product))
         .collect(Collectors.toList());
+
     response.setData(pagingProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
 
@@ -155,13 +162,16 @@ public class ProductController {
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sort") @NotNull @NotBlank String sortBy) throws LoadDataFailException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
 
       List<PagingProductDTO> pagingProducts = productService
           .getProductsByCategoryPerPage(categoryId, pageNumber, pageSize, sortBy).stream()
           .map(product -> converter.convertPagingProductToDto(product))
           .collect(Collectors.toList());
+          
       response.setData(pagingProducts);
       response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
 
@@ -191,13 +201,16 @@ public class ProductController {
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sort") @NotNull @NotBlank String sortBy,
       @RequestParam("name") @NotNull @NotBlank String name) throws LoadDataFailException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
 
-      List<PagingProductDTO> pagingProducts = productService
-          .searchProductsByCategoryAndName(categoryId, pageNumber, pageSize, sortBy, name).stream()
+      List<PagingProductDTO> pagingProducts = productService.searchProductsByCategoryAndName(categoryId, pageNumber, pageSize, sortBy, name)
+          .stream()
           .map(product -> converter.convertPagingProductToDto(product))
           .collect(Collectors.toList());
+
       response.setData(pagingProducts);
       response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
 
@@ -224,6 +237,7 @@ public class ProductController {
     ResponseDTO response = new ResponseDTO();
 
     Long countProducts = productService.countProductsByCategory(categoryId);
+
     response.setData(countProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
 
@@ -243,6 +257,7 @@ public class ProductController {
     ResponseDTO response = new ResponseDTO();
 
     Long countProducts = productService.countProductsByCategoryAndName(categoryId, name);
+
     response.setData(countProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
 
@@ -260,12 +275,18 @@ public class ProductController {
   @GetMapping("/{id}")
   public ResponseEntity<ResponseDTO> getProductDetail(@PathVariable("id") @Min(1) Long id)
       throws DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       Product foundProduct = productService.getProductDetail(id);
+
       ProductDetailDTO responseProduct = converter.convertProductDetailToDto(foundProduct);
+
       response.setData(responseProduct);
       response.setSuccessCode(SuccessCode.PRODUCT_LOADED_SUCCESS);
+
     } catch (Exception e) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -290,15 +311,22 @@ public class ProductController {
   public ResponseEntity<ResponseDTO> addProductToCategory(
       @Valid @RequestBody CreateProductDTO productDTO)
       throws CreateDataFailException, DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       boolean added = productService.addProductToCategory(productDTO, productDTO.getCategoryId());
+
       if (added) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.PRODUCT_CREATED_SUCCESS);
       }
+
     } catch (DataNotFoundException e) {
+
       String message = e.getMessage();
+
       if (message.equals(ErrorCode.ERR_CATEGORY_NOT_FOUND)) {
         response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_FOUND);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -332,14 +360,20 @@ public class ProductController {
   public ResponseEntity<ResponseDTO> updateProduct(
       @Valid @RequestBody UpdateProductDTO productDTO)
       throws UpdateDataFailException, DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
-      Product updatedProduct =
-          productService.updateProduct(productDTO, productDTO.getId(), productDTO.getCategoryId());
+
+      Product updatedProduct = productService.updateProduct(productDTO, productDTO.getId(), productDTO.getCategoryId());
+
       ProductDetailDTO responseProduct = converter.convertProductDetailToDto(updatedProduct);
+
       response.setData(responseProduct);
       response.setSuccessCode(SuccessCode.PRODUCT_UPDATED_SUCCESS);
+
     } catch (DataNotFoundException e) {
+
       String message = e.getMessage();
 
       if (message.equals(ErrorCode.ERR_SIZE_NOT_FOUND)) {
@@ -355,6 +389,7 @@ public class ProductController {
         response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_FOUND);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
+
     } catch (Exception e) {
       response.setErrorCode(ErrorCode.ERR_PRODUCT_UPDATED_FAIL);
       throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_UPDATED_FAIL);
@@ -373,13 +408,18 @@ public class ProductController {
   @DeleteMapping("/{id}")
   public ResponseEntity<ResponseDTO> deleteProduct(@PathVariable("id") @Min(1) Long id)
       throws DeleteDataFailException, DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       boolean deleted = productService.deleteProduct(id);
+
       if (deleted) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.PRODUCT_DELETED_SUCCESS);
       }
+
     } catch (DataNotFoundException e) {
       response.setErrorCode(ErrorCode.ERR_PRODUCT_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
@@ -405,25 +445,32 @@ public class ProductController {
   public ResponseEntity<ResponseDTO> replaceImagesOfProduct(
       @Valid @RequestBody ImageListDTO imageListDTO)
       throws UpdateDataFailException, DuplicateDataException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
-      Optional<Product> updatedProduct =
-          productService.replaceImagesOfProduct(imageListDTO, imageListDTO.getProductId());
+
+      Optional<Product> updatedProduct = productService.replaceImagesOfProduct(imageListDTO, imageListDTO.getProductId());
+
       if (updatedProduct.isPresent()) {
-        ProductDetailDTO responseProduct =
-            converter.convertProductDetailToDto(updatedProduct.get());
+        ProductDetailDTO responseProduct = converter.convertProductDetailToDto(updatedProduct.get());
+
         response.setData(responseProduct);
+
         if (responseProduct.getProductImages().isEmpty()) {
           response.setSuccessCode(SuccessCode.PRODUCT_IMAGES_DELETED_SUCCESS);
         } else {
           response.setSuccessCode(SuccessCode.PRODUCT_IMAGES_UPDATED_SUCCESS);
         }
+
       }
     } catch (DuplicateDataException e) {
       response.setErrorCode(ErrorCode.ERR_NOT_EXIST_TWO_SAME_COLORS);
       throw new DuplicateDataException(ErrorCode.ERR_NOT_EXIST_TWO_SAME_COLORS);
     } catch (DataNotFoundException e) {
+
       String message = e.getMessage();
+
       if (message.equals(ErrorCode.ERR_PRODUCT_NOT_FOUND)) {
         response.setErrorCode(ErrorCode.ERR_PRODUCT_NOT_FOUND);
         throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
@@ -431,6 +478,7 @@ public class ProductController {
         response.setErrorCode(ErrorCode.ERR_COLOR_NOT_FOUND);
         throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
       }
+      
     } catch (Exception e) {
       response.setErrorCode(ErrorCode.ERR_PRODUCT_DELETED_FAIL);
       throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_IMAGES_REPLACED_FAIL);

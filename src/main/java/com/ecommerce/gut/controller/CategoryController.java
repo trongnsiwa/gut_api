@@ -2,10 +2,12 @@ package com.ecommerce.gut.controller;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
 import com.ecommerce.gut.converters.CategoryConverter;
 import com.ecommerce.gut.dto.CategoryDTO;
 import com.ecommerce.gut.dto.CategoryParentDTO;
@@ -63,10 +65,11 @@ public class CategoryController {
   @GetMapping("/parent")
   public ResponseEntity<ResponseDTO> getAllParentCategories() {
     ResponseDTO response = new ResponseDTO();
-    List<CategoryParentDTO> categoryParents =
-        categoryService.getAllParentCategories().stream()
-            .map(categoryParent -> converter.convertCategoryParentToDto(categoryParent))
-            .collect(Collectors.toList());
+    
+    List<CategoryParentDTO> categoryParents = categoryService.getAllParentCategories()
+        .stream()
+        .map(categoryParent -> converter.convertCategoryParentToDto(categoryParent))
+        .collect(Collectors.toList());
 
     response.setData(categoryParents);
     response.setSuccessCode(SuccessCode.CATEGORY_PARENT_LOADED_SUCCESS);
@@ -86,10 +89,11 @@ public class CategoryController {
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
     ResponseDTO response = new ResponseDTO();
-    List<CategoryParentDTO> categoryParents =
-        categoryService.getParentCategoriesPerPage(pageNumber, pageSize, sortBy).stream()
-            .map(categoryParent -> converter.convertCategoryParentToDto(categoryParent))
-            .collect(Collectors.toList());
+
+    List<CategoryParentDTO> categoryParents = categoryService.getParentCategoriesPerPage(pageNumber, pageSize, sortBy)
+        .stream()
+        .map(categoryParent -> converter.convertCategoryParentToDto(categoryParent))
+        .collect(Collectors.toList());
 
     response.setData(categoryParents);
     response.setSuccessCode(SuccessCode.CATEGORY_PARENT_LOADED_SUCCESS);
@@ -110,8 +114,9 @@ public class CategoryController {
       @RequestParam("sortBy") @NotNull @NotBlank String sortBy,
       @RequestParam("name") @NotNull @NotBlank String name) {
     ResponseDTO response = new ResponseDTO();
-    List<CategoryDTO> categories = null;
-    categories = categoryService.searchByName(pageNumber, pageSize, sortBy, name).stream()
+
+    List<CategoryDTO> categories = categoryService.searchByName(pageNumber, pageSize, sortBy, name)
+        .stream()
         .map(category -> converter.convertCategoryToDto(category))
         .collect(Collectors.toList());
 
@@ -130,6 +135,7 @@ public class CategoryController {
   @GetMapping("/count")
   public ResponseEntity<ResponseDTO> countParents() {
     ResponseDTO response = new ResponseDTO();
+    
     Long countCategory = categoryService.countParents();
 
     response.setData(countCategory);
@@ -147,6 +153,7 @@ public class CategoryController {
   @GetMapping("/count-name")
   public ResponseEntity<ResponseDTO> countParentsByName(@RequestParam("name") @NotNull @NotBlank String name) {
     ResponseDTO response = new ResponseDTO();
+
     Long countCategory = categoryService.countParentsByName(name);
 
     response.setData(countCategory);
@@ -166,13 +173,18 @@ public class CategoryController {
   @GetMapping("/parent/{id}")
   public ResponseEntity<ResponseDTO> getCategoryparentById(
       @PathVariable("id") @Min(1) Long parentId) throws DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       Category foundCategoryParent = categoryService.getParentCategoryById(parentId);
-      CategoryParentDTO responseCategoryParent =
-          converter.convertCategoryParentToDto(foundCategoryParent);
+
+      CategoryParentDTO responseCategoryParent = converter.convertCategoryParentToDto(foundCategoryParent);
+      
       response.setData(responseCategoryParent);
       response.setSuccessCode(SuccessCode.CATEGORY_PARENT_LOADED_SUCCESS);
+
     } catch (Exception e) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
@@ -191,16 +203,23 @@ public class CategoryController {
   @GetMapping("/{id}")
   public ResponseEntity<ResponseDTO> getCategoryById(@PathVariable("id") @Min(1) Long id)
       throws DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       Category foundCategory = categoryService.getCategoryById(id);
+
       CategoryDTO responseCategory = converter.convertCategoryToDto(foundCategory);
+
       response.setData(responseCategory);
       response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
+
     } catch (Exception e) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     }
+
     return ResponseEntity.ok().body(response);
   }
 
@@ -221,14 +240,20 @@ public class CategoryController {
   public ResponseEntity<ResponseDTO> createCategoryparent(
       @Valid @RequestBody CategoryDTO parentDTO)
       throws CreateDataFailException, DuplicateDataException {
+
     ResponseDTO response = new ResponseDTO();
+    
     try {
+
       Category categoryParent = converter.convertCategoryToEntity(parentDTO);
+
       boolean added = categoryService.createParentCategory(categoryParent);
+
       if (added) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.CATEGORY_PARENT_CREATED_SUCCESS);
       }
+
     } catch (DuplicateDataException ex) {
       response.setErrorCode(ErrorCode.ERR_PARENT_NAME_EXISTED);
       throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
@@ -236,6 +261,7 @@ public class CategoryController {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_CREATED_FAIL);
       throw new CreateDataFailException(ErrorCode.ERR_CATEGORY_CREATED_FAIL);
     }
+
     return ResponseEntity.ok().body(response);
   }
 
@@ -257,14 +283,20 @@ public class CategoryController {
   public ResponseEntity<ResponseDTO> addCategoryToparent(
       @Valid @RequestBody CategoryDTO categoryDTO)
       throws CreateDataFailException, DuplicateDataException, DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       Category category = converter.convertCategoryToEntity(categoryDTO);
+
       boolean added = categoryService.addCategoryToParent(category, categoryDTO.getParentId());
+
       if (added) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.CATEGORY_CREATED_SUCCESS);
       }
+
     } catch (DuplicateDataException ex) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
       throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
@@ -297,16 +329,20 @@ public class CategoryController {
   public ResponseEntity<ResponseDTO> updateCategoryParent(
       @Valid @RequestBody CategoryDTO parentDTO)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       Category categoryParent = converter.convertCategoryToEntity(parentDTO);
-      Category updatedCategoryParent =
-          categoryService.updateParentCategory(categoryParent, parentDTO.getId());
-      CategoryParentDTO responseParent =
-          converter.convertCategoryParentToDto(updatedCategoryParent);
+
+      Category updatedCategoryParent = categoryService.updateParentCategory(categoryParent, parentDTO.getId());
+
+      CategoryParentDTO responseParent = converter.convertCategoryParentToDto(updatedCategoryParent);
 
       response.setData(responseParent);
       response.setSuccessCode(SuccessCode.CATEGORY_PARENT_UPDATED_SUCCESS);
+
     } catch (DuplicateDataException ex) {
       response.setErrorCode(ErrorCode.ERR_PARENT_NAME_EXISTED);
       throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
@@ -338,19 +374,25 @@ public class CategoryController {
   @PutMapping
   public ResponseEntity<ResponseDTO> updateCategory(@Valid @RequestBody CategoryDTO categoryDTO)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       Category category = converter.convertCategoryToEntity(categoryDTO);
-      Category updatedCategory =
-          categoryService.updateCategory(category, categoryDTO.getId(), categoryDTO.getParentId());
+
+      Category updatedCategory = categoryService.updateCategory(category, categoryDTO.getId(), categoryDTO.getParentId());
+
       CategoryDTO responseCategory = converter.convertCategoryToDto(updatedCategory);
 
       response.setData(responseCategory);
       response.setSuccessCode(SuccessCode.CATEGORY_PARENT_UPDATED_SUCCESS);
+
     } catch (DuplicateDataException ex) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
       throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
     } catch (DataNotFoundException ex) {
+
       String message = ex.getMessage();
 
       if (message.equals(ErrorCode.ERR_CATEGORY_NOT_FOUND)) {
@@ -381,13 +423,18 @@ public class CategoryController {
   @DeleteMapping("/delete/{id}")
   public ResponseEntity<ResponseDTO> deleteCategory(@PathVariable("id") @Min(1) Long id)
       throws DeleteDataFailException, DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       boolean deleted = categoryService.deleteCategory(id);
+
       if (deleted) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.CATEGORY_DELETED_SUCCESS);
       }
+
     } catch (DataNotFoundException ex) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -414,13 +461,18 @@ public class CategoryController {
   @DeleteMapping("/parent/delete/{id}")
   public ResponseEntity<?> deleteCategoryParent(@PathVariable("id") @Min(1) Long id)
       throws DeleteDataFailException, RestrictDataException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       boolean deleted = categoryService.deleteParentCategory(id);
+
       if (deleted) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.CATEGORY_PARENT_DELETED_SUCCESS);
       }
+      
     } catch (RestrictDataException e) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_STILL_IN_PARENT);
       throw new RestrictDataException(ErrorCode.ERR_CATEGORY_STILL_IN_PARENT);

@@ -2,6 +2,7 @@ package com.ecommerce.gut.service;
 
 import java.util.List;
 import java.util.Optional;
+
 import com.ecommerce.gut.dto.CreateProductDTO;
 import com.ecommerce.gut.dto.ImageListDTO;
 import com.ecommerce.gut.dto.UpdateProductDTO;
@@ -14,6 +15,7 @@ import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface ProductService {
+
   List<Product> getProductsPerPage(Integer pageNumber, Integer pageSize, String sortBy);
 
   List<Product> searchProductsByName(Integer pageNumber, Integer pageSize, String sortBy, String name);
@@ -39,4 +41,5 @@ public interface ProductService {
   boolean deleteProduct(Long id) throws DeleteDataFailException, DataNotFoundException;
 
   Optional<Product> replaceImagesOfProduct(ImageListDTO imageListRequest, Long id) throws UpdateDataFailException, DataNotFoundException, DuplicateDataException;
+
 }

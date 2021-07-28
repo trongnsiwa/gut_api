@@ -1,7 +1,9 @@
 package com.ecommerce.gut.converters;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import com.ecommerce.gut.dto.RoleDTO;
 import com.ecommerce.gut.dto.UserAvatarDTO;
 import com.ecommerce.gut.dto.UserDTO;
@@ -12,9 +14,12 @@ import com.ecommerce.gut.entity.Role;
 import com.ecommerce.gut.entity.User;
 import com.ecommerce.gut.exception.ConvertEntityDTOException;
 import com.ecommerce.gut.payload.response.ErrorCode;
+
 import org.modelmapper.ModelMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -29,11 +34,14 @@ public class UserConverter {
   public UserDTO convertUserToDto(User user) throws ConvertEntityDTOException {
     try {
       UserDTO dto = modelMapper.map(user, UserDTO.class);
-      Set<RoleDTO> roles = user.getRoles().stream()
+
+      Set<RoleDTO> roles = user.getRoles()
+          .stream()
           .map(this::convertRoleToDTO)
           .collect(Collectors.toSet());
 
       dto.setRoles(roles);
+      
       if (user.getImage() != null) {
         dto.setAvatar(convertImageToDTO(user.getImage()));
       }
@@ -49,7 +57,9 @@ public class UserConverter {
   public UserProfileDTO convertUserProfileToDto(User user) throws ConvertEntityDTOException {
     try {
       UserProfileDTO dto = modelMapper.map(user, UserProfileDTO.class);
-      Set<RoleDTO> roles = user.getRoles().stream()
+      
+      Set<RoleDTO> roles = user.getRoles()
+          .stream()
           .map(role -> {
             if (role.getName().equals(ERole.ROLE_ADMIN)) {
               return new RoleDTO(role.getId(), "Admin");
@@ -60,7 +70,8 @@ public class UserConverter {
           .collect(Collectors.toSet());
 
       dto.setRoles(roles);
-      if (user.getImage() != null) {
+
+      if (!Objects.isNull(user.getImage())) {
         dto.setAvatar(convertImageToDTO(user.getImage()));
       }
 
@@ -80,7 +91,8 @@ public class UserConverter {
           .collect(Collectors.toSet());
 
       user.setRoles(roles);
-      if (dto.getAvatar() != null) {
+
+      if (Objects.isNull(dto.getAvatar())) {
         user.setImage(convertImageToEntity(dto.getAvatar()));
       }
 
@@ -94,6 +106,7 @@ public class UserConverter {
   public Role convertRoleToEntity(RoleDTO dto) throws ConvertEntityDTOException {
     try {
       Role role = new Role();
+
       role.setId(dto.getId());
 
       if (dto.getName().equals("Admin")) {
@@ -112,7 +125,9 @@ public class UserConverter {
   public RoleDTO convertRoleToDTO(Role role) throws ConvertEntityDTOException {
     try {
       RoleDTO dto = new RoleDTO();
+
       dto.setId(role.getId());
+
       if (role.getName().equals(ERole.ROLE_ADMIN)) {
         dto.setName("Admin");
       } else {

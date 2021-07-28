@@ -2,10 +2,12 @@ package com.ecommerce.gut.controller;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
 import com.ecommerce.gut.converters.ColorConverter;
 import com.ecommerce.gut.dto.ColorDTO;
 import com.ecommerce.gut.entity.Color;
@@ -19,6 +21,7 @@ import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.payload.response.ResponseDTO;
 import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.ColorService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -65,6 +68,7 @@ public class ColorController {
     List<ColorDTO> colors = colorService.getAllColors().stream()
         .map(color -> converter.convertToDto(color))
         .collect(Collectors.toList());
+
     response.setData(colors);
     response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
 
@@ -85,10 +89,11 @@ public class ColorController {
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
     ResponseDTO response = new ResponseDTO();
-    List<ColorDTO> colors = null;
-    colors = colorService.getColorsPerPage(pageNumber, pageSize, sortBy).stream()
+    List<ColorDTO> colors = colorService.getColorsPerPage(pageNumber, pageSize, sortBy)
+        .stream()
         .map(color -> converter.convertToDto(color))
         .collect(Collectors.toList());
+
     response.setData(colors);
     response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
 
@@ -109,10 +114,12 @@ public class ColorController {
       @RequestParam("name") @NotNull @NotBlank String name)
       throws DataNotFoundException {
     ResponseDTO response = new ResponseDTO();
-    List<ColorDTO> colors = null;
-    colors = colorService.searchByName(pageNumber, pageSize, sortBy, name).stream()
+
+    List<ColorDTO> colors = colorService.searchByName(pageNumber, pageSize, sortBy, name)
+        .stream()
         .map(color -> converter.convertToDto(color))
         .collect(Collectors.toList());
+
     response.setData(colors);
     response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
 
@@ -128,12 +135,16 @@ public class ColorController {
   @GetMapping("/{id}")
   public ResponseEntity<ResponseDTO> getColorById(@PathVariable(name = "id") @Min(1) Long id)
       throws DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       Color foundColor = colorService.getColorById(id);
       ColorDTO responseColor = converter.convertToDto(foundColor);
       response.setData(responseColor);
       response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
+
     } catch (Exception e) {
       response.setErrorCode(ErrorCode.ERR_COLOR_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
@@ -151,7 +162,9 @@ public class ColorController {
   @GetMapping("/count")
   public ResponseEntity<ResponseDTO> countColors() {
     ResponseDTO response = new ResponseDTO();
+
     Long countColors = colorService.countColors();
+
     response.setData(countColors);
     response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
 
@@ -167,7 +180,9 @@ public class ColorController {
   @GetMapping("/count-name")
   public ResponseEntity<ResponseDTO> countColorsByName(@RequestParam("name") @NotNull @NotBlank String name) {
     ResponseDTO response = new ResponseDTO();
+
     Long countColors = colorService.countColorsByName(name);
+
     response.setData(countColors);
     response.setSuccessCode(SuccessCode.COLOR_LOADED_SUCCESS);
 
@@ -186,15 +201,21 @@ public class ColorController {
   @PostMapping
   public ResponseEntity<ResponseDTO> addColor(@Valid @RequestBody ColorDTO colorDTO)
       throws CreateDataFailException, DuplicateDataException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       Color color = converter.convertToEntity(colorDTO);
       boolean added = colorService.createColor(color);
+
       if (added) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.COLOR_CREATED_SUCCESS);
       }
+      
     } catch (DuplicateDataException e) {
+
       if (e.getMessage().equals(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN)) {
         response.setErrorCode(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
@@ -202,6 +223,7 @@ public class ColorController {
         response.setErrorCode(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
       }
+
     } catch (Exception e) {
       response.setErrorCode(ErrorCode.ERR_COLOR_CREATED_FAIL);
       throw new CreateDataFailException(ErrorCode.ERR_COLOR_CREATED_FAIL);
@@ -225,11 +247,17 @@ public class ColorController {
   @PutMapping
   public ResponseEntity<ResponseDTO> updateColor(@Valid @RequestBody ColorDTO colorDTO)
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       Color color = converter.convertToEntity(colorDTO);
+
       Color updatedColor = colorService.updateColor(color, colorDTO.getId());
+
       ColorDTO responseColor = converter.convertToDto(updatedColor);
+
       response.setData(responseColor);
       response.setSuccessCode(SuccessCode.COLOR_UPDATED_SUCCESS);
 
@@ -237,6 +265,7 @@ public class ColorController {
       response.setErrorCode(ErrorCode.ERR_COLOR_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
     } catch (DuplicateDataException e) {
+
       if (e.getMessage().equals(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN)) {
         response.setErrorCode(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_NAME_ALREADY_TAKEN);
@@ -244,6 +273,7 @@ public class ColorController {
         response.setErrorCode(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
         throw new DuplicateDataException(ErrorCode.ERR_COLOR_SOURCE_ALREADY_TAKEN);
       }
+
     } catch (Exception e) {
       response.setErrorCode(ErrorCode.ERR_COLOR_UPDATED_FAIL);
       throw new UpdateDataFailException(ErrorCode.ERR_COLOR_UPDATED_FAIL);
@@ -265,13 +295,18 @@ public class ColorController {
   @DeleteMapping("/{id}")
   public ResponseEntity<ResponseDTO> deleteColor(@PathVariable(name = "id") @Min(1) Long id)
       throws DeleteDataFailException, RestrictDataException, DataNotFoundException {
+
     ResponseDTO response = new ResponseDTO();
+
     try {
+
       boolean deleted = colorService.deleteColor(id);
+
       if (deleted) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.COLOR_DELETED_SUCCESS);
       }
+      
     } catch (DataNotFoundException e) {
       response.setErrorCode(ErrorCode.ERR_COLOR_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);

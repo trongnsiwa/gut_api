@@ -1,6 +1,7 @@
 package com.ecommerce.gut.converters;
 
 import java.util.stream.Collectors;
+
 import com.ecommerce.gut.dto.ColorDTO;
 import com.ecommerce.gut.dto.PagingProductDTO;
 import com.ecommerce.gut.dto.ProductColorSizeDTO;
@@ -14,9 +15,12 @@ import com.ecommerce.gut.entity.ProductImage;
 import com.ecommerce.gut.exception.ConvertEntityDTOException;
 import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.entity.ColorSize;
+
 import org.modelmapper.ModelMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,14 +36,19 @@ public class ProductConverter {
       throws ConvertEntityDTOException {
     try {
       ProductDetailDTO productDetailDTO = modelMapper.map(product, ProductDetailDTO.class);
+
       productDetailDTO.setProductImages(
-          product.getProductImages().stream()
+          product.getProductImages()
+              .stream()
               .map(this::convertProductImageToDto)
               .collect(Collectors.toList()));
+
       productDetailDTO.setColorSizes(
-          product.getColorSizes().stream()
+          product.getColorSizes()
+              .stream()
               .map(this::convertProductColorSizeToDto)
               .collect(Collectors.toSet()));
+
       productDetailDTO.setCategoryId(product.getCategory().getId());
       productDetailDTO.setCategoryName(product.getCategory().getName());
       productDetailDTO.setBrandId(product.getBrand().getId());
@@ -56,15 +65,20 @@ public class ProductConverter {
       throws ConvertEntityDTOException {
     try {
       PagingProductDTO pagingProductDTO = modelMapper.map(product, PagingProductDTO.class);
+
       pagingProductDTO.setImages(
-          product.getProductImages().stream()
+          product.getProductImages()
+              .stream()
               .map(this::convertProductImageToDto)
               .filter(img -> img.getColorCode() >= 0)
               .collect(Collectors.toList()));
+
       pagingProductDTO.setColors(
-          product.getColorSizes().stream()
+          product.getColorSizes()
+              .stream()
               .map(colorSize -> convertColorToDto(colorSize.getColor()))
               .collect(Collectors.toSet()));
+              
       pagingProductDTO.setCategoryId(product.getCategory().getId());
       pagingProductDTO.setCategoryName(product.getCategory().getName());
       pagingProductDTO.setBrandId(product.getBrand().getId());
@@ -81,6 +95,7 @@ public class ProductConverter {
       throws ConvertEntityDTOException {
     try {
       ProductImageDTO imageDTO = new ProductImageDTO();
+
       imageDTO.setId(productImage.getImage().getId());
       imageDTO.setImageUrl(productImage.getImage().getImageUrl());
       imageDTO.setTitle(productImage.getImage().getTitle());
@@ -97,7 +112,9 @@ public class ProductConverter {
       throws ConvertEntityDTOException {
     try {
       ColorDTO colorDTO = this.convertColorToDto(productColorSize.getColor());
+
       SizeDTO sizeDTO = this.convertSizeToDto(productColorSize.getSize());
+
       return new ProductColorSizeDTO(colorDTO, sizeDTO, productColorSize.getQuantity());
     } catch (Exception ex) {
       LOGGER.info("Fail to convert ColorSize to ProductColorSizeDTO");

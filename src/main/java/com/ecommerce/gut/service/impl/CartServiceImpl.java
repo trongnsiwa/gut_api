@@ -1,10 +1,12 @@
 package com.ecommerce.gut.service.impl;
 
 import java.time.LocalDateTime;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import com.ecommerce.gut.entity.Cart;
 import com.ecommerce.gut.entity.CartItem;
 import com.ecommerce.gut.entity.Product;
@@ -18,10 +20,11 @@ import com.ecommerce.gut.repository.CartRepository;
 import com.ecommerce.gut.repository.ProductRepository;
 import com.ecommerce.gut.repository.UserRepository;
 import com.ecommerce.gut.service.CartService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,12 +41,12 @@ public class CartServiceImpl implements CartService {
   @Autowired
   ProductRepository productRepository;
 
-  @PreAuthorize("hasRole('USER')")
   @Override
   public boolean addItemToCart(UUID userId, Long productId, Long colorId, Long sizeId)
       throws CreateDataFailException {
     try {
       Optional<User> user = userRepository.findById(userId);
+
       if (!user.isPresent()) {
         LOGGER.info("User {} is not found", userId);
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
@@ -57,11 +60,13 @@ public class CartServiceImpl implements CartService {
 
       Cart cart = cartRepository.findByUser(user.get()).orElse(new Cart());
 
-      List<CartItem> cartItems = cart.getCartItems().stream()
+      List<CartItem> cartItems = cart.getCartItems()
+          .stream()
           .filter(item -> item.getProduct().getId().equals(productId))
           .collect(Collectors.toList());
 
       CartItem cartItem = null;
+
       if (cartItems.isEmpty()) {
         cartItem = new CartItem();
       } else {
@@ -94,12 +99,12 @@ public class CartServiceImpl implements CartService {
     return true;
   }
 
-  @PreAuthorize("hasRole('USER')")
   @Override
   public boolean updateItemQuantity(UUID userId, Long productId, Integer amount)
       throws UpdateDataFailException {
     try {
       Optional<User> user = userRepository.findById(userId);
+
       if (!user.isPresent()) {
         LOGGER.info("User {} is not found", userId);
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
@@ -116,10 +121,12 @@ public class CartServiceImpl implements CartService {
         throw new DataNotFoundException(ErrorCode.ERR_ITEM_CART_NOT_FOUND);
       }
 
-      CartItem existedItem = cart.getCartItems().stream()
+      CartItem existedItem = cart.getCartItems()
+          .stream()
           .filter(item -> item.getProduct().getId().equals(productId))
           .collect(Collectors.toList())
           .get(0);
+
       if (amount > 0) {
         existedItem.setAmount(amount);
         cart.getCartItems().add(existedItem);
@@ -128,10 +135,13 @@ public class CartServiceImpl implements CartService {
       }
 
       cart.setUpdatedDate(LocalDateTime.now());
+
       cartRepository.save(cart);
 
     } catch (DataNotFoundException ex) {
+
       String message = ex.getMessage();
+
       if (message.equals(ErrorCode.ERR_USER_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
       } else if (message.equals(ErrorCode.ERR_CART_NOT_FOUND)) {
@@ -139,6 +149,7 @@ public class CartServiceImpl implements CartService {
       } else {
         throw new DataNotFoundException(ErrorCode.ERR_ITEM_CART_NOT_FOUND);
       }
+
     } catch (Exception ex) {
       LOGGER.info("Fail to update quantity of product {} into the cart of user {}", productId,
           userId);
@@ -148,11 +159,11 @@ public class CartServiceImpl implements CartService {
     return true;
   }
 
-  @PreAuthorize("hasRole('USER')")
   @Override
   public boolean removeItem(UUID userId, Long productId) throws DeleteDataFailException {
     try {
       Optional<User> user = userRepository.findById(userId);
+
       if (!user.isPresent()) {
         LOGGER.info("User {} is not found", userId);
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
@@ -169,19 +180,24 @@ public class CartServiceImpl implements CartService {
         throw new DataNotFoundException(ErrorCode.ERR_ITEM_CART_NOT_FOUND);
       }
 
-      CartItem existedItem = cart.getCartItems().stream()
+      CartItem existedItem = cart.getCartItems()
+          .stream()
           .filter(item -> item.getProduct().getId().equals(productId))
           .collect(Collectors.toList())
           .get(0);
+
       existedItem.setCart(null);
 
       cart.getCartItems().removeIf(item -> item.getProduct().getId().equals(productId));
+
       cart.setUpdatedDate(LocalDateTime.now());
 
       cartRepository.save(cart);
 
     } catch (DataNotFoundException ex) {
+
       String message = ex.getMessage();
+
       if (message.equals(ErrorCode.ERR_USER_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
       } else if (message.equals(ErrorCode.ERR_CART_NOT_FOUND)) {
@@ -189,6 +205,7 @@ public class CartServiceImpl implements CartService {
       } else {
         throw new DataNotFoundException(ErrorCode.ERR_ITEM_CART_NOT_FOUND);
       }
+
     } catch (Exception ex) {
       LOGGER.info("Fail to remove product {} from the cart of user {}", productId, userId);
       throw new DeleteDataFailException(ErrorCode.ERR_ADD_TO_CART_FAIL);
@@ -197,11 +214,11 @@ public class CartServiceImpl implements CartService {
     return true;
   }
 
-  @PreAuthorize("hasRole('USER')")
   @Override
   public boolean clearCart(UUID userId) throws UpdateDataFailException {
     try {
       Optional<User> user = userRepository.findById(userId);
+
       if (!user.isPresent()) {
         LOGGER.info("User {} is not found", userId);
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
@@ -218,12 +235,15 @@ public class CartServiceImpl implements CartService {
 
       cartRepository.save(cart);
     } catch (DataNotFoundException ex) {
+
       String message = ex.getMessage();
+
       if (message.equals(ErrorCode.ERR_USER_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
       } else {
         throw new DataNotFoundException(ErrorCode.ERR_CART_NOT_FOUND);
       }
+
     } catch (Exception ex) {
       LOGGER.info("Fail to clear the cart of user {}", userId);
       throw new UpdateDataFailException(ErrorCode.ERR_CLEAR_CART_FAIL);
@@ -232,11 +252,11 @@ public class CartServiceImpl implements CartService {
     return true;
   }
 
-  @PreAuthorize("hasRole('USER')")
   @Override
   public Cart getCartByUserId(UUID userId) {
     try {
       Optional<User> user = userRepository.findById(userId);
+
       if (!user.isPresent()) {
         LOGGER.info("User {} is not found", userId);
         throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
@@ -259,7 +279,8 @@ public class CartServiceImpl implements CartService {
   }
 
   boolean checkExistedItemInCart(Cart cart, Long productId) {
-    List<CartItem> cartItems = cart.getCartItems().stream()
+    List<CartItem> cartItems = cart.getCartItems()
+        .stream()
         .filter(item -> item.getProduct().getId().equals(productId))
         .collect(Collectors.toList());
 

@@ -2,6 +2,7 @@ package com.ecommerce.gut.dto;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -26,6 +27,6 @@ public class ColorSizeDTO {
   private Long colorId;
 
   @NotEmpty(message = "{colorSize.sizes.notEmpty}")
-  private Set<SizeQuantity> sizes = new HashSet<>();
+  private Set<SizeQuantityDTO> sizes = new HashSet<>();
   
 }

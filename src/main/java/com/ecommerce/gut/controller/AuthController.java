@@ -1,6 +1,7 @@
 package com.ecommerce.gut.controller;
 
 import javax.validation.Valid;
+
 import com.ecommerce.gut.exception.AuthException;
 import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.exception.DuplicateDataException;
@@ -11,6 +12,7 @@ import com.ecommerce.gut.payload.response.JwtResponse;
 import com.ecommerce.gut.payload.response.ResponseDTO;
 import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.AuthService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -50,13 +53,16 @@ public class AuthController {
       @Valid @RequestBody LoginRequest loginRequest) throws AuthException {
     ResponseDTO response = new ResponseDTO();
     try {
+
       JwtResponse jwtResponse = authService.authenticateUser(loginRequest);
       response.setSuccessCode(SuccessCode.USER_LOGIN_SUCCESS);
       response.setData(jwtResponse);
+
     } catch (DisabledException | BadCredentialsException e) {
       response.setErrorCode(ErrorCode.ERR_LOGIN_FAIL);
       throw new AuthException(ErrorCode.ERR_LOGIN_FAIL);
     }
+
     return ResponseEntity.ok()
           .body(response);
   }
@@ -76,11 +82,13 @@ public class AuthController {
       throws CreateDataFailException, DuplicateDataException {
     ResponseDTO response = new ResponseDTO();
     try {
+
       boolean registered = authService.registerUser(signUpRequest);
       if (registered) {
         response.setData(null);
         response.setSuccessCode(SuccessCode.USER_SIGNUP_SUCCESS);
       }
+
     } catch (DuplicateDataException ex) {
       response.setErrorCode(ErrorCode.ERR_EMAIL_ALREADY_TAKEN);
       throw new DuplicateDataException(ErrorCode.ERR_EMAIL_ALREADY_TAKEN);
@@ -88,6 +96,7 @@ public class AuthController {
       response.setErrorCode(ErrorCode.ERR_USER_CREATED_FAIL);
       throw new CreateDataFailException(ErrorCode.ERR_USER_CREATED_FAIL);
     }
+    
     return ResponseEntity.ok().body(response);
   }
 

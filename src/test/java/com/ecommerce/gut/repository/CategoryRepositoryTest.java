@@ -3,13 +3,13 @@ package com.ecommerce.gut.repository;
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import com.ecommerce.gut.entity.Category;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+
+import com.ecommerce.gut.entity.Category;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
@@ -28,26 +28,17 @@ public class CategoryRepositoryTest {
   }
 
   @Test
-  public void testFindAllPerPageSuccess()  throws Exception {
-    String parentName = "Test2";
-    PageRequest pageRequest= PageRequest.of(0, 2, Sort.by("name").descending());
-
-    // List<Category> foundCategoryParents = categoryRepository.getParentCategoryPerPage(pageRequest).getContent();
-
-    // assertEquals(2, foundCategoryParents.size());
-    // assertEquals(foundCategoryParents.get(0).getName(), parentName);
-  }
-
-  @Test
   public void testCreateCategoryParentSuccess()  throws Exception{
     Category categoryParent = new Category(0L, "Test2");
     categoryParent.setParent(null);
+
     assertNotNull(categoryRepository.save(categoryParent));
   }
 
   @Test
   public void testExistedByNameSuccess()  throws Exception{
     String name = "Test";
+
     assertEquals(true, categoryRepository.existsByName(name));
   }
 
@@ -65,6 +56,7 @@ public class CategoryRepositoryTest {
   public void testGetParentByIdSuccess() throws Exception {
     Long parentId = 159L;
     Category parent = categoryRepository.findById(parentId).get();
+
     assertNotNull(parent);
     assertEquals(2, parent.getSubCategories().size());
   }
@@ -74,18 +66,21 @@ public class CategoryRepositoryTest {
     Category category = categoryRepository.findById(159L).get();
     Category parent = categoryRepository.findById(157L).get();
     category.setParent(parent);
+
     assertNotNull(categoryRepository.save(category));
   }
 
   @Test
   public void testDeleteCategorySuccess() throws Exception {
     categoryRepository.deleteById(162L);
+
     assertEquals(true, !categoryRepository.findById(162L).isPresent());
   }
 
   @Test
   public void testDeleteCategoryParentIfNotChildSuccess() throws Exception {
     categoryRepository.deleteById(157L);
+
     assertEquals(true, !categoryRepository.findById(157L).isPresent());
   }
 
@@ -99,6 +94,7 @@ public class CategoryRepositoryTest {
         });
 
     categoryRepository.deleteById(158L);
+    
     assertEquals(true, !categoryRepository.findById(158L).isPresent());
   }
 

@@ -3,6 +3,7 @@ package com.ecommerce.gut.service.impl;
 import static com.ecommerce.gut.specification.ProductSpecification.categoryEquals;
 import static com.ecommerce.gut.specification.ProductSpecification.nameContainsIgnoreCase;
 import static com.ecommerce.gut.specification.ProductSpecification.parentEquals;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -11,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import com.ecommerce.gut.dto.CreateProductDTO;
 import com.ecommerce.gut.dto.ImageListDTO;
 import com.ecommerce.gut.dto.ProductImageDTO;
@@ -40,13 +42,14 @@ import com.ecommerce.gut.repository.ProductRepository;
 import com.ecommerce.gut.repository.BrandRepository;
 import com.ecommerce.gut.service.ProductService;
 import com.ecommerce.gut.specification.ProductSpecification;
-import org.springframework.stereotype.Service;
 
+import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.domain.Specification;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,6 +120,7 @@ public class ProductServiceImpl implements ProductService {
       throws LoadDataFailException, DataNotFoundException {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+
       if (!existedCategory.isPresent()) {
         LOGGER.info("Category {} is not found", categoryId);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -124,8 +128,7 @@ public class ProductServiceImpl implements ProductService {
 
       Category category = existedCategory.get();
 
-      PageRequest pageRequest =
-          PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
+      PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
       Specification<Product> parenSpec = parentEquals(category);
       Specification<Product> nameSpec = nameContainsIgnoreCase(name);
@@ -151,6 +154,7 @@ public class ProductServiceImpl implements ProductService {
   public Long countProductsByCategory(Long categoryId) {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+
       if (!existedCategory.isPresent()) {
         LOGGER.info("Category {} is not found", categoryId);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -176,6 +180,7 @@ public class ProductServiceImpl implements ProductService {
   public Long countProductsByCategoryAndName(Long categoryId, String name) {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+
       if (!existedCategory.isPresent()) {
         LOGGER.info("Category {} is not found", categoryId);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -203,6 +208,7 @@ public class ProductServiceImpl implements ProductService {
       Integer pageSize, String sortBy) throws LoadDataFailException, DataNotFoundException {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+
       if (!existedCategory.isPresent()) {
         LOGGER.info("Category {} is not found", categoryId);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -210,8 +216,7 @@ public class ProductServiceImpl implements ProductService {
 
       Category category = existedCategory.get();
 
-      PageRequest pageRequest =
-          PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
+      PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
       Specification<Product> findParentSpec = parentEquals(category);
 
@@ -232,6 +237,7 @@ public class ProductServiceImpl implements ProductService {
 
   private Sort generateSortProduct(String sortBy) {
     Sort sort = null;
+
     switch (sortBy) {
       case "CHEAPEST":
         List<Order> cheapOrders = new ArrayList<>();
@@ -289,12 +295,14 @@ public class ProductServiceImpl implements ProductService {
       throws CreateDataFailException {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+
       if (!existedCategory.isPresent()) {
         LOGGER.info("Category {} is not found", categoryId);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
 
       Optional<Brand> existedBrand = brandRepository.findById(productDTO.getBrandId());
+
       if (!existedBrand.isPresent()) {
         LOGGER.info("Brand {} is not found", productDTO.getBrandId());
         throw new DataNotFoundException(ErrorCode.ERR_BRAND_NOT_FOUND);
@@ -344,7 +352,9 @@ public class ProductServiceImpl implements ProductService {
 
       productRepository.save(product);
     } catch (DataNotFoundException e) {
+
       String message = e.getMessage();
+
       if (message.equals(ErrorCode.ERR_CATEGORY_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       } else if (message.equals(ErrorCode.ERR_COLOR_NOT_FOUND)) {
@@ -354,6 +364,7 @@ public class ProductServiceImpl implements ProductService {
       } else {
         throw new DataNotFoundException(ErrorCode.ERR_BRAND_NOT_FOUND);
       }
+
     } catch (Exception e) {
       LOGGER.info("Fail to create product {}", productDTO.getName());
       throw new CreateDataFailException(ErrorCode.ERR_PRODUCT_CREATED_FAIL);
@@ -366,32 +377,37 @@ public class ProductServiceImpl implements ProductService {
   public Product updateProduct(UpdateProductDTO productDTO, Long id, Long categoryId)
       throws UpdateDataFailException, DataNotFoundException {
     try {
-      Optional<Category> existedCategory =
-          categoryRepository.findById(categoryId);
+      Optional<Category> existedCategory = categoryRepository.findById(categoryId);
+
       if (!existedCategory.isPresent()) {
         LOGGER.info("Category {} is not found", categoryId);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
 
       Optional<Brand> existedBrand = brandRepository.findById(productDTO.getBrandId());
+
       if (!existedBrand.isPresent()) {
         LOGGER.info("Brand {} is not found", productDTO.getBrandId());
         throw new DataNotFoundException(ErrorCode.ERR_BRAND_NOT_FOUND);
       }
 
       Optional<Product> existedProduct = productRepository.findById(id);
+
       if (!existedProduct.isPresent()) {
         LOGGER.info("Product {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
       }
 
       Product product = existedProduct.get();
+
       transferDataToExistProduct(product, productDTO);
+
       product.setCategory(existedCategory.get());
       product.setBrand(existedBrand.get());
       product.setInStock(false);
 
       Set<ColorSize> colorSizes = null;
+
       if (!productDTO.getColors().isEmpty()) {
         colorSizes = colorSizeRepository.findColorSizesByProductId(id);
       }
@@ -401,6 +417,7 @@ public class ProductServiceImpl implements ProductService {
       return productRepository.save(product);
 
     } catch (DataNotFoundException e) {
+
       String message = e.getMessage();
 
       if (message.equals(ErrorCode.ERR_SIZE_NOT_FOUND)) {
@@ -425,6 +442,7 @@ public class ProductServiceImpl implements ProductService {
   public boolean deleteProduct(Long id) throws DeleteDataFailException, DataNotFoundException {
     try {
       Optional<Product> existedProduct = productRepository.findById(id);
+
       if (!existedProduct.isPresent()) {
         LOGGER.info("Product {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
@@ -449,6 +467,7 @@ public class ProductServiceImpl implements ProductService {
       throws UpdateDataFailException, DuplicateDataException, DataNotFoundException {
     try {
       Optional<Product> existedProduct = productRepository.findById(id);
+
       if (!existedProduct.isPresent()) {
         LOGGER.info("Product {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
@@ -498,12 +517,15 @@ public class ProductServiceImpl implements ProductService {
     } catch (DuplicateDataException e) {
       throw new DuplicateDataException(ErrorCode.ERR_NOT_EXIST_TWO_SAME_COLORS);
     } catch (DataNotFoundException e) {
+
       String message = e.getMessage();
+
       if (message.equals(ErrorCode.ERR_PRODUCT_NOT_FOUND)) {
         throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
       } else {
         throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
       }
+
     } catch (Exception e) {
       LOGGER.info("Fail to replace images of product {}", id);
       throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_IMAGES_REPLACED_FAIL);
@@ -535,6 +557,7 @@ public class ProductServiceImpl implements ProductService {
 
   private void setColorAndSizeToProduct(Product product, UpdateProductDTO productDTO,
       Set<ColorSize> colorSizes) {
+
     product.getColorSizes().clear();
 
     productDTO.getColors().stream().forEach(colorSize -> {
@@ -559,7 +582,8 @@ public class ProductServiceImpl implements ProductService {
               product.addColorSize(color, psize, size.getQuantity());
             } else {
               product.getColorSizes().add(
-                  colorSizes.stream()
+                  colorSizes
+                      .stream()
                       .filter(cs -> cs.getColor().equals(color) && cs.getSize().equals(psize))
                       .collect(Collectors.toList()).get(0));
             }
@@ -575,8 +599,8 @@ public class ProductServiceImpl implements ProductService {
     LOGGER.info("Delete all images of product {} successful", product.getId());
 
     Product savedProduct = productRepository.save(product);
-    productImages.stream()
-        .forEach(image -> imageRepository.deleteById(image.getImage().getId()));
+
+    productImages.stream().forEach(image -> imageRepository.deleteById(image.getImage().getId()));
 
     return Optional.of(savedProduct);
   }
@@ -599,6 +623,7 @@ public class ProductServiceImpl implements ProductService {
     });
 
     Set<Long> colorCodeSet = new HashSet<>(colorCodes);
+    
     if (colorCodeSet.size() < colorCodes.size()) {
       LOGGER.info("Cannot exist two same colors in the list");
       throw new DuplicateDataException(ErrorCode.ERR_NOT_EXIST_TWO_SAME_COLORS);

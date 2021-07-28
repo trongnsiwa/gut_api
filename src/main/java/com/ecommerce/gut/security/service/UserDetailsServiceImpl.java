@@ -1,12 +1,12 @@
 package com.ecommerce.gut.security.service;
 
 import javax.transaction.Transactional;
+
 import com.ecommerce.gut.entity.User;
 import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

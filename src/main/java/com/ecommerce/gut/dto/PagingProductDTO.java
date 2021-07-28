@@ -1,10 +1,12 @@
 package com.ecommerce.gut.dto;
 
 import java.time.LocalDateTime;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -17,6 +19,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class PagingProductDTO {
+
   private Long id;
   private String name;
   private Double price;
@@ -33,4 +36,5 @@ public class PagingProductDTO {
   private String categoryName;
   private Long brandId;
   private String brandName;
+
 }

@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SizeQuantity {
+public class SizeQuantityDTO {
   
   private Long sizeId;
   private Integer quantity;
