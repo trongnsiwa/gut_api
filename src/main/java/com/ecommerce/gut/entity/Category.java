@@ -59,6 +59,8 @@ public class Category {
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "category")
   private List<Product> products = new ArrayList<>();
 
+  private boolean deleted;
+
   public Category(Long id, String name) {
     this.id = id;
     this.name = name;

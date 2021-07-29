@@ -24,4 +24,6 @@ public class CategoryDTO {
 
   private Long parentId;
 
+  private boolean deleted;
+
 }

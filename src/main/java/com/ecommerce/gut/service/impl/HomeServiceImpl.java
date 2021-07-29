@@ -1,6 +1,7 @@
 package com.ecommerce.gut.service.impl;
 
 import static com.ecommerce.gut.specification.ProductSpecification.isBrandNew;
+import static com.ecommerce.gut.specification.ProductSpecification.isNotDeleted;
 import static com.ecommerce.gut.specification.ProductSpecification.isNotSale;
 import static com.ecommerce.gut.specification.ProductSpecification.isSale;
 
@@ -20,7 +21,6 @@ import com.ecommerce.gut.exception.LoadDataFailException;
 import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.repository.ProductRepository;
 import com.ecommerce.gut.service.HomeService;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +47,9 @@ public class HomeServiceImpl implements HomeService {
 
       Specification<Product> newSpec = isBrandNew();
       Specification<Product> notSaleSpec = isNotSale();
+      Specification<Product> isNotDeletedSpec = isNotDeleted();
 
-      List<Product> products = productRepository.findAll(Specification.where(newSpec).and(notSaleSpec), pageRequest).getContent();
+      List<Product> products = productRepository.findAll(Specification.where(newSpec).and(notSaleSpec).and(isNotDeletedSpec), pageRequest).getContent();
 
       if (!products.isEmpty()) {
         return products
@@ -75,8 +76,9 @@ public class HomeServiceImpl implements HomeService {
       PageRequest pageRequest = PageRequest.of(0, size, sort);
 
       Specification<Product> findSpec = isSale();
+      Specification<Product> isNotDeletedSpec = isNotDeleted();
 
-      List<Product> products = productRepository.findAll(findSpec, pageRequest).getContent();
+      List<Product> products = productRepository.findAll(Specification.where(findSpec).and(isNotDeletedSpec), pageRequest).getContent();
 
       if (!products.isEmpty()) {
         return products

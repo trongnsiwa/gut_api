@@ -21,6 +21,10 @@ public final class ProductSpecification {
     return (root, query, cb) -> cb.notEqual(root.<Boolean>get("sale"), true);
   }
 
+  public static Specification<Product> isNotDeleted() {
+    return (root, query, cb) -> cb.notEqual(root.<Boolean>get("deleted"), true);
+  }
+
   public static Specification<Product> nameContainsIgnoreCase(String searchTerm) {
     return (root, query, cb) -> {
       String containsLikePattern = getContainsLikePattern(searchTerm);

@@ -258,14 +258,13 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   public boolean deleteCategory(Long id) throws DeleteDataFailException, DataNotFoundException {
     try {
-      boolean existed = categoryRepository.existsById(id);
-
-      if (!existed) {
+      Category existedCategory = categoryRepository.findById(id).orElseThrow(() -> {
         LOGGER.info("Category {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
-      }
+      });
 
-      categoryRepository.deleteById(id);
+      existedCategory.setDeleted(true);
+      categoryRepository.save(existedCategory);
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     } catch (Exception ex) {
@@ -280,12 +279,10 @@ public class CategoryServiceImpl implements CategoryService {
   public boolean deleteParentCategory(Long id)
       throws DeleteDataFailException, DataNotFoundException, RestrictDataException {
     try {
-      boolean existedparentId = categoryRepository.existsById(id);
-
-      if (!existedparentId) {
+      Category existedParent= categoryRepository.findById(id).orElseThrow(() -> {
         LOGGER.info("Category parent {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_PARENT_NOT_FOUND);
-      }
+      });
 
       boolean stillHaveCategory = categoryRepository.existsByParentId(id);
       
@@ -294,7 +291,8 @@ public class CategoryServiceImpl implements CategoryService {
         throw new RestrictDataException(ErrorCode.ERR_CATEGORY_STILL_IN_PARENT);
       }
 
-      categoryRepository.deleteById(id);
+      existedParent.setDeleted(true);
+      categoryRepository.save(existedParent);
     } catch (RestrictDataException e) {
       throw new RestrictDataException(ErrorCode.ERR_CATEGORY_STILL_IN_PARENT);
     } catch (DataNotFoundException e) {

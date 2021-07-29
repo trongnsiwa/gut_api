@@ -19,5 +19,6 @@ public class CategoryParentDTO {
   private Long id;
   private String name;
   private Set<CategoryDTO> subCategories = new HashSet<>();
+  private boolean deleted;
 
 }
