@@ -77,6 +77,27 @@ public class CategoryController {
     return ResponseEntity.ok().body(response);
   }
 
+  @Operation(summary = "Get all category childs")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200",
+          description = "Found all categories even if empty", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+  })
+  @GetMapping("/child")
+  public ResponseEntity<ResponseDTO> getAllChildCategories() {
+    ResponseDTO response = new ResponseDTO();
+    
+    List<CategoryDTO> categories = categoryService.getAllChildCategories()
+        .stream()
+        .map(category -> converter.convertCategoryToDto(category))
+        .collect(Collectors.toList());
+
+    response.setData(categories);
+    response.setSuccessCode(SuccessCode.CATEGORY_PARENT_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
   @Operation(summary = "Get category parents")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200",
@@ -126,6 +147,32 @@ public class CategoryController {
     return ResponseEntity.ok().body(response);
   }
 
+  @Operation(summary = "Search categories by parent and name")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200",
+          description = "Found categories even if empty", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+  })
+  @GetMapping("/search-parent")
+  public ResponseEntity<ResponseDTO> searchByParentAndName(
+    @RequestParam("parent") @NotNull @Min(1) Long parentId,
+      @RequestParam("num") @Min(1) Integer pageNumber,
+      @RequestParam("size") @Min(1) Integer pageSize,
+      @RequestParam("sortBy") @NotNull @NotBlank String sortBy,
+      @RequestParam("name") @NotNull @NotBlank String name) {
+    ResponseDTO response = new ResponseDTO();
+
+    List<CategoryDTO> categories = categoryService.searchByParentAndName(parentId, pageNumber, pageSize, sortBy, name)
+        .stream()
+        .map(category -> converter.convertCategoryToDto(category))
+        .collect(Collectors.toList());
+
+    response.setData(categories);
+    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
   @Operation(summary = "Count categories")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200",
@@ -151,10 +198,28 @@ public class CategoryController {
       @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
   })
   @GetMapping("/count-name")
-  public ResponseEntity<ResponseDTO> countParentsByName(@RequestParam("name") @NotNull @NotBlank String name) {
+  public ResponseEntity<ResponseDTO> countByName(@RequestParam("name") @NotNull @NotBlank String name) {
     ResponseDTO response = new ResponseDTO();
 
-    Long countCategory = categoryService.countParentsByName(name);
+    Long countCategory = categoryService.countByName(name);
+
+    response.setData(countCategory);
+    response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Count categories by parent and name")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200",
+          description = "Countable even if empty", content = @Content),
+      @ApiResponse(responseCode = "400", description = "Bad request", content = @Content),
+  })
+  @GetMapping("/count-parent")
+  public ResponseEntity<ResponseDTO> countByParentAndName(@RequestParam("parent") @NotNull @Min(1) Long parentId, @RequestParam("name") @NotNull @NotBlank String name) {
+    ResponseDTO response = new ResponseDTO();
+
+    Long countCategory = categoryService.countByParentAndName(parentId, name);
 
     response.setData(countCategory);
     response.setSuccessCode(SuccessCode.CATEGORY_LOADED_SUCCESS);
@@ -422,7 +487,7 @@ public class CategoryController {
   })
   @DeleteMapping("/delete/{id}")
   public ResponseEntity<ResponseDTO> deleteCategory(@PathVariable("id") @Min(1) Long id)
-      throws DeleteDataFailException, DataNotFoundException {
+      throws DeleteDataFailException, DataNotFoundException, RestrictDataException {
 
     ResponseDTO response = new ResponseDTO();
 
@@ -438,6 +503,8 @@ public class CategoryController {
     } catch (DataNotFoundException ex) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+    } catch (RestrictDataException e) {
+      throw new RestrictDataException(ErrorCode.ERR_PRODUCT_STILL_IN_CATEGORY);
     } catch (Exception e) {
       response.setErrorCode(ErrorCode.ERR_CATEGORY_DELETED_FAIL);
       throw new DeleteDataFailException(ErrorCode.ERR_CATEGORY_DELETED_FAIL);

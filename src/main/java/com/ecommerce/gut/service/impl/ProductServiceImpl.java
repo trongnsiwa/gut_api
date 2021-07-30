@@ -1,6 +1,7 @@
 package com.ecommerce.gut.service.impl;
 
 import static com.ecommerce.gut.specification.ProductSpecification.categoryEquals;
+import static com.ecommerce.gut.specification.ProductSpecification.isNotDeleted;
 import static com.ecommerce.gut.specification.ProductSpecification.nameContainsIgnoreCase;
 import static com.ecommerce.gut.specification.ProductSpecification.parentEquals;
 
@@ -89,7 +90,7 @@ public class ProductServiceImpl implements ProductService {
   public List<Product> getProductsPerPage(Integer pageNumber, Integer pageSize, String sortBy) {
     PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
-    return productRepository.findAll(pageRequest).getContent();
+    return productRepository.findAll(isNotDeleted(), pageRequest).getContent();
   }
 
   @Override
@@ -99,19 +100,19 @@ public class ProductServiceImpl implements ProductService {
 
     Specification<Product> searchSpec = nameContainsIgnoreCase(name);
 
-    return productRepository.findAll(searchSpec, pageRequest).getContent();
+    return productRepository.findAll(Specification.where(searchSpec).and(isNotDeleted()), pageRequest).getContent();
   }
 
   @Override
   public Long countProducts() {
-    return productRepository.count();
+    return productRepository.count(isNotDeleted());
   }
 
   @Override
   public Long countProductsByName(String name) {
     Specification<Product> countSpec = ProductSpecification.nameContainsIgnoreCase(name);
 
-    return productRepository.count(countSpec);
+    return productRepository.count(Specification.where(countSpec).and(isNotDeleted()));
   }
 
   @Override
@@ -134,14 +135,14 @@ public class ProductServiceImpl implements ProductService {
       Specification<Product> nameSpec = nameContainsIgnoreCase(name);
 
       if (Objects.isNull(category.getParent())) {
-        return productRepository.findAll(Specification.where(parenSpec).and(nameSpec), pageRequest)
+        return productRepository.findAll(Specification.where(parenSpec).and(nameSpec).and(isNotDeleted()), pageRequest)
             .getContent();
       }
 
       Specification<Product> categorySpec = categoryEquals(category);
 
       return productRepository
-          .findAll(Specification.where(categorySpec).and(nameSpec), pageRequest)
+          .findAll(Specification.where(categorySpec).and(nameSpec).and(isNotDeleted()), pageRequest)
           .getContent();
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -165,12 +166,12 @@ public class ProductServiceImpl implements ProductService {
       Specification<Product> countParentSpec = parentEquals(category);
 
       if (Objects.isNull(category.getParent())) {
-        return productRepository.count(countParentSpec);
+        return productRepository.count(Specification.where(countParentSpec).and(isNotDeleted()));
       }
 
       Specification<Product> countSpec = categoryEquals(category);
 
-      return productRepository.count(countSpec);
+      return productRepository.count(Specification.where(countSpec).and(isNotDeleted()));
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     }
@@ -192,12 +193,12 @@ public class ProductServiceImpl implements ProductService {
       Specification<Product> nameSpec = nameContainsIgnoreCase(name);
 
       if (Objects.isNull(category.getParent())) {
-        return productRepository.count(Specification.where(parenSpec).and(nameSpec));
+        return productRepository.count(Specification.where(parenSpec).and(nameSpec).and(isNotDeleted()));
       }
 
       Specification<Product> categorySpec = categoryEquals(category);
 
-      return productRepository.count(Specification.where(categorySpec).and(categorySpec));
+      return productRepository.count(Specification.where(categorySpec).and(nameSpec).and(isNotDeleted()));
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     }
@@ -221,12 +222,12 @@ public class ProductServiceImpl implements ProductService {
       Specification<Product> findParentSpec = parentEquals(category);
 
       if (Objects.isNull(category.getParent())) {
-        return productRepository.findAll(findParentSpec, pageRequest).getContent();
+        return productRepository.findAll(Specification.where(findParentSpec).and(isNotDeleted()), pageRequest).getContent();
       }
 
       Specification<Product> findSpec = categoryEquals(category);
 
-      return productRepository.findAll(findSpec, pageRequest)
+      return productRepository.findAll(Specification.where(findSpec).and(isNotDeleted()), pageRequest)
           .getContent();
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -301,6 +302,11 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
 
+      if(Objects.isNull(existedCategory.get().getParent())) {
+        LOGGER.info("Cannot add product to category parent {}", categoryId);
+        throw new CreateDataFailException(ErrorCode.ERR_PRODUCT_ADDED_TO_PARENT);
+      }
+
       Optional<Brand> existedBrand = brandRepository.findById(productDTO.getBrandId());
 
       if (!existedBrand.isPresent()) {
@@ -366,8 +372,14 @@ public class ProductServiceImpl implements ProductService {
       }
 
     } catch (Exception e) {
+
+      if (e.getMessage().equals(ErrorCode.ERR_PRODUCT_ADDED_TO_PARENT)) {
+        throw new CreateDataFailException(ErrorCode.ERR_PRODUCT_ADDED_TO_PARENT);
+      }
+
       LOGGER.info("Fail to create product {}", productDTO.getName());
       throw new CreateDataFailException(ErrorCode.ERR_PRODUCT_CREATED_FAIL);
+    
     }
 
     return true;
@@ -382,6 +394,11 @@ public class ProductServiceImpl implements ProductService {
       if (!existedCategory.isPresent()) {
         LOGGER.info("Category {} is not found", categoryId);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      }
+
+      if(Objects.isNull(existedCategory.get().getParent())) {
+        LOGGER.info("Cannot add product to category parent {}", categoryId);
+        throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_ADDED_TO_PARENT);
       }
 
       Optional<Brand> existedBrand = brandRepository.findById(productDTO.getBrandId());
@@ -433,8 +450,14 @@ public class ProductServiceImpl implements ProductService {
       }
 
     } catch (Exception e) {
+
+      if (e.getMessage().equals(ErrorCode.ERR_PRODUCT_ADDED_TO_PARENT)) {
+        throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_ADDED_TO_PARENT);
+      }
+
       LOGGER.info("Fail to update product {}", id);
       throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_UPDATED_FAIL);
+    
     }
   }
 
@@ -450,6 +473,8 @@ public class ProductServiceImpl implements ProductService {
 
       Product product = existedProduct.get();
       product.setDeleted(true);
+      product.setCategory(null);
+      product.setBrand(null);
 
       productRepository.save(product);
     } catch (DataNotFoundException e) {

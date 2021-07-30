@@ -8,15 +8,11 @@ public final class ColorSpecification {
   private ColorSpecification() {}
 
   public static Specification<Color> nameEquals(String name) {
-    return (root, query, cb) -> {
-      return cb.equal(root.<String>get("name"), name);
-    };
+    return (root, query, cb) -> cb.equal(root.<String>get("name"), name);
   }
 
   public static Specification<Color> sourceEquals(String source) {
-    return (root, query, cb) -> {
-      return cb.equal(root.<String>get("source"), source);
-    };
+    return (root, query, cb) -> cb.equal(root.<String>get("source"), source);
   }
 
   public static Specification<Color> nameContainsIgnoreCase(String searchTerm) {

@@ -16,6 +16,7 @@ public class ErrorCode {
   public static final String ERR_PARENT_NAME_EXISTED = "ERR_PARENT_NAME_EXISTED";
   public static final String ERR_CATEGORY_NAME_EXISTED = "ERR_CATEGORY_NAME_EXISTED";
   public static final String ERR_CATEGORY_STILL_IN_PARENT = "ERR_CATEGORY_STILL_IN_PARENT";
+  public static final String ERR_PRODUCT_STILL_IN_CATEGORY = "ERR_PRODUCT_STILL_IN_CATEGORY";
   public static final String ERR_CATEGORY_PARENT_CREATED_FAIL = "ERR_CATEGORY_PARENT_CREATED_FAIL";
   public static final String ERR_CATEGORY_CREATED_FAIL = "ERR_CATEGORY_CREATED_FAIL";
   public static final String ERR_CATEGORY_PARENT_UPDATED_FAIL = "ERR_CATEGORY_PARENT_UPDATED_FAIL";
@@ -48,6 +49,7 @@ public class ErrorCode {
   public static final String ERR_PRODUCT_UPDATED_FAIL = "ERR_PRODUCT_UPDATED_FAIL";
   public static final String ERR_PRODUCT_DELETED_FAIL = "ERR_PRODUCT_DELETED_FAIL";
   public static final String ERR_PRODUCT_IMAGES_REPLACED_FAIL = "ERR_PRODUCT_IMAGES_REPLACED_FAIL";
+  public static final String ERR_PRODUCT_ADDED_TO_PARENT = "ERR_PRODUCT_ADDED_TO_PARENT";
 
   // USER
   public static final String ERR_USER_NOT_FOUND = "ERR_USER_NOT_FOUND"; 

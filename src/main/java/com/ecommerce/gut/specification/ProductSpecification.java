@@ -33,9 +33,7 @@ public final class ProductSpecification {
   }
 
   public static Specification<Product> categoryEquals(Category category) {
-    return (root, query, cb) -> {
-      return cb.equal(root.<Category>get("category"), category);
-    };
+    return (root, query, cb) -> cb.equal(root.<Category>get("category"), category);
   }
 
   public static Specification<Product> parentEquals(Category parent) {

@@ -1,7 +1,10 @@
 package com.ecommerce.gut.service.impl;
 
+import static com.ecommerce.gut.specification.CategorySpecification.isNotDeleted;
 import static com.ecommerce.gut.specification.CategorySpecification.nameContainsIgnoreCase;
 import static com.ecommerce.gut.specification.CategorySpecification.nameEquals;
+import static com.ecommerce.gut.specification.CategorySpecification.parentEquals;
+import static com.ecommerce.gut.specification.CategorySpecification.parentIsNotNull;
 import static com.ecommerce.gut.specification.CategorySpecification.parentIsNull;
 
 import java.util.List;
@@ -9,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.ecommerce.gut.entity.Category;
+import com.ecommerce.gut.entity.Product;
 import com.ecommerce.gut.exception.CreateDataFailException;
 import com.ecommerce.gut.exception.DataNotFoundException;
 import com.ecommerce.gut.exception.DeleteDataFailException;
@@ -17,8 +21,9 @@ import com.ecommerce.gut.exception.RestrictDataException;
 import com.ecommerce.gut.exception.UpdateDataFailException;
 import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.repository.CategoryRepository;
+import com.ecommerce.gut.repository.ProductRepository;
 import com.ecommerce.gut.service.CategoryService;
-
+import com.ecommerce.gut.specification.ProductSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,9 +41,17 @@ public class CategoryServiceImpl implements CategoryService {
   @Autowired
   CategoryRepository categoryRepository;
 
+  @Autowired
+  ProductRepository productRepository;
+
   @Override
   public List<Category> getAllParentCategories() {
-    return categoryRepository.findAll(parentIsNull());
+    return categoryRepository.findAll(Specification.where(parentIsNull()).and(isNotDeleted()));
+  }
+
+  @Override
+  public List<Category> getAllChildCategories() {
+    return categoryRepository.findAll(Specification.where(parentIsNotNull()).and(isNotDeleted()));
   }
 
   @Override
@@ -55,8 +68,9 @@ public class CategoryServiceImpl implements CategoryService {
     PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
 
     Specification<Category> parentSpec = parentIsNull();
+    Specification<Category> isNotDeletedSpec = isNotDeleted();
 
-    return categoryRepository.findAll(parentSpec, pageRequest).getContent();
+    return categoryRepository.findAll(Specification.where(parentSpec).and(isNotDeletedSpec), pageRequest).getContent();
   }
 
   @Override
@@ -73,18 +87,47 @@ public class CategoryServiceImpl implements CategoryService {
     PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
 
     Specification<Category> searchSpec = nameContainsIgnoreCase(name);
+    Specification<Category> isNotDeletedSpec = isNotDeleted();
 
-    return categoryRepository.findAll(searchSpec, pageRequest).getContent();
+    return categoryRepository.findAll(Specification.where(searchSpec).and(isNotDeletedSpec), pageRequest).getContent();
+  }
+
+  @Override
+  public List<Category> searchByParentAndName(Long parentId, Integer pageNum, Integer pageSize, String sortBy,
+      String name) {
+    Category parent = categoryRepository.findById(parentId).get();
+
+    Sort sort = null;
+
+    if ("Z-A".equals(sortBy)) {
+      sort = Sort.by("name").descending();
+    } else {
+      sort = Sort.by("name").ascending();
+    }
+
+    PageRequest pageRequest = PageRequest.of(pageNum - 1, pageSize, sort);
+
+    Specification<Category> searchSpec = nameContainsIgnoreCase(name);
+    Specification<Category> isNotDeletedSpec = isNotDeleted();
+
+    return categoryRepository.findAll(Specification.where(searchSpec).and(parentEquals(parent)).and(isNotDeletedSpec), pageRequest).getContent();
   }
 
   @Override
   public Long countParents() {
-    return categoryRepository.count(parentIsNull());
+    return categoryRepository.count(Specification.where(parentIsNull()).and(isNotDeleted()));
   }
 
   @Override
-  public Long countParentsByName(String name) {
-    return categoryRepository.count(Specification.where(parentIsNull()).and(nameContainsIgnoreCase(name)));
+  public Long countByName(String name) {
+    return categoryRepository.count(Specification.where(nameContainsIgnoreCase(name)).and(isNotDeleted()));
+  }
+
+  @Override
+  public Long countByParentAndName(Long parentId, String name) {
+    Category parent = categoryRepository.findById(parentId).get();
+
+    return categoryRepository.count(Specification.where(parentEquals(parent)).and(nameContainsIgnoreCase(name)).and(isNotDeleted()));
   }
 
   @Override
@@ -117,6 +160,7 @@ public class CategoryServiceImpl implements CategoryService {
         throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
       }
 
+      parentCategory.setDeleted(false);
       categoryRepository.save(parentCategory);
     } catch (DuplicateDataException ex) {
       throw new DuplicateDataException(ErrorCode.ERR_PARENT_NAME_EXISTED);
@@ -146,7 +190,7 @@ public class CategoryServiceImpl implements CategoryService {
         LOGGER.info("Category name {} is already existed", category.getName());
         throw new DuplicateDataException(ErrorCode.ERR_CATEGORY_NAME_EXISTED);
       }
-
+      category.setDeleted(false);
       category.setParent(parent.get());
 
       categoryRepository.save(category);
@@ -256,17 +300,28 @@ public class CategoryServiceImpl implements CategoryService {
 
 
   @Override
-  public boolean deleteCategory(Long id) throws DeleteDataFailException, DataNotFoundException {
+  public boolean deleteCategory(Long id) throws DeleteDataFailException, DataNotFoundException, RestrictDataException {
     try {
       Category existedCategory = categoryRepository.findById(id).orElseThrow(() -> {
         LOGGER.info("Category {} is not found", id);
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       });
 
+      Specification<Product> categoryEqualsSpec = ProductSpecification.categoryEquals(existedCategory);
+
+      long totalProducts = productRepository.count(categoryEqualsSpec);
+
+      if (totalProducts > 0) {
+        LOGGER.info("Category {} still have products", id);
+        throw new RestrictDataException(ErrorCode.ERR_PRODUCT_STILL_IN_CATEGORY);
+      }
+
       existedCategory.setDeleted(true);
       categoryRepository.save(existedCategory);
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+    } catch (RestrictDataException ex) {
+      throw new RestrictDataException(ErrorCode.ERR_PRODUCT_STILL_IN_CATEGORY);
     } catch (Exception ex) {
       LOGGER.info("Fail to delete category {}", id);
       throw new DeleteDataFailException(ErrorCode.ERR_CATEGORY_DELETED_FAIL);

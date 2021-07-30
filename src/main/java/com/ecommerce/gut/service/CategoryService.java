@@ -14,9 +14,13 @@ public interface CategoryService {
 
   List<Category> getAllParentCategories();
 
+  List<Category> getAllChildCategories();
+
   List<Category> getParentCategoriesPerPage(Integer pageNum, Integer pageSize, String sortBy);
 
   List<Category> searchByName(Integer pageNum, Integer pageSize, String sortBy, String name);
+
+  List<Category> searchByParentAndName(Long categoryId, Integer pageNum, Integer pageSize, String sortBy, String name);
 
   Category getParentCategoryById(Long parentId);
 
@@ -24,7 +28,9 @@ public interface CategoryService {
 
   Long countParents();
 
-  Long countParentsByName(String name);
+  Long countByName(String name);
+
+  Long countByParentAndName(Long categoryId, String name);
 
   boolean createParentCategory(Category parentCategory) throws CreateDataFailException, DuplicateDataException;
 
@@ -34,7 +40,7 @@ public interface CategoryService {
 
   Category updateCategory(Category category, Long id, Long parentId) throws UpdateDataFailException, DataNotFoundException, DuplicateDataException;
 
-  boolean deleteCategory(Long id) throws DeleteDataFailException, DataNotFoundException;
+  boolean deleteCategory(Long id) throws DeleteDataFailException, DataNotFoundException, RestrictDataException;
 
   boolean deleteParentCategory(Long id) throws DeleteDataFailException, DataNotFoundException, RestrictDataException;
 
