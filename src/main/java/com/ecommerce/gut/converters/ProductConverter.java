@@ -7,17 +7,18 @@ import com.ecommerce.gut.dto.PagingProductDTO;
 import com.ecommerce.gut.dto.ProductColorSizeDTO;
 import com.ecommerce.gut.dto.ProductDetailDTO;
 import com.ecommerce.gut.dto.ProductImageDTO;
+import com.ecommerce.gut.dto.ReviewDTO;
 import com.ecommerce.gut.dto.SizeDTO;
 import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.entity.PSize;
 import com.ecommerce.gut.entity.Product;
 import com.ecommerce.gut.entity.ProductImage;
+import com.ecommerce.gut.entity.Review;
 import com.ecommerce.gut.exception.ConvertEntityDTOException;
 import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.entity.ColorSize;
 
 import org.modelmapper.ModelMapper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,22 @@ public class ProductConverter {
   public ProductDetailDTO convertProductDetailToDto(Product product)
       throws ConvertEntityDTOException {
     try {
-      ProductDetailDTO productDetailDTO = modelMapper.map(product, ProductDetailDTO.class);
+
+      ProductDetailDTO productDetailDTO = ProductDetailDTO.builder()
+          .id(product.getId())
+          .name(product.getName())
+          .price(product.getPrice())
+          .shortDesc(product.getShortDesc())
+          .longDesc(product.getLongDesc())
+          .material(product.getMaterial())
+          .handling(product.getHandling())
+          .brandNew(product.isBrandNew())
+          .sale(product.isSale())
+          .priceSale(product.getPriceSale())
+          .saleFromDate(product.getSaleFromDate())
+          .saleToDate(product.getSaleToDate())
+          .deleted(product.isDeleted())
+          .build();
 
       productDetailDTO.setProductImages(
           product.getProductImages()
@@ -48,6 +64,12 @@ public class ProductConverter {
               .stream()
               .map(this::convertProductColorSizeToDto)
               .collect(Collectors.toSet()));
+
+      productDetailDTO.setReviews(
+          product.getReviews()
+              .stream()
+              .map(review -> convertReviewToDto(review, product))
+              .collect(Collectors.toList()));
 
       productDetailDTO.setCategoryId(product.getCategory().getId());
       productDetailDTO.setCategoryName(product.getCategory().getName());
@@ -64,7 +86,18 @@ public class ProductConverter {
   public PagingProductDTO convertPagingProductToDto(Product product)
       throws ConvertEntityDTOException {
     try {
-      PagingProductDTO pagingProductDTO = modelMapper.map(product, PagingProductDTO.class);
+      PagingProductDTO pagingProductDTO = PagingProductDTO.builder()
+          .id(product.getId())
+          .name(product.getName())
+          .price(product.getPrice())
+          .shortDesc(product.getShortDesc())
+          .brandNew(product.isBrandNew())
+          .sale(product.isSale())
+          .salePrice(product.getPriceSale())
+          .saleFromDate(product.getSaleFromDate())
+          .saleToDate(product.getSaleToDate())
+          .deleted(product.isDeleted())
+          .build();
 
       pagingProductDTO.setImages(
           product.getProductImages()
@@ -78,7 +111,7 @@ public class ProductConverter {
               .stream()
               .map(colorSize -> convertColorToDto(colorSize.getColor()))
               .collect(Collectors.toSet()));
-              
+
       pagingProductDTO.setCategoryId(product.getCategory().getId());
       pagingProductDTO.setCategoryName(product.getCategory().getName());
       pagingProductDTO.setBrandId(product.getBrand().getId());
@@ -87,6 +120,27 @@ public class ProductConverter {
       return pagingProductDTO;
     } catch (Exception ex) {
       LOGGER.info("Fail to convert Product to PagingProductDTO");
+      throw new ConvertEntityDTOException(ErrorCode.ERR_DATA_CONVERT_FAIL);
+    }
+  }
+
+  public ReviewDTO convertReviewToDto(Review review, Product product)
+      throws ConvertEntityDTOException {
+    try {
+      ReviewDTO dto = new ReviewDTO();
+
+      dto.setId(review.getId());
+      dto.setProductId(product.getId());
+      dto.setUserId(review.getUser().getId());
+      dto.setUserName(review.getUser().getFirstName() + " " + review.getUser().getLastName());
+      dto.setTitle(review.getTitle());
+      dto.setComment(review.getComment());
+      dto.setRating(review.getRating());
+      dto.setDatetime(review.getDatetime());
+
+      return dto;
+    } catch (Exception ex) {
+      LOGGER.info("Fail to convert Review to ReviewDTO");
       throw new ConvertEntityDTOException(ErrorCode.ERR_DATA_CONVERT_FAIL);
     }
   }

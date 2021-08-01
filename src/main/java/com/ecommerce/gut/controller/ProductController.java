@@ -1,15 +1,18 @@
 package com.ecommerce.gut.controller;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 import com.ecommerce.gut.converters.ProductConverter;
+import com.ecommerce.gut.dto.AddReviewDTO;
 import com.ecommerce.gut.dto.CreateProductDTO;
 import com.ecommerce.gut.dto.ImageListDTO;
 import com.ecommerce.gut.dto.PagingProductDTO;
@@ -26,7 +29,7 @@ import com.ecommerce.gut.payload.response.ErrorCode;
 import com.ecommerce.gut.payload.response.ResponseDTO;
 import com.ecommerce.gut.payload.response.SuccessCode;
 import com.ecommerce.gut.service.ProductService;
-
+import com.google.common.base.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -70,10 +73,19 @@ public class ProductController {
   public ResponseEntity<ResponseDTO> getProductsPerPage(
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
-      @RequestParam("sortBy") @NotNull @NotBlank String sortBy) {
+      @RequestParam("sortBy") @NotNull @NotBlank String sortBy,
+      @RequestParam(required = false, name = "saleTypes") String saleTypes,
+      @RequestParam(required = false, name = "colorIds") String colorIds,
+      @RequestParam(required = false, name = "sizeIds") String sizeIds,
+      @RequestParam(required = false, name = "fromPrice") Double fromPrice,
+      @RequestParam(required = false, name = "toPrice") Double toPrice) {
     ResponseDTO response = new ResponseDTO();
 
-    List<PagingProductDTO> pagingProducts = productService.getProductsPerPage(pageNumber, pageSize, sortBy)
+    List<PagingProductDTO> pagingProducts = productService
+        .getProductsPerPage(
+            pageNumber, pageSize, sortBy,
+            getListTypesFromString(saleTypes), getListIdsFromString(colorIds),
+            getListIdsFromString(sizeIds), fromPrice, toPrice)
         .stream()
         .map(product -> converter.convertPagingProductToDto(product))
         .collect(Collectors.toList());
@@ -91,10 +103,16 @@ public class ProductController {
       @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
   })
   @GetMapping("/count")
-  public ResponseEntity<ResponseDTO> countProducts() {
+  public ResponseEntity<ResponseDTO> countProducts(
+      @RequestParam(required = false, name = "saleTypes") String saleTypes,
+      @RequestParam(required = false, name = "colorIds") String colorIds,
+      @RequestParam(required = false, name = "sizeIds") String sizeIds,
+      @RequestParam(required = false, name = "fromPrice") Double fromPrice,
+      @RequestParam(required = false, name = "toPrice") Double toPrice) {
     ResponseDTO response = new ResponseDTO();
 
-    Long countProducts = productService.countProducts();
+    Long countProducts = productService.countProducts(getListTypesFromString(saleTypes),
+        getListIdsFromString(colorIds), getListIdsFromString(sizeIds), fromPrice, toPrice);
 
     response.setData(countProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
@@ -110,10 +128,16 @@ public class ProductController {
   })
   @GetMapping("/count-name")
   public ResponseEntity<ResponseDTO> countProductsByName(
-      @RequestParam("name") @NotNull @NotBlank String name) {
+      @RequestParam("name") @NotNull @NotBlank String name,
+      @RequestParam(required = false, name = "saleTypes") String saleTypes,
+      @RequestParam(required = false, name = "colorIds") String colorIds,
+      @RequestParam(required = false, name = "sizeIds") String sizeIds,
+      @RequestParam(required = false, name = "fromPrice") Double fromPrice,
+      @RequestParam(required = false, name = "toPrice") Double toPrice) {
     ResponseDTO response = new ResponseDTO();
 
-    Long countProducts = productService.countProductsByName(name);
+    Long countProducts = productService.countProductsByName(name, getListTypesFromString(saleTypes),
+        getListIdsFromString(colorIds), getListIdsFromString(sizeIds), fromPrice, toPrice);
 
     response.setData(countProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
@@ -134,10 +158,17 @@ public class ProductController {
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sortBy") @NotNull @NotBlank String sortBy,
-      @RequestParam("name") @NotNull @NotBlank String name) {
+      @RequestParam("name") @NotNull @NotBlank String name,
+      @RequestParam(required = false, name = "saleTypes") String saleTypes,
+      @RequestParam(required = false, name = "colorIds") String colorIds,
+      @RequestParam(required = false, name = "sizeIds") String sizeIds,
+      @RequestParam(required = false, name = "fromPrice") Double fromPrice,
+      @RequestParam(required = false, name = "toPrice") Double toPrice) {
     ResponseDTO response = new ResponseDTO();
 
-    List<PagingProductDTO> pagingProducts = productService.searchProductsByName(pageNumber, pageSize, sortBy, name)
+    List<PagingProductDTO> pagingProducts = productService
+        .searchProductsByName(pageNumber, pageSize, sortBy, name, getListTypesFromString(saleTypes),
+            getListIdsFromString(colorIds), getListIdsFromString(sizeIds), fromPrice, toPrice)
         .stream()
         .map(product -> converter.convertPagingProductToDto(product))
         .collect(Collectors.toList());
@@ -161,17 +192,26 @@ public class ProductController {
       @RequestParam("category") @NotNull @Min(1) Long categoryId,
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
-      @RequestParam("sort") @NotNull @NotBlank String sortBy) throws LoadDataFailException {
+      @RequestParam("sort") @NotNull @NotBlank String sortBy,
+      @RequestParam(required = false, name = "saleTypes") String saleTypes,
+      @RequestParam(required = false, name = "colorIds") String colorIds,
+      @RequestParam(required = false, name = "sizeIds") String sizeIds,
+      @RequestParam(required = false, name = "fromPrice") Double fromPrice,
+      @RequestParam(required = false, name = "toPrice") Double toPrice)
+      throws LoadDataFailException {
 
     ResponseDTO response = new ResponseDTO();
 
     try {
 
       List<PagingProductDTO> pagingProducts = productService
-          .getProductsByCategoryPerPage(categoryId, pageNumber, pageSize, sortBy).stream()
+          .getProductsByCategoryPerPage(categoryId, pageNumber, pageSize, sortBy,
+              getListTypesFromString(saleTypes), getListIdsFromString(colorIds),
+              getListIdsFromString(sizeIds), fromPrice, toPrice)
+          .stream()
           .map(product -> converter.convertPagingProductToDto(product))
           .collect(Collectors.toList());
-          
+
       response.setData(pagingProducts);
       response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
 
@@ -200,13 +240,22 @@ public class ProductController {
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
       @RequestParam("sort") @NotNull @NotBlank String sortBy,
-      @RequestParam("name") @NotNull @NotBlank String name) throws LoadDataFailException {
+      @RequestParam("name") @NotNull @NotBlank String name,
+      @RequestParam(required = false, name = "saleTypes") String saleTypes,
+      @RequestParam(required = false, name = "colorIds") String colorIds,
+      @RequestParam(required = false, name = "sizeIds") String sizeIds,
+      @RequestParam(required = false, name = "fromPrice") Double fromPrice,
+      @RequestParam(required = false, name = "toPrice") Double toPrice)
+      throws LoadDataFailException {
 
     ResponseDTO response = new ResponseDTO();
 
     try {
 
-      List<PagingProductDTO> pagingProducts = productService.searchProductsByCategoryAndName(categoryId, pageNumber, pageSize, sortBy, name)
+      List<PagingProductDTO> pagingProducts = productService
+          .searchProductsByCategoryAndName(categoryId, pageNumber, pageSize, sortBy, name,
+              getListTypesFromString(saleTypes), getListIdsFromString(colorIds),
+              getListIdsFromString(sizeIds), fromPrice, toPrice)
           .stream()
           .map(product -> converter.convertPagingProductToDto(product))
           .collect(Collectors.toList());
@@ -233,10 +282,17 @@ public class ProductController {
   })
   @GetMapping("/category/count")
   public ResponseEntity<ResponseDTO> countProductsByCategory(
-      @RequestParam("category") @NotNull @Min(1) Long categoryId) {
+      @RequestParam("category") @NotNull @Min(1) Long categoryId,
+      @RequestParam(required = false, name = "saleTypes") String saleTypes,
+      @RequestParam(required = false, name = "colorIds") String colorIds,
+      @RequestParam(required = false, name = "sizeIds") String sizeIds,
+      @RequestParam(required = false, name = "fromPrice") Double fromPrice,
+      @RequestParam(required = false, name = "toPrice") Double toPrice) {
     ResponseDTO response = new ResponseDTO();
 
-    Long countProducts = productService.countProductsByCategory(categoryId);
+    Long countProducts =
+        productService.countProductsByCategory(categoryId, getListTypesFromString(saleTypes),
+            getListIdsFromString(colorIds), getListIdsFromString(sizeIds), fromPrice, toPrice);
 
     response.setData(countProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
@@ -253,10 +309,17 @@ public class ProductController {
   @GetMapping("/category/count-name")
   public ResponseEntity<ResponseDTO> countProductsByCategoryAndName(
       @RequestParam("category") @NotNull @Min(1) Long categoryId,
-      @RequestParam("name") @NotNull @NotBlank String name) {
+      @RequestParam("name") @NotNull @NotBlank String name,
+      @RequestParam(required = false, name = "saleTypes") String saleTypes,
+      @RequestParam(required = false, name = "colorIds") String colorIds,
+      @RequestParam(required = false, name = "sizeIds") String sizeIds,
+      @RequestParam(required = false, name = "fromPrice") Double fromPrice,
+      @RequestParam(required = false, name = "toPrice") Double toPrice) {
     ResponseDTO response = new ResponseDTO();
 
-    Long countProducts = productService.countProductsByCategoryAndName(categoryId, name);
+    Long countProducts = productService.countProductsByCategoryAndName(categoryId, name,
+        getListTypesFromString(saleTypes), getListIdsFromString(colorIds),
+        getListIdsFromString(sizeIds), fromPrice, toPrice);
 
     response.setData(countProducts);
     response.setSuccessCode(SuccessCode.PRODUCTS_LOADED_SUCCESS);
@@ -288,8 +351,8 @@ public class ProductController {
       response.setSuccessCode(SuccessCode.PRODUCT_LOADED_SUCCESS);
 
     } catch (Exception e) {
-      response.setErrorCode(ErrorCode.ERR_CATEGORY_NOT_FOUND);
-      throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
+      response.setErrorCode(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+      throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
     }
 
     return ResponseEntity.ok().body(response);
@@ -365,7 +428,8 @@ public class ProductController {
 
     try {
 
-      Product updatedProduct = productService.updateProduct(productDTO, productDTO.getId(), productDTO.getCategoryId());
+      Product updatedProduct =
+          productService.updateProduct(productDTO, productDTO.getId(), productDTO.getCategoryId());
 
       ProductDetailDTO responseProduct = converter.convertProductDetailToDto(updatedProduct);
 
@@ -450,10 +514,12 @@ public class ProductController {
 
     try {
 
-      Optional<Product> updatedProduct = productService.replaceImagesOfProduct(imageListDTO, imageListDTO.getProductId());
+      Optional<Product> updatedProduct =
+          productService.replaceImagesOfProduct(imageListDTO, imageListDTO.getProductId());
 
       if (updatedProduct.isPresent()) {
-        ProductDetailDTO responseProduct = converter.convertProductDetailToDto(updatedProduct.get());
+        ProductDetailDTO responseProduct =
+            converter.convertProductDetailToDto(updatedProduct.get());
 
         response.setData(responseProduct);
 
@@ -478,13 +544,74 @@ public class ProductController {
         response.setErrorCode(ErrorCode.ERR_COLOR_NOT_FOUND);
         throw new DataNotFoundException(ErrorCode.ERR_COLOR_NOT_FOUND);
       }
-      
+
     } catch (Exception e) {
-      response.setErrorCode(ErrorCode.ERR_PRODUCT_DELETED_FAIL);
+      response.setErrorCode(ErrorCode.ERR_PRODUCT_IMAGES_REPLACED_FAIL);
       throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_IMAGES_REPLACED_FAIL);
     }
 
     return ResponseEntity.ok().body(response);
+  }
+
+  @Operation(summary = "Add user review of product",
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+          description = "User review object to add to product"))
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Add review successful",
+          content = @Content),
+      @ApiResponse(responseCode = "400", description = "Enter invalid data", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Product Id or User Id is not found",
+          content = @Content),
+  })
+  @PutMapping("/review")
+  public ResponseEntity<ResponseDTO> addUserReviewOfProduct(
+      @Valid @RequestBody AddReviewDTO reviewRequest)
+      throws UpdateDataFailException, DataNotFoundException {
+
+    ResponseDTO response = new ResponseDTO();
+
+    try {
+
+      Product updatedProduct = productService.addUserReviewOfProduct(reviewRequest);
+      ProductDetailDTO responseProduct = converter.convertProductDetailToDto(updatedProduct);
+
+      response.setData(responseProduct);
+      response.setSuccessCode(SuccessCode.PRODUCT_REVIEW_ADDED_SUCCESS);
+    } catch (DataNotFoundException e) {
+
+      String message = e.getMessage();
+
+      if (message.equals(ErrorCode.ERR_PRODUCT_NOT_FOUND)) {
+        response.setErrorCode(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+        throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+      } else {
+        response.setErrorCode(ErrorCode.ERR_USER_NOT_FOUND);
+        throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
+      }
+
+    } catch (Exception e) {
+      response.setErrorCode(ErrorCode.ERR_PRODUCT_DELETED_FAIL);
+      throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_REVIEW_ADDED_FAIL);
+    }
+
+    return ResponseEntity.ok().body(response);
+  }
+
+  private Set<Long> getListIdsFromString(String ids) {
+    if (Strings.isNullOrEmpty(ids)) {
+      return Collections.emptySet();
+    }
+
+    return Arrays.asList(ids.split(",")).stream().map(s -> Long.parseLong(s.trim()))
+        .collect(Collectors.toSet());
+  }
+
+  private Set<String> getListTypesFromString(String ids) {
+    if (Strings.isNullOrEmpty(ids)) {
+      return Collections.emptySet();
+    }
+
+    return Arrays.asList(ids.split(",")).stream().map(String::trim).collect(Collectors.toSet());
   }
 
 }

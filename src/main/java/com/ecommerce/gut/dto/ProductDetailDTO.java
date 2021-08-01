@@ -6,9 +6,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +16,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
+@Builder
 public class ProductDetailDTO {
 
   private Long id;
@@ -32,8 +31,15 @@ public class ProductDetailDTO {
   private Double priceSale;
   private LocalDateTime saleFromDate;
   private LocalDateTime saleToDate;
+
+  @Builder.Default
   private List<ProductImageDTO> productImages = new ArrayList<>();
+
+  @Builder.Default
   private Set<ProductColorSizeDTO> colorSizes = new HashSet<>();
+
+  @Builder.Default
+  private List<ReviewDTO> reviews = new ArrayList<>();
   private boolean deleted;
   private Long categoryId;
   private String categoryName;

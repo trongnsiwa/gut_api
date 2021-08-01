@@ -1,8 +1,9 @@
 package com.ecommerce.gut.entity;
 
 import java.time.LocalDateTime;
-
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,6 +17,7 @@ import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -36,64 +38,63 @@ import lombok.Setter;
 @EqualsAndHashCode
 @Entity
 @Table(
-        name = "users",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "users_email_key",
-                        columnNames = "email")
-        },
-        indexes = {
-                @Index(name = "mul_name", columnList = "first_name, last_name"),
-                @Index(name = "idx_status", columnList = "status"),
-                @Index(name = "idx_avatar", columnList = "image_id")
-        }
-)
+                name = "users",
+                uniqueConstraints = {
+                                @UniqueConstraint(
+                                                name = "users_email_key",
+                                                columnNames = "email")
+                },
+                indexes = {
+                                @Index(name = "mul_name", columnList = "first_name, last_name"),
+                                @Index(name = "idx_status", columnList = "status"),
+                                @Index(name = "idx_avatar", columnList = "image_id")
+                })
 public class User {
 
         @Id
         @GenericGenerator(
-                name = "UUID",
-                strategy = "org.hibernate.id.UUIDGenerator")
+                        name = "UUID",
+                        strategy = "org.hibernate.id.UUIDGenerator")
         @GeneratedValue(generator = "UUID")
         @Column(
-                name = "user_id",
-                unique = true,
-                nullable = false)
+                        name = "user_id",
+                        unique = true,
+                        nullable = false)
         @Type(type = "org.hibernate.type.PostgresUUIDType")
         private UUID id;
 
         @Column(
-                name = "email",
-                nullable = false,
-                columnDefinition = "TEXT")
+                        name = "email",
+                        nullable = false,
+                        columnDefinition = "TEXT")
         private String email;
 
         @Column(
-                name = "password",
-                nullable = false,
-                columnDefinition = "TEXT")
+                        name = "password",
+                        nullable = false,
+                        columnDefinition = "TEXT")
         private String password;
 
         @Column(
-                name = "first_name",
-                nullable = false,
-                length = 50)
+                        name = "first_name",
+                        nullable = false,
+                        length = 50)
         private String firstName;
 
         @Column(
-                name = "last_name",
-                nullable = false,
-                length = 50)
+                        name = "last_name",
+                        nullable = false,
+                        length = 50)
         private String lastName;
 
         @Column(
-                name = "phone",
-                length = 20)
+                        name = "phone",
+                        length = 20)
         private String phone;
 
         @Column(
-                name = "address",
-                columnDefinition = "TEXT")
+                        name = "address",
+                        columnDefinition = "TEXT")
         private String address;
 
         @CreationTimestamp
@@ -116,15 +117,18 @@ public class User {
 
         @ManyToMany(fetch = FetchType.EAGER)
         @JoinTable(
-                name = "user_roles",
-                joinColumns = @JoinColumn(
-                        name = "user_id"),
-                inverseJoinColumns = @JoinColumn(
-                        name = "role_id"))
+                        name = "user_roles",
+                        joinColumns = @JoinColumn(
+                                        name = "user_id"),
+                        inverseJoinColumns = @JoinColumn(
+                                        name = "role_id"))
         private Set<Role> roles = new HashSet<>();
 
         @OneToOne(mappedBy = "user")
         private Cart cart;
+
+        @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+        private List<Review> reviews = new ArrayList<>();
 
         public User() {
                 this.deleted = false;

@@ -1,7 +1,12 @@
 package com.ecommerce.gut.specification;
 
+import java.util.Set;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Path;
 import com.ecommerce.gut.entity.Category;
+import com.ecommerce.gut.entity.Color;
+import com.ecommerce.gut.entity.PSize;
 import com.ecommerce.gut.entity.Product;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -10,19 +15,19 @@ public final class ProductSpecification {
   private ProductSpecification() {}
 
   public static Specification<Product> isBrandNew() {
-    return (root, query, cb) -> cb.equal(root.<Boolean>get("brandNew"), true);
+    return (root, query, cb) -> cb.isTrue(root.<Boolean>get("brandNew"));
   }
 
   public static Specification<Product> isSale() {
-    return (root, query, cb) -> cb.equal(root.<Boolean>get("sale"), true);
+    return (root, query, cb) -> cb.isTrue(root.<Boolean>get("sale"));
   }
 
   public static Specification<Product> isNotSale() {
-    return (root, query, cb) -> cb.notEqual(root.<Boolean>get("sale"), true);
+    return (root, query, cb) -> cb.isFalse(root.<Boolean>get("sale"));
   }
 
   public static Specification<Product> isNotDeleted() {
-    return (root, query, cb) -> cb.notEqual(root.<Boolean>get("deleted"), true);
+    return (root, query, cb) -> cb.isFalse(root.<Boolean>get("deleted"));
   }
 
   public static Specification<Product> nameContainsIgnoreCase(String searchTerm) {
@@ -41,6 +46,38 @@ public final class ProductSpecification {
       Join<Product, Category> proCate = root.join("category");
       return cb.equal(proCate.<Category>get("parent"), parent);
     };
+  }
+
+  public static Specification<Product> haveColors(Set<Color> colors) {
+    return (root, query, cb) -> {
+      Path<Color> color = root.join("colorSizes", JoinType.LEFT).<Color>get("color");
+      query.distinct(true);
+      return color.in(colors);
+    };
+  }
+
+  public static Specification<Product> haveSizes(Set<PSize> sizes) {
+    return (root, query, cb) -> {
+      Path<PSize> size = root.join("colorSizes", JoinType.LEFT).<PSize>get("size");
+      query.distinct(true);
+      return size.in(sizes);
+    };
+  }
+
+  public static Specification<Product> betweenPrices(Double fromPrice, Double toPrice) {
+    return (root, query, cb) -> cb.between(root.<Double>get("price"), fromPrice, toPrice);
+  }
+
+  public static Specification<Product> betweenSalePrices(Double fromPrice, Double toPrice) {
+    return (root, query, cb) -> cb.between(root.<Double>get("priceSale"), fromPrice, toPrice);
+  }
+
+  public static Specification<Product> greaterThanPrice(Double fromPrice) {
+    return (root, query, cb) -> cb.greaterThanOrEqualTo(root.<Double>get("price"), fromPrice);
+  }
+
+  public static Specification<Product> greaterThanSalePrice(Double fromPrice) {
+    return (root, query, cb) -> cb.greaterThanOrEqualTo(root.<Double>get("priceSale"), fromPrice);
   }
 
   private static String getContainsLikePattern(String searchTerm) {

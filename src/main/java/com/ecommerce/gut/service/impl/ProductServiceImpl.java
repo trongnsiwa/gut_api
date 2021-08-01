@@ -1,7 +1,15 @@
 package com.ecommerce.gut.service.impl;
 
+import static com.ecommerce.gut.specification.ProductSpecification.betweenPrices;
+import static com.ecommerce.gut.specification.ProductSpecification.betweenSalePrices;
 import static com.ecommerce.gut.specification.ProductSpecification.categoryEquals;
+import static com.ecommerce.gut.specification.ProductSpecification.greaterThanPrice;
+import static com.ecommerce.gut.specification.ProductSpecification.greaterThanSalePrice;
+import static com.ecommerce.gut.specification.ProductSpecification.haveColors;
+import static com.ecommerce.gut.specification.ProductSpecification.haveSizes;
+import static com.ecommerce.gut.specification.ProductSpecification.isBrandNew;
 import static com.ecommerce.gut.specification.ProductSpecification.isNotDeleted;
+import static com.ecommerce.gut.specification.ProductSpecification.isSale;
 import static com.ecommerce.gut.specification.ProductSpecification.nameContainsIgnoreCase;
 import static com.ecommerce.gut.specification.ProductSpecification.parentEquals;
 
@@ -13,7 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+import com.ecommerce.gut.dto.AddReviewDTO;
 import com.ecommerce.gut.dto.CreateProductDTO;
 import com.ecommerce.gut.dto.ImageListDTO;
 import com.ecommerce.gut.dto.ProductImageDTO;
@@ -24,6 +32,7 @@ import com.ecommerce.gut.entity.Color;
 import com.ecommerce.gut.entity.PSize;
 import com.ecommerce.gut.entity.Product;
 import com.ecommerce.gut.entity.ProductImage;
+import com.ecommerce.gut.entity.User;
 import com.ecommerce.gut.entity.ColorSize;
 import com.ecommerce.gut.entity.Image;
 import com.ecommerce.gut.exception.CreateDataFailException;
@@ -40,11 +49,11 @@ import com.ecommerce.gut.repository.ColorSizeRepository;
 import com.ecommerce.gut.repository.ImageRepository;
 import com.ecommerce.gut.repository.ProductImageRepository;
 import com.ecommerce.gut.repository.ProductRepository;
+import com.ecommerce.gut.repository.UserRepository;
 import com.ecommerce.gut.repository.BrandRepository;
 import com.ecommerce.gut.service.ProductService;
-import com.ecommerce.gut.specification.ProductSpecification;
-
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -86,38 +95,59 @@ public class ProductServiceImpl implements ProductService {
   @Autowired
   ColorSizeRepository colorSizeRepository;
 
+  @Autowired
+  UserRepository userRepository;
+
   @Override
-  public List<Product> getProductsPerPage(Integer pageNumber, Integer pageSize, String sortBy) {
+  public List<Product> getProductsPerPage(Integer pageNumber, Integer pageSize, String sortBy,
+      Set<String> saleType, Set<Long> colorIds, Set<Long> sizeIds, Double fromPrice,
+      Double toPrice) {
     PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
-    return productRepository.findAll(isNotDeleted(), pageRequest).getContent();
+    Specification<Product> filterSpec =
+        filterProducts(saleType, colorIds, sizeIds, fromPrice, toPrice);
+
+    return productRepository.findAll(filterSpec, pageRequest).getContent();
   }
 
   @Override
   public List<Product> searchProductsByName(Integer pageNumber, Integer pageSize, String sortBy,
-      String name) {
+      String name, Set<String> saleType, Set<Long> colorIds, Set<Long> sizeIds, Double fromPrice,
+      Double toPrice) {
     PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
-    Specification<Product> searchSpec = nameContainsIgnoreCase(name);
+    Specification<Product> searchSpec = Specification.where(nameContainsIgnoreCase(name));
 
-    return productRepository.findAll(Specification.where(searchSpec).and(isNotDeleted()), pageRequest).getContent();
+    Specification<Product> filterSpec =
+        filterProducts(saleType, colorIds, sizeIds, fromPrice, toPrice);
+
+    return productRepository.findAll(searchSpec.and(filterSpec), pageRequest).getContent();
   }
 
   @Override
-  public Long countProducts() {
-    return productRepository.count(isNotDeleted());
+  public Long countProducts(Set<String> saleType, Set<Long> colorIds, Set<Long> sizeIds,
+      Double fromPrice, Double toPrice) {
+    Specification<Product> filterSpec =
+        filterProducts(saleType, colorIds, sizeIds, fromPrice, toPrice);
+
+    return productRepository.count(filterSpec);
   }
 
   @Override
-  public Long countProductsByName(String name) {
-    Specification<Product> countSpec = ProductSpecification.nameContainsIgnoreCase(name);
+  public Long countProductsByName(String name, Set<String> saleTypes, Set<Long> colorIds,
+      Set<Long> sizeIds, Double fromPrice, Double toPrice) {
+    Specification<Product> countSpec = Specification.where(nameContainsIgnoreCase(name));
 
-    return productRepository.count(Specification.where(countSpec).and(isNotDeleted()));
+    Specification<Product> filterSpec =
+        filterProducts(saleTypes, colorIds, sizeIds, fromPrice, toPrice);
+
+    return productRepository.count(countSpec.and(filterSpec));
   }
 
   @Override
   public List<Product> searchProductsByCategoryAndName(Long categoryId, Integer pageNumber,
-      Integer pageSize, String sortBy, String name)
+      Integer pageSize, String sortBy, String name, Set<String> saleTypes, Set<Long> colorIds,
+      Set<Long> sizeIds, Double fromPrice, Double toPrice)
       throws LoadDataFailException, DataNotFoundException {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
@@ -129,20 +159,22 @@ public class ProductServiceImpl implements ProductService {
 
       Category category = existedCategory.get();
 
-      PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
+      PageRequest pageRequest =
+          PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
-      Specification<Product> parenSpec = parentEquals(category);
-      Specification<Product> nameSpec = nameContainsIgnoreCase(name);
+      Specification<Product> spec = Specification.where(nameContainsIgnoreCase(name));
+
+      Specification<Product> filterSpec =
+          filterProducts(saleTypes, colorIds, sizeIds, fromPrice, toPrice);
 
       if (Objects.isNull(category.getParent())) {
-        return productRepository.findAll(Specification.where(parenSpec).and(nameSpec).and(isNotDeleted()), pageRequest)
+        return productRepository
+            .findAll(spec.and(filterSpec).and(parentEquals(category)), pageRequest)
             .getContent();
       }
 
-      Specification<Product> categorySpec = categoryEquals(category);
-
       return productRepository
-          .findAll(Specification.where(categorySpec).and(nameSpec).and(isNotDeleted()), pageRequest)
+          .findAll(spec.and(filterSpec).and(categoryEquals(category)), pageRequest)
           .getContent();
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
@@ -152,7 +184,8 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Long countProductsByCategory(Long categoryId) {
+  public Long countProductsByCategory(Long categoryId, Set<String> saleTypes, Set<Long> colorIds,
+      Set<Long> sizeIds, Double fromPrice, Double toPrice) {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
 
@@ -163,22 +196,22 @@ public class ProductServiceImpl implements ProductService {
 
       Category category = existedCategory.get();
 
-      Specification<Product> countParentSpec = parentEquals(category);
+      Specification<Product> filterSpec =
+          filterProducts(saleTypes, colorIds, sizeIds, fromPrice, toPrice);
 
       if (Objects.isNull(category.getParent())) {
-        return productRepository.count(Specification.where(countParentSpec).and(isNotDeleted()));
+        return productRepository.count(filterSpec.and(parentEquals(category)));
       }
 
-      Specification<Product> countSpec = categoryEquals(category);
-
-      return productRepository.count(Specification.where(countSpec).and(isNotDeleted()));
+      return productRepository.count(filterSpec.and(categoryEquals(category)));
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     }
   }
 
   @Override
-  public Long countProductsByCategoryAndName(Long categoryId, String name) {
+  public Long countProductsByCategoryAndName(Long categoryId, String name, Set<String> saleTypes,
+      Set<Long> colorIds, Set<Long> sizeIds, Double fromPrice, Double toPrice) {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
 
@@ -189,16 +222,16 @@ public class ProductServiceImpl implements ProductService {
 
       Category category = existedCategory.get();
 
-      Specification<Product> parenSpec = parentEquals(category);
-      Specification<Product> nameSpec = nameContainsIgnoreCase(name);
+      Specification<Product> spec = Specification.where(nameContainsIgnoreCase(name));
+
+      Specification<Product> filterSpec =
+          filterProducts(saleTypes, colorIds, sizeIds, fromPrice, toPrice);
 
       if (Objects.isNull(category.getParent())) {
-        return productRepository.count(Specification.where(parenSpec).and(nameSpec).and(isNotDeleted()));
+        return productRepository.count(spec.and(filterSpec).and(parentEquals(category)));
       }
 
-      Specification<Product> categorySpec = categoryEquals(category);
-
-      return productRepository.count(Specification.where(categorySpec).and(nameSpec).and(isNotDeleted()));
+      return productRepository.count(spec.and(filterSpec).and(categoryEquals(category)));
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     }
@@ -206,7 +239,8 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public List<Product> getProductsByCategoryPerPage(Long categoryId, Integer pageNumber,
-      Integer pageSize, String sortBy) throws LoadDataFailException, DataNotFoundException {
+      Integer pageSize, String sortBy, Set<String> saleTypes, Set<Long> colorIds, Set<Long> sizeIds,
+      Double fromPrice, Double toPrice) throws LoadDataFailException, DataNotFoundException {
     try {
       Optional<Category> existedCategory = categoryRepository.findById(categoryId);
 
@@ -217,23 +251,87 @@ public class ProductServiceImpl implements ProductService {
 
       Category category = existedCategory.get();
 
-      PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
+      PageRequest pageRequest =
+          PageRequest.of(pageNumber - 1, pageSize, generateSortProduct(sortBy));
 
-      Specification<Product> findParentSpec = parentEquals(category);
+      Specification<Product> filterSpec =
+          filterProducts(saleTypes, colorIds, sizeIds, fromPrice, toPrice);
 
       if (Objects.isNull(category.getParent())) {
-        return productRepository.findAll(Specification.where(findParentSpec).and(isNotDeleted()), pageRequest).getContent();
+        return productRepository
+            .findAll(filterSpec.and(parentEquals(category)), pageRequest)
+            .getContent();
       }
 
-      Specification<Product> findSpec = categoryEquals(category);
-
-      return productRepository.findAll(Specification.where(findSpec).and(isNotDeleted()), pageRequest)
+      return productRepository
+          .findAll(filterSpec.and(categoryEquals(category)), pageRequest)
           .getContent();
     } catch (DataNotFoundException ex) {
       throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
     } catch (Exception ex) {
       throw new LoadDataFailException(ErrorCode.ERR_PRODUCT_LOADED_FAIL);
     }
+  }
+
+  private Specification<Product> filterProducts(Set<String> saleTypes, Set<Long> colorIds,
+      Set<Long> sizeIds, Double fromPrice, Double toPrice) {
+    Specification<Product> spec = Specification.where(isNotDeleted());
+
+    Boolean[] arrNew = {false};
+    Boolean[] arrSale = {false};
+
+    if (!CollectionUtils.isEmpty(saleTypes)) {
+      saleTypes.stream().forEach(type -> {
+        if ("new".equalsIgnoreCase(type)) {
+          arrNew[0] = true;
+        } else {
+          arrSale[0] = true;
+        }
+      });
+    }
+
+    if (arrNew[0]) {
+      spec = spec.and(isBrandNew());
+    }
+    if (arrSale[0]) {
+      spec = spec.and(isSale());
+    }
+
+    if (!CollectionUtils.isEmpty(colorIds)) {
+      Set<Color> colors = colorIds
+          .stream()
+          .map(id -> colorRepository.findById(id).get())
+          .collect(Collectors.toSet());
+
+      spec = spec.and(haveColors(colors));
+    }
+
+    if (!CollectionUtils.isEmpty(sizeIds)) {
+      Set<PSize> sizes = sizeIds
+          .stream()
+          .map(id -> pSizeRepository.findById(id).get())
+          .collect(Collectors.toSet());
+
+      spec = spec.and(haveSizes(sizes));
+    }
+
+    if (Objects.nonNull(fromPrice)) {
+      if (Objects.nonNull(toPrice)) {
+        if (arrSale[0]) {
+          spec = spec.and(betweenSalePrices(fromPrice, toPrice));
+        } else {
+          spec = spec.and(betweenPrices(fromPrice, toPrice));
+        }
+      } else {
+        if (arrSale[0]) {
+          spec = spec.and(greaterThanSalePrice(fromPrice));
+        } else {
+          spec = spec.and(greaterThanPrice(fromPrice));
+        }
+      }
+    }
+
+    return spec;
   }
 
   private Sort generateSortProduct(String sortBy) {
@@ -302,7 +400,7 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
 
-      if(Objects.isNull(existedCategory.get().getParent())) {
+      if (Objects.isNull(existedCategory.get().getParent())) {
         LOGGER.info("Cannot add product to category parent {}", categoryId);
         throw new CreateDataFailException(ErrorCode.ERR_PRODUCT_ADDED_TO_PARENT);
       }
@@ -379,7 +477,7 @@ public class ProductServiceImpl implements ProductService {
 
       LOGGER.info("Fail to create product {}", productDTO.getName());
       throw new CreateDataFailException(ErrorCode.ERR_PRODUCT_CREATED_FAIL);
-    
+
     }
 
     return true;
@@ -396,7 +494,7 @@ public class ProductServiceImpl implements ProductService {
         throw new DataNotFoundException(ErrorCode.ERR_CATEGORY_NOT_FOUND);
       }
 
-      if(Objects.isNull(existedCategory.get().getParent())) {
+      if (Objects.isNull(existedCategory.get().getParent())) {
         LOGGER.info("Cannot add product to category parent {}", categoryId);
         throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_ADDED_TO_PARENT);
       }
@@ -457,7 +555,7 @@ public class ProductServiceImpl implements ProductService {
 
       LOGGER.info("Fail to update product {}", id);
       throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_UPDATED_FAIL);
-    
+
     }
   }
 
@@ -557,6 +655,42 @@ public class ProductServiceImpl implements ProductService {
     }
   }
 
+  @Override
+  public Product addUserReviewOfProduct(AddReviewDTO reviewRequest) throws UpdateDataFailException, DataNotFoundException {
+    try {
+      Optional<Product> existedProduct = productRepository.findById(reviewRequest.getProductId());
+
+      if (!existedProduct.isPresent()) {
+        LOGGER.info("Product {} is not found", reviewRequest.getProductId());
+        throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+      }
+
+      Optional<User> existedUser = userRepository.findById(reviewRequest.getUserId());
+
+      if (!existedUser.isPresent()) {
+        LOGGER.info("User {} is not found", reviewRequest.getUserId());
+        throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
+      }
+
+      Product product = existedProduct.get();
+      product.addReview(existedUser.get(), reviewRequest.getTitle(), reviewRequest.getComment(), reviewRequest.getRating());
+
+      return productRepository.save(product);
+    } catch (DataNotFoundException e) {
+      String message = e.getMessage();
+
+      if (message.equals(ErrorCode.ERR_PRODUCT_NOT_FOUND)) {
+        throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
+      } else {
+        throw new DataNotFoundException(ErrorCode.ERR_USER_NOT_FOUND);
+      }
+
+    } catch (Exception e) {
+      LOGGER.info("Fail to add review of product {}", reviewRequest.getProductId());
+      throw new UpdateDataFailException(ErrorCode.ERR_PRODUCT_REVIEW_ADDED_FAIL);
+    }
+  }
+
   private void saveImageBeforeAddToProduct(ProductImageDTO img, Product product) {
     Image image = new Image(img.getImageUrl(), img.getTitle());
 
@@ -648,7 +782,7 @@ public class ProductServiceImpl implements ProductService {
     });
 
     Set<Long> colorCodeSet = new HashSet<>(colorCodes);
-    
+
     if (colorCodeSet.size() < colorCodes.size()) {
       LOGGER.info("Cannot exist two same colors in the list");
       throw new DuplicateDataException(ErrorCode.ERR_NOT_EXIST_TWO_SAME_COLORS);

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +17,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
+@Builder
 public class PagingProductDTO {
 
   private Long id;
@@ -29,8 +29,13 @@ public class PagingProductDTO {
   private Double salePrice;
   private LocalDateTime saleFromDate;
   private LocalDateTime saleToDate;
+
+  @Builder.Default
   private List<ProductImageDTO> images = new ArrayList<>();
+
+  @Builder.Default
   private Set<ColorDTO> colors = new HashSet<>();
+  
   private boolean deleted;
   private Long categoryId;
   private String categoryName;

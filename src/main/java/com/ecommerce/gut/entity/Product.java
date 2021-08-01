@@ -105,6 +105,11 @@ public class Product {
       orphanRemoval = true)
   private Set<ColorSize> colorSizes = new HashSet<>();
 
+  @Builder.Default
+  @OneToMany(fetch = FetchType.EAGER, mappedBy = "product", cascade = CascadeType.ALL,
+      orphanRemoval = true)
+  private Set<Review> reviews = new HashSet<>();
+
   @Column(name = "is_deleted")
   private boolean deleted;
 
@@ -186,6 +191,11 @@ public class Product {
     ProductImage productImage = new ProductImage(this, image);
     productImage.setColorCode(colorCode);
     productImages.add(productImage);
+  }
+
+  public void addReview(User user, String title, String comment, Integer rating) {
+    Review review = new Review(this, user, title, comment, rating);
+    reviews.add(review);
   }
 
 }

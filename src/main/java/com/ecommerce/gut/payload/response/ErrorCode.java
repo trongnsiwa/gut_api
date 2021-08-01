@@ -49,6 +49,7 @@ public class ErrorCode {
   public static final String ERR_PRODUCT_UPDATED_FAIL = "ERR_PRODUCT_UPDATED_FAIL";
   public static final String ERR_PRODUCT_DELETED_FAIL = "ERR_PRODUCT_DELETED_FAIL";
   public static final String ERR_PRODUCT_IMAGES_REPLACED_FAIL = "ERR_PRODUCT_IMAGES_REPLACED_FAIL";
+  public static final String ERR_PRODUCT_REVIEW_ADDED_FAIL = "ERR_PRODUCT_REVIEW_ADDED_FAIL";
   public static final String ERR_PRODUCT_ADDED_TO_PARENT = "ERR_PRODUCT_ADDED_TO_PARENT";
 
   // USER
