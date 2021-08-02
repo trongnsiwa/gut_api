@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,7 +42,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @CrossOrigin(origins = "http://localhost:3000", maxAge = 3600)
 @RestController
 @RequestMapping("/cart")
-@Tag(name = "user")
+@Tag(name = "cart")
 @Validated
 public class CartController {
 
@@ -65,18 +66,17 @@ public class CartController {
   @PostMapping("/addToCart")
   public ResponseEntity<ResponseDTO> addItemToCart(@Valid @RequestBody AddCartItemDTO dto)
       throws CreateDataFailException, DataNotFoundException {
-    
+
     ResponseDTO response = new ResponseDTO();
-    
+
     try {
 
-      boolean added =
-          cartService.addItemToCart(convertStringToUUID(dto.getUserId()), dto.getProductId(),
-              dto.getColorId(), dto.getSizeId());
-      if (added) {
-        response.setSuccessCode(SuccessCode.ADD_TO_CART_SUCCESS);
-        response.setData(null);
-      }
+      Cart cart =
+          cartService.addItemToCart(dto.getUserId(), dto.getProductId(),
+              dto.getColorId(), dto.getSizeId(), dto.getAmount());
+      CartDTO resCart = converter.convertCartToDto(cart);
+      response.setSuccessCode(SuccessCode.ADD_TO_CART_SUCCESS);
+      response.setData(resCart);
 
     } catch (DataNotFoundException ex) {
 
@@ -87,10 +87,22 @@ public class CartController {
         response.setErrorCode(ErrorCode.ERR_PRODUCT_NOT_FOUND);
         throw new DataNotFoundException(ErrorCode.ERR_PRODUCT_NOT_FOUND);
       }
-      
+
     } catch (Exception ex) {
-      response.setErrorCode(ErrorCode.ERR_ADD_TO_CART_FAIL);
-      throw new CreateDataFailException(ErrorCode.ERR_ADD_TO_CART_FAIL);
+
+      String message = ex.getMessage();
+
+      if (message.equals(ErrorCode.ERR_OUT_OF_STOCK)) {
+        response.setErrorCode(ErrorCode.ERR_OUT_OF_STOCK);
+        throw new CreateDataFailException(ErrorCode.ERR_OUT_OF_STOCK);
+      } else if (message.equals(ErrorCode.ERR_CURRENT_QUANTITY_LOWER)) {
+        response.setErrorCode(ErrorCode.ERR_CURRENT_QUANTITY_LOWER);
+        throw new CreateDataFailException(ErrorCode.ERR_CURRENT_QUANTITY_LOWER);
+      } else {
+        response.setErrorCode(ErrorCode.ERR_ADD_TO_CART_FAIL);
+        throw new CreateDataFailException(ErrorCode.ERR_ADD_TO_CART_FAIL);
+      }
+
     }
 
     return ResponseEntity.ok().body(response);
@@ -107,20 +119,19 @@ public class CartController {
       @ApiResponse(responseCode = "404", description = "Data not found",
           content = @Content),
   })
-  @PostMapping("/updateItem")
+  @PutMapping("/updateItem")
   public ResponseEntity<ResponseDTO> updateItemQuantity(@Valid @RequestBody UpdateCartItemDTO dto)
       throws UpdateDataFailException, DataNotFoundException {
-    
+
     ResponseDTO response = new ResponseDTO();
-    
+
     try {
 
-      boolean updated = cartService.updateItemQuantity(convertStringToUUID(dto.getUserId()),
+      Cart cart = cartService.updateItemQuantity(dto.getUserId(),
           dto.getProductId(), dto.getAmount());
-      if (updated) {
-        response.setSuccessCode(SuccessCode.UPDATE_ITEM_QUANTITY_SUCCESS);
-        response.setData(null);
-      }
+      CartDTO resCart = converter.convertCartToDto(cart);
+      response.setSuccessCode(SuccessCode.UPDATE_ITEM_QUANTITY_SUCCESS);
+      response.setData(resCart);
 
     } catch (DataNotFoundException ex) {
 
@@ -138,8 +149,20 @@ public class CartController {
       }
 
     } catch (Exception ex) {
-      response.setErrorCode(ErrorCode.ERR_UPDATE_ITEM_QUANTITY_FAIL);
-      throw new UpdateDataFailException(ErrorCode.ERR_UPDATE_ITEM_QUANTITY_FAIL);
+
+
+      String message = ex.getMessage();
+
+      if (message.equals(ErrorCode.ERR_OUT_OF_STOCK)) {
+        response.setErrorCode(ErrorCode.ERR_OUT_OF_STOCK);
+        throw new UpdateDataFailException(ErrorCode.ERR_OUT_OF_STOCK);
+      } else if (message.equals(ErrorCode.ERR_CURRENT_QUANTITY_LOWER)) {
+        response.setErrorCode(ErrorCode.ERR_CURRENT_QUANTITY_LOWER);
+        throw new UpdateDataFailException(ErrorCode.ERR_CURRENT_QUANTITY_LOWER);
+      } else {
+        response.setErrorCode(ErrorCode.ERR_UPDATE_ITEM_QUANTITY_FAIL);
+        throw new UpdateDataFailException(ErrorCode.ERR_UPDATE_ITEM_QUANTITY_FAIL);
+      }
     }
 
     return ResponseEntity.ok().body(response);
@@ -156,20 +179,19 @@ public class CartController {
       @ApiResponse(responseCode = "404", description = "Data not found",
           content = @Content),
   })
-  @PostMapping("/removeItem")
+  @DeleteMapping("/removeItem")
   public ResponseEntity<ResponseDTO> removeItem(@Valid @RequestBody RemoveCartItemDTO dto)
       throws DeleteDataFailException, DataNotFoundException {
-  
+
     ResponseDTO response = new ResponseDTO();
-    
+
     try {
 
-      boolean removed =
-          cartService.removeItem(convertStringToUUID(dto.getUserId()), dto.getProductId());
-      if (removed) {
-        response.setSuccessCode(SuccessCode.REMOVE_ITEM_SUCCESS);
-        response.setData(null);
-      }
+      Cart cart =
+          cartService.removeItem(dto.getUserId(), dto.getProductId());
+      CartDTO resCart = converter.convertCartToDto(cart);
+      response.setSuccessCode(SuccessCode.REMOVE_ITEM_SUCCESS);
+      response.setData(resCart);
 
     } catch (DataNotFoundException ex) {
 
@@ -203,12 +225,12 @@ public class CartController {
       @ApiResponse(responseCode = "404", description = "Data not found",
           content = @Content),
   })
-  @PutMapping("/clear/{userId}")
+  @DeleteMapping("/clear/{userId}")
   public ResponseEntity<ResponseDTO> clearCart(@PathVariable("userId") @NotNull UUID userId)
       throws UpdateDataFailException, DataNotFoundException {
 
     ResponseDTO response = new ResponseDTO();
-    
+
     try {
 
       boolean cleared = cartService.clearCart(userId);
@@ -266,14 +288,10 @@ public class CartController {
         response.setErrorCode(ErrorCode.ERR_CART_NOT_FOUND);
         throw new DataNotFoundException(ErrorCode.ERR_CART_NOT_FOUND);
       }
-      
+
     }
 
     return ResponseEntity.ok().body(response);
-  }
-
-  private UUID convertStringToUUID(String uuidString) {
-    return UUID.fromString(uuidString);
   }
 
 }

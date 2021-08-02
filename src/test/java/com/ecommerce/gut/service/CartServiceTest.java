@@ -25,12 +25,12 @@ public class CartServiceTest {
 
   @Test
   public void testAddNewItemToCartSuccess() throws CreateDataFailException {
-    assertEquals(true, cartService.addItemToCart(UUID.fromString("628c6f73-459c-4c8d-afa5-6345b28f80ef"), 89L, 0L, 1L)); 
+    assertEquals(true, cartService.addItemToCart(UUID.fromString("628c6f73-459c-4c8d-afa5-6345b28f80ef"), 89L, 0L, 1L, 1)); 
   }
 
   @Test
   public void testAddExistedItemToCartSuccess() throws CreateDataFailException {
-    assertEquals(true, cartService.addItemToCart(UUID.fromString("628c6f73-459c-4c8d-afa5-6345b28f80ef"), 90L, 0L, 1L)); 
+    assertEquals(true, cartService.addItemToCart(UUID.fromString("628c6f73-459c-4c8d-afa5-6345b28f80ef"), 90L, 0L, 1L, 1)); 
   }
 
   @Test

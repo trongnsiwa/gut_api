@@ -1,5 +1,6 @@
 package com.ecommerce.gut.dto;
 
+import java.util.UUID;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
@@ -15,7 +16,7 @@ import lombok.Setter;
 public class RemoveCartItemDTO {
   
   @NotNull(message = "{cart.userId.notNull}")
-  private String userId;
+  private UUID userId;
   
   @NotNull(message = "{product.id.notNull}")
   @Min(value = 1, message = "{cart.productId.min}")

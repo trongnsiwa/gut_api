@@ -9,11 +9,11 @@ import com.ecommerce.gut.exception.UpdateDataFailException;
 
 public interface CartService {
   
-  boolean addItemToCart(UUID userId, Long productId, Long colorId, Long sizeId) throws CreateDataFailException;
+  Cart addItemToCart(UUID userId, Long productId, Long colorId, Long sizeId, Integer amount) throws CreateDataFailException;
   
-  boolean updateItemQuantity(UUID userId, Long productId, Integer amount) throws UpdateDataFailException;
+  Cart updateItemQuantity(UUID userId, Long productId, Integer amount) throws UpdateDataFailException;
 
-  boolean removeItem(UUID userId, Long productId) throws DeleteDataFailException;
+  Cart removeItem(UUID userId, Long productId) throws DeleteDataFailException;
 
   boolean clearCart(UUID userId) throws UpdateDataFailException;
 

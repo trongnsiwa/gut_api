@@ -64,6 +64,8 @@ public class ErrorCode {
   public static final String ERR_LOAD_USERS_FAIL = "ERR_LOAD_USERS_FAIL";
 
   // CART
+  public static final String ERR_CURRENT_QUANTITY_LOWER = "ERR_CURRENT_QUANTITY_LOWER";
+  public static final String ERR_OUT_OF_STOCK = "ERR_OUT_OF_STOCK";
   public static final String ERR_ADD_TO_CART_FAIL = "ERR_ADD_TO_CART_FAIL";
   public static final String ERR_REMOVE_ITEM_FAIL = "ERR_REMOVE_ITEM_FAIL";
   public static final String ERR_UPDATE_ITEM_QUANTITY_FAIL = "ERR_UPDATE_ITEM_QUANTITY_FAIL";
