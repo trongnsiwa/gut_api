@@ -30,13 +30,6 @@ public final class ProductSpecification {
     return (root, query, cb) -> cb.isFalse(root.<Boolean>get("deleted"));
   }
 
-  public static Specification<Product> nameContainsIgnoreCase(String searchTerm) {
-    return (root, query, cb) -> {
-      String containsLikePattern = getContainsLikePattern(searchTerm);
-      return cb.like(cb.lower(root.<String>get("name")), containsLikePattern);
-    };
-  }
-
   public static Specification<Product> categoryEquals(Category category) {
     return (root, query, cb) -> cb.equal(root.<Category>get("category"), category);
   }
@@ -78,6 +71,13 @@ public final class ProductSpecification {
 
   public static Specification<Product> greaterThanSalePrice(Double fromPrice) {
     return (root, query, cb) -> cb.greaterThanOrEqualTo(root.<Double>get("priceSale"), fromPrice);
+  }
+
+  public static Specification<Product> nameContainsIgnoreCase(String searchTerm) {
+    return (root, query, cb) -> {
+      String containsLikePattern = getContainsLikePattern(searchTerm);
+      return cb.like(cb.lower(root.<String>get("name")), containsLikePattern);
+    };
   }
 
   private static String getContainsLikePattern(String searchTerm) {
