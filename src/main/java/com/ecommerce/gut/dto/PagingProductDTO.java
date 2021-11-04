@@ -29,6 +29,7 @@ public class PagingProductDTO {
   private Double salePrice;
   private LocalDateTime saleFromDate;
   private LocalDateTime saleToDate;
+  private Double rate;
 
   @Builder.Default
   private List<ProductImageDTO> images = new ArrayList<>();

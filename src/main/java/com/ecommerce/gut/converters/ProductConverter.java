@@ -117,6 +117,11 @@ public class ProductConverter {
       pagingProductDTO.setBrandId(product.getBrand().getId());
       pagingProductDTO.setBrandName(product.getBrand().getName());
 
+      if (!product.getReviews().isEmpty()) {
+        int rate = product.getReviews().stream().mapToInt(Review::getRating).sum();
+        pagingProductDTO.setRate((double) Math.round(rate / product.getReviews().size()));
+      }
+
       return pagingProductDTO;
     } catch (Exception ex) {
       LOGGER.info("Fail to convert Product to PagingProductDTO");
