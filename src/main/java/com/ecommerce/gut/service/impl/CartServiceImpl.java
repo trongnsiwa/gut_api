@@ -112,7 +112,7 @@ public class CartServiceImpl implements CartService {
 
       cartItem.setProduct(selectedProduct);
       cartItem.setAmount(cartItem.getAmount() + amount);
-      cartItem.setPrice(selectedProduct.getPriceSale() > 0 ? selectedProduct.getPriceSale()
+      cartItem.setPrice(Objects.nonNull(selectedProduct.getPriceSale()) && selectedProduct.getPriceSale() > 0 ? selectedProduct.getPriceSale()
           : selectedProduct.getPrice());
       cartItem.setColorSize(colorSize);
       cartItem.setCart(cart);

@@ -374,6 +374,8 @@ public class ProductServiceImpl implements ProductService {
         defaultOrders.add(new Order(Direction.ASC, "saleFromDate", Sort.NullHandling.NULLS_LAST));
         defaultOrders.add(new Order(Direction.ASC, "saleToDate", Sort.NullHandling.NULLS_LAST));
         defaultOrders.add(new Order(Direction.DESC, "updatedDate"));
+
+        sort = Sort.by(defaultOrders);
         break;
     }
 

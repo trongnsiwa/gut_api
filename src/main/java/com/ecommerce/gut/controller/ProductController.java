@@ -73,7 +73,7 @@ public class ProductController {
   public ResponseEntity<ResponseDTO> getProductsPerPage(
       @RequestParam("num") @Min(1) Integer pageNumber,
       @RequestParam("size") @Min(1) Integer pageSize,
-      @RequestParam("sortBy") @NotNull @NotBlank String sortBy,
+      @RequestParam("sortBy") @NotBlank String sortBy,
       @RequestParam(required = false, name = "saleTypes") String saleTypes,
       @RequestParam(required = false, name = "colorIds") String colorIds,
       @RequestParam(required = false, name = "sizeIds") String sizeIds,

@@ -179,8 +179,8 @@ public class CartController {
       @ApiResponse(responseCode = "404", description = "Data not found",
           content = @Content),
   })
-  @DeleteMapping("/removeItem")
-  public ResponseEntity<ResponseDTO> removeItem(@Valid @RequestBody RemoveCartItemDTO dto)
+  @DeleteMapping("/{userId}/{productId}")
+  public ResponseEntity<ResponseDTO> removeItem(@PathVariable UUID userId, @PathVariable Long productId)
       throws DeleteDataFailException, DataNotFoundException {
 
     ResponseDTO response = new ResponseDTO();
@@ -188,7 +188,7 @@ public class CartController {
     try {
 
       Cart cart =
-          cartService.removeItem(dto.getUserId(), dto.getProductId());
+          cartService.removeItem(userId, productId);
       CartDTO resCart = converter.convertCartToDto(cart);
       response.setSuccessCode(SuccessCode.REMOVE_ITEM_SUCCESS);
       response.setData(resCart);
